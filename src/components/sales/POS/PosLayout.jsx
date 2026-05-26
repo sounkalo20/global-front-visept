@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
@@ -21,6 +21,7 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSale, setIsLoadingSale] = useState(false);
+  const [showCartMobile, setShowCartMobile] = useState(false);
 
   const isEditMode = mode === 'edit';
 
@@ -52,10 +53,8 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
 
   const handleUpdatePrice = useCallback((productId, price, priceType = null) => {
     if (priceType) {
-      // Si un type de prix est spécifié, mettre à jour le prix ET le type
       cart.updateUnitPrice(productId, price, priceType);
     } else {
-      // Sinon, juste mettre à jour le prix
       cart.updateUnitPrice(productId, price);
     }
   }, []);
@@ -87,7 +86,6 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
       toast.success(isEditMode ? 'Vente modifiée avec succès !' : 'Vente validée avec succès !');
       cart.clearCart();
       if (activeCompany) fetchProducts(activeCompany.id);
-      router.push(`/dashboard/sales/${result.sale.id}`);
     } else {
       toast.error(result.message);
     }
@@ -121,15 +119,34 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
             <span className="text-sm text-gray-400 ml-2">{currentSale.sale_number}</span>
           )}
         </div>
-        <div className="text-sm text-gray-500">
-          {cart.getItemsCount()} article(s)
+
+        {/* Bouton panier mobile */}
+        <div className="flex items-center gap-3 lg:hidden">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCartMobile(!showCartMobile)}
+            className="relative"
+          >
+            <ShoppingCart size={18} className="mr-2" />
+            Panier ({cart.getItemsCount()})
+            {cart.items.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {cart.items.length}
+              </span>
+            )}
+          </Button>
+        </div>
+
+        <div className="text-sm text-gray-500 hidden lg:block">
+          {cart.getItemsCount()} article(s) • Total: {cart.getTotal().toLocaleString()} FCFA
         </div>
       </div>
 
       {/* Contenu principal */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Colonne gauche - Produits */}
-        <div className="w-full lg:w-3/5 xl:w-2/3 border-r flex flex-col bg-white overflow-hidden">
+        <div className={`${showCartMobile ? 'hidden' : 'flex'} lg:flex flex-col w-full lg:w-[55%] border-r bg-white overflow-hidden`}>
           <ProductGrid
             products={products}
             onAddToCart={handleAddToCart}
@@ -138,13 +155,32 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
         </div>
 
         {/* Colonne droite - Panier + Paiement */}
-        <div className="w-full lg:w-2/5 xl:w-1/3 flex flex-col bg-white overflow-hidden">
+        <div className={`${showCartMobile ? 'flex' : 'hidden'} lg:flex flex-col w-full lg:w-[45%] bg-white overflow-hidden`}>
+          {/* Header du panier */}
+          <div className="border-b px-4 py-3 bg-gray-50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingCart size={20} className="text-gray-700" />
+              <h2 className="font-semibold text-gray-900">Panier</h2>
+              <span className="text-sm text-gray-500">
+                ({cart.getItemsCount()} article{cart.items.length > 1 ? 's' : ''})
+              </span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCartMobile(false)}
+              className="lg:hidden"
+            >
+              ✕
+            </Button>
+          </div>
+
           <ClientSelector
             clientName={cart.clientName}
             onSetClient={cart.setClient}
           />
 
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             <CartPanel
               items={cart.items}
               onUpdateQuantity={handleUpdateQuantity}
@@ -156,49 +192,51 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
             />
           </div>
 
-          <PaymentSection
-            paymentMethod={cart.paymentMethod}
-            onPaymentMethodChange={cart.setPaymentMethod}
-            amountPaid={cart.amountPaid}
-            onAmountPaidChange={cart.setAmountPaid}
-            paymentReference={cart.paymentReference}
-            onPaymentReferenceChange={cart.setPaymentReference}
-            discountType={cart.discountType}
-            onDiscountChange={cart.setDiscount}
-            discountValue={cart.discountValue}
-            onDiscountValueChange={(v) => cart.setDiscount(cart.discountType, v)}
-            total={cart.getTotal()}
-          />
+          <div className="border-t bg-white">
+            <PaymentSection
+              paymentMethod={cart.paymentMethod}
+              onPaymentMethodChange={cart.setPaymentMethod}
+              amountPaid={cart.amountPaid}
+              onAmountPaidChange={cart.setAmountPaid}
+              paymentReference={cart.paymentReference}
+              onPaymentReferenceChange={cart.setPaymentReference}
+              discountType={cart.discountType}
+              onDiscountChange={cart.setDiscount}
+              discountValue={cart.discountValue}
+              onDiscountValueChange={(v) => cart.setDiscount(cart.discountType, v)}
+              total={cart.getTotal()}
+            />
 
-          {/* Bouton valider / enregistrer */}
-          <div className="p-4 border-t">
-            <Button
-              onClick={handleSubmit}
-              className="w-full h-12 text-base font-semibold"
-              disabled={
-                isSubmitting ||
-                cart.items.length === 0 ||
-                cart.amountPaid < cart.getTotal()
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin mr-2" />
-                  {isEditMode ? 'Enregistrement...' : 'Validation...'}
-                </>
-              ) : isEditMode ? (
-                <>
-                  <Save size={20} className="mr-2" />
-                  Enregistrer les modifications
-                </>
-              ) : cart.amountPaid < cart.getTotal() ? (
-                <span className="text-red-200">
-                  Montant insuffisant
-                </span>
-              ) : (
-                `Valider • ${cart.getTotal().toLocaleString()} FCFA`
-              )}
-            </Button>
+            {/* Bouton valider / enregistrer */}
+            <div className="p-4">
+              <Button
+                onClick={handleSubmit}
+                className="w-full h-14 text-base font-semibold shadow-lg"
+                disabled={
+                  isSubmitting ||
+                  cart.items.length === 0 ||
+                  cart.amountPaid < cart.getTotal()
+                }
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin mr-2" />
+                    {isEditMode ? 'Enregistrement...' : 'Validation...'}
+                  </>
+                ) : isEditMode ? (
+                  <>
+                    <Save size={20} className="mr-2" />
+                    Enregistrer les modifications
+                  </>
+                ) : cart.amountPaid < cart.getTotal() ? (
+                  <span className="text-red-200">
+                    Montant insuffisant ({Math.abs(cart.amountPaid - cart.getTotal()).toLocaleString()} FCFA restants)
+                  </span>
+                ) : (
+                  `Valider • ${cart.getTotal().toLocaleString()} FCFA`
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
