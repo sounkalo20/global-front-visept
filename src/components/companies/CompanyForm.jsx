@@ -159,7 +159,7 @@ export default function CompanyForm() {
             >
               <h2 className="text-lg font-semibold mb-4">Informations générales</h2>
               <div className="space-y-4">
-                <div>
+                {/* <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">
                     Logo <span className="text-gray-400">(optionnel)</span>
                   </label>
@@ -178,7 +178,7 @@ export default function CompanyForm() {
                       <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleLogoChange} className="hidden" />
                     </label>
                   </div>
-                </div>
+                </div> */}
 
                 <div>
                   <label className="mb-1 block text-sm font-medium text-gray-700">Nom de l'entreprise *</label>
