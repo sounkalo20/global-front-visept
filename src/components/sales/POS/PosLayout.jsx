@@ -87,7 +87,7 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
       toast.success(isEditMode ? 'Vente modifiée avec succès !' : 'Vente validée avec succès !');
       cart.clearCart();
       if (activeCompany) fetchProducts(activeCompany.id);
-      router.push(`/dashboard/sales/${result.sale.id}`);
+      // router.push(`/dashboard/sales/${result.sale.id}`);
     } else {
       toast.error(result.message);
     }

@@ -191,127 +191,122 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                     ))}
                 </div>
 
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSubmit(onSubmit)(e);
-                }}>
-                    <AnimatePresence mode="wait">
-                        {/* STEP 1 */}
-                        {step === 1 && (
-                            <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                                <h3 className="font-medium">Informations produit</h3>
+                <AnimatePresence mode="wait">
+                    {/* STEP 1 */}
+                    {step === 1 && (
+                        <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                            <h3 className="font-medium">Informations produit</h3>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Nom *</label>
+                                <Input placeholder="Nom du produit" error={errors.name?.message} {...register('name')} />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Description</label>
+                                <Input placeholder="Description courte" error={errors.description?.message} {...register('description')} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700">Nom *</label>
-                                    <Input placeholder="Nom du produit" error={errors.name?.message} {...register('name')} />
+                                    <label className="text-sm font-medium text-gray-700">SKU</label>
+                                    <Input placeholder="Réf. interne" error={errors.sku?.message} {...register('sku')} />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700">Description</label>
-                                    <Input placeholder="Description courte" error={errors.description?.message} {...register('description')} />
+                                    <label className="text-sm font-medium text-gray-700">Code-barres</label>
+                                    <Input placeholder="Scanner ou saisir" error={errors.barcode?.message} {...register('barcode')} />
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">SKU</label>
-                                        <Input placeholder="Réf. interne" error={errors.sku?.message} {...register('sku')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Code-barres</label>
-                                        <Input placeholder="Scanner ou saisir" error={errors.barcode?.message} {...register('barcode')} />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
+                            </div>
+                        </motion.div>
+                    )}
 
-                        {/* STEP 2 */}
-                        {step === 2 && (
-                            <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                                <h3 className="font-medium">Prix & Stock</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Prix de revient</label>
-                                        <Input type="number" step="0.01" {...register('cost_price')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Prix vente détail *</label>
-                                        <Input type="number" step="0.01" error={errors.retail_price?.message} {...register('retail_price')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Prix de gros</label>
-                                        <Input type="number" step="0.01" {...register('wholesale_price')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Qté min. gros</label>
-                                        <Input type="number" {...register('wholesale_min_qty')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Stock initial</label>
-                                        <Input type="number" {...register('current_stock')} />
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Seuil alerte</label>
-                                        <Input type="number" {...register('low_stock_threshold')} />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* STEP 3 */}
-                        {step === 3 && (
-                            <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                                <h3 className="font-medium">Catégorie & Image</h3>
+                    {/* STEP 2 */}
+                    {step === 2 && (
+                        <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                            <h3 className="font-medium">Prix & Stock</h3>
+                            <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700">Catégorie</label>
-                                    {!showNewCategory ? (
-                                        <div className="flex gap-2">
-                                            <select
-                                                {...register('category_id')}
-                                                className="flex-1 h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
-                                            >
-                                                <option value="">Aucune catégorie</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                                ))}
-                                            </select>
-                                            <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
-                                                <Plus size={16} />
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder="Nouvelle catégorie"
-                                                value={newCategoryName}
-                                                onChange={(e) => setNewCategoryName(e.target.value)}
-                                            />
-                                            <Button type="button" size="sm" onClick={handleAddCategory}>Ajouter</Button>
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)}>Annuler</Button>
-                                        </div>
-                                    )}
+                                    <label className="text-sm font-medium text-gray-700">Prix de revient</label>
+                                    <Input type="number" step="0.01" {...register('cost_price')} />
                                 </div>
-                                <ImageUpload currentImage={product?.image_url} onFileChange={setImageFile} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Prix vente détail *</label>
+                                    <Input type="number" step="0.01" error={errors.retail_price?.message} {...register('retail_price')} />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Prix de gros</label>
+                                    <Input type="number" step="0.01" {...register('wholesale_price')} />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Qté min. gros</label>
+                                    <Input type="number" {...register('wholesale_min_qty')} />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Stock initial</label>
+                                    <Input type="number" {...register('current_stock')} />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Seuil alerte</label>
+                                    <Input type="number" {...register('low_stock_threshold')} />
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
 
-                    {/* Navigation */}
-                    <div className="flex justify-between mt-6 pt-4 border-t">
-                        {step > 1 ? (
-                            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
-                                <ArrowLeft size={16} className="mr-1" /> Retour
-                            </Button>
-                        ) : <div />}
-                        {step < totalSteps ? (
-                            <Button type="button" onClick={() => setStep(step + 1)}>
-                                Suivant <ArrowRight size={16} className="ml-1" />
-                            </Button>
-                        ) : (
-                            <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                    <><Loader2 size={16} className="animate-spin mr-2" /> Enregistrement...</>
-                                ) : isEditing ? 'Enregistrer' : 'Créer le produit'}
-                            </Button>
-                        )}
-                    </div>
-                </form>
+                    {/* STEP 3 */}
+                    {step === 3 && (
+                        <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                            <h3 className="font-medium">Catégorie & Image</h3>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">Catégorie</label>
+                                {!showNewCategory ? (
+                                    <div className="flex gap-2">
+                                        <select
+                                            {...register('category_id')}
+                                            className="flex-1 h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
+                                        >
+                                            <option value="">Aucune catégorie</option>
+                                            {categories.map((cat) => (
+                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                        <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
+                                            <Plus size={16} />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Nouvelle catégorie"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                        />
+                                        <Button type="button" size="sm" onClick={handleAddCategory}>Ajouter</Button>
+                                        <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)}>Annuler</Button>
+                                    </div>
+                                )}
+                            </div>
+                            <ImageUpload currentImage={product?.image_url} onFileChange={setImageFile} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Navigation */}
+                <div className="flex justify-between mt-6 pt-4 border-t">
+                    {step > 1 ? (
+                        <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+                            <ArrowLeft size={16} className="mr-1" /> Retour
+                        </Button>
+                    ) : <div />}
+                    {step < totalSteps ? (
+                        <Button type="button" onClick={() => setStep(step + 1)}>
+                            Suivant <ArrowRight size={16} className="ml-1" />
+                        </Button>
+                    ) : (
+                        <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                            {isSubmitting ? (
+                                <><Loader2 size={16} className="animate-spin mr-2" /> Enregistrement...</>
+                            ) : isEditing ? 'Enregistrer' : 'Créer le produit'}
+                        </Button>
+                    )}
+                </div>
             </DialogContent>
         </Dialog>
     );
