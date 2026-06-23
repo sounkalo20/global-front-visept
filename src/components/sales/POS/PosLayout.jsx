@@ -1,9 +1,11 @@
+// app/shop/sales/new/pos-layout.jsx (REMPLACER)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import ClientSelector from './ClientSelector';
@@ -13,7 +15,7 @@ import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
 
-export default function PosLayout({ mode = 'create', saleId = null }) {
+export default function PosLayout({ mode = 'create', saleId = null, backLink }) {
   const router = useRouter();
   const { activeCompany } = useCompanyStore();
   const { products, fetchProducts } = useProductStore();
@@ -21,22 +23,19 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSale, setIsLoadingSale] = useState(false);
+  const [cartExpanded, setCartExpanded] = useState(true);
 
   const isEditMode = mode === 'edit';
 
-  // Charger les produits
   useEffect(() => {
     if (activeCompany) fetchProducts(activeCompany.id);
   }, [activeCompany]);
 
-  // En mode édition, charger la vente existante
   useEffect(() => {
     if (isEditMode && saleId && activeCompany) {
       setIsLoadingSale(true);
       fetchSaleById(saleId, activeCompany.id).then((sale) => {
-        if (sale) {
-          cart.loadFromSale(sale);
-        }
+        if (sale) cart.loadFromSale(sale);
         setIsLoadingSale(false);
       });
     }
@@ -46,24 +45,6 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
     cart.addItem(product);
   }, []);
 
-  const handleUpdateQuantity = useCallback((productId, qty) => {
-    cart.updateQuantity(productId, qty);
-  }, []);
-
-  const handleUpdatePrice = useCallback((productId, price, priceType = null) => {
-    if (priceType) {
-      // Si un type de prix est spécifié, mettre à jour le prix ET le type
-      cart.updateUnitPrice(productId, price, priceType);
-    } else {
-      // Sinon, juste mettre à jour le prix
-      cart.updateUnitPrice(productId, price);
-    }
-  }, []);
-
-  const handleRemoveItem = useCallback((productId) => {
-    cart.removeItem(productId);
-  }, []);
-
   const handleSubmit = async () => {
     if (!activeCompany || cart.items.length === 0) {
       toast.error('Le panier est vide.');
@@ -71,23 +52,14 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
     }
 
     setIsSubmitting(true);
-
-    let result;
-    if (isEditMode) {
-      const payload = cart.getUpdatePayload(activeCompany.id);
-      result = await updateSale(saleId, payload);
-    } else {
-      const payload = cart.getPayload(activeCompany.id);
-      result = await createSale(payload);
-    }
-
+    const payload = isEditMode ? cart.getUpdatePayload(activeCompany.id) : cart.getPayload(activeCompany.id);
+    const result = isEditMode ? await updateSale(saleId, payload) : await createSale(payload);
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success(isEditMode ? 'Vente modifiée avec succès !' : 'Vente validée avec succès !');
+      toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
       cart.clearCart();
       if (activeCompany) fetchProducts(activeCompany.id);
-      // router.push(`/dashboard/sales/${result.sale.id}`);
     } else {
       toast.error(result.message);
     }
@@ -95,67 +67,106 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
 
   if (isLoadingSale) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <Loader2 size={32} className="animate-spin text-brand-600" />
       </div>
     );
   }
 
+  const itemsCount = cart.getItemsCount();
+  const cartTotal = cart.getTotal();
+
   return (
-    <div className="h-[calc(100vh-65px)] flex flex-col">
-      {/* Header */}
-      <div className="border-b bg-white px-4 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push(isEditMode ? `/dashboard/sales/${saleId}` : '/dashboard/sales')}
-            className="h-8 w-8"
-          >
-            <ArrowLeft size={18} />
-          </Button>
-          <h1 className="font-semibold text-lg">
-            {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
-          </h1>
-          {isEditMode && currentSale && (
-            <span className="text-sm text-gray-400 ml-2">{currentSale.sale_number}</span>
-          )}
+    <div className="h-[calc(100vh-65px)] flex bg-gray-50">
+      {/* ======================== */}
+      {/* COLONNE GAUCHE : Produits + Panier */}
+      {/* ======================== */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push(isEditMode ? `${backLink}/${saleId}` : `${backLink}`)}
+            >
+              <ArrowLeft size={20} />
+            </Button>
+            <div>
+              <h1 className="font-semibold text-lg">
+                {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
+              </h1>
+              {isEditMode && currentSale && (
+                <span className="text-xs text-gray-400">{currentSale.sale_number}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-gray-500">
+            <ShoppingCart size={16} />
+            <span>{itemsCount} article{itemsCount > 1 ? 's' : ''}</span>
+            {itemsCount > 0 && (
+              <Badge variant="outline" className="font-bold">
+                {cartTotal.toLocaleString()} FCFA
+              </Badge>
+            )}
+          </div>
+        </header>
+
+        {/* Zone produits */}
+        <div className="flex-1 overflow-hidden">
+          <ProductGrid products={products} onAddToCart={handleAddToCart} cartItems={cart.items} />
         </div>
-        <div className="text-sm text-gray-500">
-          {cart.getItemsCount()} article(s)
-        </div>
+
+        {/* Zone panier (en bas) */}
+        {itemsCount > 0 && (
+          <div className="border-t bg-white shadow-lg shrink-0">
+            {/* Toggle panier */}
+            <button
+              onClick={() => setCartExpanded(!cartExpanded)}
+              className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <ShoppingCart size={16} />
+                Panier ({itemsCount})
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-brand-700">{cartTotal.toLocaleString()} FCFA</span>
+                {cartExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+              </div>
+            </button>
+
+            {cartExpanded && (
+              <div className="max-h-[300px] overflow-hidden flex flex-col">
+                <div className="overflow-y-auto flex-1">
+                  <CartPanel
+                    items={cart.items}
+                    onUpdateQuantity={cart.updateQuantity}
+                    onUpdatePrice={cart.updateUnitPrice}
+                    onRemoveItem={cart.removeItem}
+                    subtotal={cart.getSubtotal()}
+                    discountAmount={cart.getDiscountAmount()}
+                    total={cartTotal}
+                    compact
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Contenu principal */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Colonne gauche - Produits */}
-        <div className="w-full lg:w-3/5 xl:w-2/3 border-r flex flex-col bg-white overflow-hidden">
-          <ProductGrid
-            products={products}
-            onAddToCart={handleAddToCart}
-            cartItems={cart.items}
-          />
-        </div>
+      {/* ======================== */}
+      {/* COLONNE DROITE : Client + Paiement + Valider */}
+      {/* ======================== */}
+      <div className="w-[380px] xl:w-[420px] border-l bg-white flex flex-col shrink-0 hidden lg:flex">
+        {/* Client */}
+        <ClientSelector
+          clientName={cart.clientName}
+          onSetClient={cart.setClient}
+        />
 
-        {/* Colonne droite - Panier + Paiement */}
-        <div className="w-full lg:w-2/5 xl:w-1/3 flex flex-col bg-white overflow-hidden">
-          <ClientSelector
-            clientName={cart.clientName}
-            onSetClient={cart.setClient}
-          />
-
-          <div className="flex-1 overflow-hidden">
-            <CartPanel
-              items={cart.items}
-              onUpdateQuantity={handleUpdateQuantity}
-              onUpdatePrice={handleUpdatePrice}
-              onRemoveItem={handleRemoveItem}
-              subtotal={cart.getSubtotal()}
-              discountAmount={cart.getDiscountAmount()}
-              total={cart.getTotal()}
-            />
-          </div>
-
+        {/* Paiement */}
+        <div className="flex-1 overflow-y-auto">
           <PaymentSection
             paymentMethod={cart.paymentMethod}
             onPaymentMethodChange={cart.setPaymentMethod}
@@ -167,40 +178,53 @@ export default function PosLayout({ mode = 'create', saleId = null }) {
             onDiscountChange={cart.setDiscount}
             discountValue={cart.discountValue}
             onDiscountValueChange={(v) => cart.setDiscount(cart.discountType, v)}
-            total={cart.getTotal()}
+            total={cartTotal}
           />
-
-          {/* Bouton valider / enregistrer */}
-          <div className="p-4 border-t">
-            <Button
-              onClick={handleSubmit}
-              className="w-full h-12 text-base font-semibold"
-              disabled={
-                isSubmitting ||
-                cart.items.length === 0 ||
-                cart.amountPaid < cart.getTotal()
-              }
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={20} className="animate-spin mr-2" />
-                  {isEditMode ? 'Enregistrement...' : 'Validation...'}
-                </>
-              ) : isEditMode ? (
-                <>
-                  <Save size={20} className="mr-2" />
-                  Enregistrer les modifications
-                </>
-              ) : cart.amountPaid < cart.getTotal() ? (
-                <span className="text-red-200">
-                  Montant insuffisant
-                </span>
-              ) : (
-                `Valider • ${cart.getTotal().toLocaleString()} FCFA`
-              )}
-            </Button>
-          </div>
         </div>
+
+        {/* Bouton Valider */}
+        <div className="p-4 border-t bg-white">
+          <Button
+            onClick={handleSubmit}
+            className="w-full h-12 text-base font-semibold rounded-xl"
+            disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+          >
+            {isSubmitting ? (
+              <Loader2 size={20} className="animate-spin mr-2" />
+            ) : cart.items.length === 0 ? (
+              'Panier vide'
+            ) : cart.amountPaid < cartTotal ? (
+              `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
+            ) : (
+              <>
+                <Save size={18} className="mr-2" />
+                Valider • {cartTotal.toLocaleString()} FCFA
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile : bouton valider flottant */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
+        <Button
+          onClick={handleSubmit}
+          className="w-full h-12 text-base font-semibold rounded-xl"
+          disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+        >
+          {isSubmitting ? (
+            <Loader2 size={20} className="animate-spin mr-2" />
+          ) : cart.items.length === 0 ? (
+            'Panier vide'
+          ) : cart.amountPaid < cartTotal ? (
+            `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
+          ) : (
+            <>
+              <Save size={18} className="mr-2" />
+              Valider • {cartTotal.toLocaleString()} FCFA
+            </>
+          )}
+        </Button>
       </div>
     </div>
   );

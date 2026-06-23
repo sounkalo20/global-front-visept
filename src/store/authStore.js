@@ -6,9 +6,10 @@ const useAuthStore = create((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
+  isSuperAdmin: false,
   isLoading: true,
 
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user, isSuperAdmin: !!user.is_super_admin }),
 
   setToken: (token) => {
     if (typeof window !== 'undefined') {
@@ -26,11 +27,12 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('visept_user', JSON.stringify(user));
     }
 
-    set({ user, token, isAuthenticated: true });
+    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin });
 
     // Charger les entreprises après login
-    await useCompanyStore.getState().fetchCompanies();
-
+    if (!user.is_super_admin) {
+      await useCompanyStore.getState().fetchCompanies();
+    }
     return response.data;
   },
 
@@ -43,7 +45,7 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('visept_user', JSON.stringify(user));
     }
 
-    set({ user, token, isAuthenticated: true });
+    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin });
     return response.data;
   },
 
@@ -72,18 +74,32 @@ const useAuthStore = create((set) => ({
       const response = await api.get('/auth/me');
       const user = response.data.data.user;
 
-      set({ user, token, isAuthenticated: true, isLoading: false });
+      set({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+        isSuperAdmin: user.is_super_admin || false
+      });
 
-      // Charger les entreprises après checkAuth
-      await useCompanyStore.getState().fetchCompanies();
+      if (!user.is_super_admin) {
+        await useCompanyStore.getState().fetchCompanies();
+      }
     } catch {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('visept_token');
         localStorage.removeItem('visept_user');
       }
-      set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isSuperAdmin: false
+      });
     }
   },
+
 
   init: () => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem('visept_user') : null;
@@ -92,8 +108,16 @@ const useAuthStore = create((set) => ({
     if (stored && storedToken) {
       try {
         const user = JSON.parse(stored);
-        set({ user, token: storedToken, isAuthenticated: true, isLoading: false });
-        useCompanyStore.getState().initCompanies();
+        set({
+          user,
+          token: storedToken,
+          isAuthenticated: true,
+          isLoading: false,
+          isSuperAdmin: user.is_super_admin || false
+        });
+        if (!user.is_super_admin) {
+          useCompanyStore.getState().initCompanies();
+        }
       } catch {
         set({ isLoading: false });
       }

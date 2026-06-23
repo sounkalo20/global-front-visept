@@ -1,3 +1,4 @@
+// store/companyStore.js
 import { create } from 'zustand';
 import { companiesApi } from '@/lib/api/companies';
 
@@ -5,10 +6,10 @@ const useCompanyStore = create((set, get) => ({
   companies: [],
   activeCompany: null,
   isLoading: false,
+  isFetched: false, // ← AJOUTÉ : pour éviter les refetch inutiles
 
   setCompanies: (companies) => {
     set({ companies });
-    // Persister dans localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('visept_companies', JSON.stringify(companies));
     }
@@ -18,6 +19,8 @@ const useCompanyStore = create((set, get) => ({
     set({ activeCompany: company });
     if (typeof window !== 'undefined' && company) {
       localStorage.setItem('visept_activeCompany', JSON.stringify(company));
+    } else if (typeof window !== 'undefined') {
+      localStorage.removeItem('visept_activeCompany');
     }
   },
 
@@ -37,7 +40,6 @@ const useCompanyStore = create((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('visept_companies', JSON.stringify(companies));
     }
-    // Mettre à jour l'active si nécessaire
     if (get().activeCompany?.id === updatedCompany.id) {
       set({ activeCompany: updatedCompany });
       if (typeof window !== 'undefined') {
@@ -48,33 +50,36 @@ const useCompanyStore = create((set, get) => ({
 
   deleteCompany: (companyId) => {
     const companies = get().companies.filter((c) => c.id !== companyId);
-    set({ companies });
+    const newActive = get().activeCompany?.id === companyId
+      ? (companies.length > 0 ? companies[0] : null)
+      : get().activeCompany;
+
+    set({ companies, activeCompany: newActive });
+
     if (typeof window !== 'undefined') {
       localStorage.setItem('visept_companies', JSON.stringify(companies));
-    }
-    // Si l'entreprise supprimée était active, switcher sur la première disponible
-    if (get().activeCompany?.id === companyId) {
-      const newActive = companies.length > 0 ? companies[0] : null;
-      set({ activeCompany: newActive });
-      if (typeof window !== 'undefined') {
-        if (newActive) {
-          localStorage.setItem('visept_activeCompany', JSON.stringify(newActive));
-        } else {
-          localStorage.removeItem('visept_activeCompany');
-        }
+      if (newActive) {
+        localStorage.setItem('visept_activeCompany', JSON.stringify(newActive));
+      } else {
+        localStorage.removeItem('visept_activeCompany');
       }
     }
   },
 
   fetchCompanies: async () => {
+    // Éviter les appels multiples simultanés
+    if (get().isLoading) return;
+
     set({ isLoading: true });
     try {
       const response = await companiesApi.getAll();
       const companies = response.data.data.companies;
-      set({ companies, isLoading: false });
 
-      // Définir l'entreprise active automatiquement
-      if (companies.length > 0 && !get().activeCompany) {
+      // Déterminer l'active company AVANT le set
+      let activeCompany = null;
+
+      if (companies.length > 0) {
+        // Essayer de récupérer depuis le localStorage
         const storedActive = typeof window !== 'undefined'
           ? localStorage.getItem('visept_activeCompany')
           : null;
@@ -82,21 +87,27 @@ const useCompanyStore = create((set, get) => ({
         if (storedActive) {
           try {
             const parsed = JSON.parse(storedActive);
-            const exists = companies.find((c) => c.id === parsed.id);
-            if (exists) {
-              set({ activeCompany: exists });
-              return;
-            }
-          } catch {}
+            activeCompany = companies.find((c) => c.id === parsed.id) || null;
+          } catch {
+            activeCompany = null;
+          }
         }
-        set({ activeCompany: companies[0] });
+
+        // Fallback : première entreprise
+        if (!activeCompany) {
+          activeCompany = companies[0];
+        }
       }
 
-      if (companies.length === 0) {
-        set({ activeCompany: null });
-      }
+      // UN SEUL set pour tout mettre à jour
+      set({
+        companies,
+        activeCompany,
+        isLoading: false,
+        isFetched: true,
+      });
     } catch {
-      set({ isLoading: false });
+      set({ isLoading: false, isFetched: true });
     }
   },
 
@@ -109,14 +120,14 @@ const useCompanyStore = create((set, get) => ({
         try {
           const companies = JSON.parse(storedCompanies);
           set({ companies });
-        } catch {}
+        } catch { }
       }
 
       if (storedActive) {
         try {
           const active = JSON.parse(storedActive);
           set({ activeCompany: active });
-        } catch {}
+        } catch { }
       }
     }
   },

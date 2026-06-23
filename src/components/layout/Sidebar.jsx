@@ -1,37 +1,21 @@
+// components/layout/Sidebar.jsx
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import {
-    LayoutDashboard,
-    ShoppingCart,
-    Receipt,
-    DollarSign,
-    Package,
-    FolderTree,
-    Boxes,
-    Users,
-    Truck,
-    UserCheck,
-    Building2,
-    Settings,
-    CreditCard,
-    FileText,
-    User,
-    ChevronLeft,
-    ChevronRight,
-    LogOut,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import SidebarSection from './SidebarSection';
 import SidebarItem from './SidebarItem';
 import useSidebarStore from '@/store/sidebarStore';
 import useAuthStore from '@/store/authStore';
+import useNavigation from '@/hooks/useNavigation';
 import { cn } from '@/lib/utils';
 
 export default function Sidebar() {
     const { isCollapsed, toggleCollapsed, init } = useSidebarStore();
     const { user, logout } = useAuthStore();
     const router = useRouter();
+    const navigation = useNavigation();
 
     useEffect(() => {
         init();
@@ -41,43 +25,6 @@ export default function Sidebar() {
         logout();
         router.push('/login');
     };
-
-    const navigation = [
-        {
-            section: 'Général',
-            items: [
-                { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-            ],
-        },
-        {
-            section: 'Finance',
-            items: [
-                { href: '/dashboard/sales', label: 'Ventes', icon: ShoppingCart },
-                { href: '/dashboard/expenses', label: 'Dépenses', icon: Receipt },
-                { href: '/dashboard/debts', label: 'Dettes', icon: DollarSign },
-            ],
-        },
-        {
-            section: 'Inventaire',
-            items: [
-                { href: '/dashboard/products', label: 'Produits', icon: Package },
-                { href: '/dashboard/categories', label: 'Catégories', icon: FolderTree },
-            ],
-        },
-        {
-            section: 'CRM',
-            items: [
-                { href: '/dashboard/clients', label: 'Clients', icon: Users },
-            ],
-        },
-        {
-            section: 'Entreprise',
-            items: [
-                { href: '/dashboard/companies', label: 'Entreprises', icon: Building2 },
-                // { href: '/dashboard/settings', label: 'Paramètres', icon: Settings },
-            ],
-        },
-    ];
 
     return (
         <motion.aside
@@ -119,7 +66,7 @@ export default function Sidebar() {
                 </button>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation dynamique */}
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4 [&::-webkit-scrollbar]:hidden">
                 {navigation.map((section) => (
                     <SidebarSection key={section.section} title={section.section} collapsed={isCollapsed}>
@@ -138,12 +85,6 @@ export default function Sidebar() {
 
             {/* Footer */}
             <div className="border-t p-3 space-y-1">
-                {/* <SidebarItem
-                    href="/dashboard/profile"
-                    icon={User}
-                    label="Mon profil"
-                    collapsed={isCollapsed}
-                /> */}
                 <button
                     onClick={handleLogout}
                     className={cn(

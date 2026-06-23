@@ -1,6 +1,8 @@
+// app/shop/sales/new/PaymentSection.jsx (REMPLACER)
 'use client';
-
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { Percent, Banknote, Smartphone, Building2, Wallet } from 'lucide-react';
 
 export default function PaymentSection({
   paymentMethod,
@@ -17,104 +19,139 @@ export default function PaymentSection({
 }) {
   const change = Math.max(0, amountPaid - total);
 
+  const paymentMethods = [
+    { key: 'cash', label: 'Espèces', icon: Banknote },
+    { key: 'mobile_money', label: 'Mobile', icon: Smartphone },
+    { key: 'bank_transfer', label: 'Virement', icon: Building2 },
+  ];
+
+  const discountOptions = [
+    { key: 'none', label: 'Sans remise' },
+    { key: 'percentage', label: '%' },
+    { key: 'fixed', label: 'FCFA' },
+  ];
+
+  const handleDiscountTypeChange = (type) => {
+    // Réinitialiser la valeur quand on change de type
+    onDiscountChange(type, type === 'none' ? 0 : discountValue);
+  };
+
+  const handleDiscountValueChange = (value) => {
+    onDiscountValueChange(parseFloat(value) || 0);
+  };
+
   return (
-    <div className="border-t bg-white p-4 space-y-3">
-
-      {/* REMISE */}
-      <div className="flex gap-2 text-xs">
-        <button
-          onClick={() => onDiscountChange('none', 0)}
-          className={`px-2 py-1 border rounded ${
-            discountType === 'none' ? 'bg-black text-white' : ''
-          }`}
-        >
-          Aucune
-        </button>
-
-        <button
-          onClick={() => onDiscountChange('percentage', discountValue)}
-          className={`px-2 py-1 border rounded ${
-            discountType === 'percentage' ? 'bg-black text-white' : ''
-          }`}
-        >
-          %
-        </button>
-
-        <button
-          onClick={() => onDiscountChange('fixed', discountValue)}
-          className={`px-2 py-1 border rounded ${
-            discountType === 'fixed' ? 'bg-black text-white' : ''
-          }`}
-        >
-          FCFA
-        </button>
-
+    <div className="p-4 space-y-4">
+      {/* Remise */}
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-2 block">Remise</label>
+        <div className="flex items-center gap-1">
+          {discountOptions.map(opt => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => handleDiscountTypeChange(opt.key)}
+              className={cn(
+                'flex-1 py-2 text-xs font-medium rounded-lg border transition-colors',
+                discountType === opt.key
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              )}
+            >
+              {opt.key === 'percentage' && <Percent size={12} className="inline mr-1" />}
+              {opt.label}
+            </button>
+          ))}
+        </div>
         {discountType !== 'none' && (
-          <Input
-            type="number"
-            value={discountValue}
-            onChange={(e) =>
-              onDiscountValueChange(parseFloat(e.target.value) || 0)
-            }
-            className="h-8 w-24 text-xs"
-          />
+          <div className="mt-2 flex items-center gap-2">
+            <Input
+              type="number"
+              value={discountValue || ''}
+              onChange={(e) => handleDiscountValueChange(e.target.value)}
+              className="h-9 text-sm rounded-lg"
+              placeholder={discountType === 'percentage' ? 'Pourcentage' : 'Montant FCFA'}
+              min="0"
+              step={discountType === 'percentage' ? '1' : '0.01'}
+            />
+            <span className="text-xs text-gray-400 shrink-0">
+              {discountType === 'percentage' ? '%' : 'FCFA'}
+            </span>
+          </div>
         )}
       </div>
 
-      {/* MÉTHODE */}
-      <div className="flex gap-1">
-        {[
-          { key: 'cash', label: '💵 Cash' },
-          { key: 'mobile_money', label: '📱 Mobile' },
-          { key: 'bank_transfer', label: '🏦 Virement' },
-        ].map((m) => (
-          <button
-            key={m.key}
-            onClick={() => onPaymentMethodChange(m.key)}
-            className={`flex-1 py-2 text-xs rounded border ${
-              paymentMethod === m.key
-                ? 'bg-black text-white'
-                : 'bg-white'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
+      {/* Méthode de paiement */}
+      <div>
+        <label className="text-xs font-medium text-gray-500 mb-2 block">Paiement</label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {paymentMethods.map(m => (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => onPaymentMethodChange(m.key)}
+              className={cn(
+                'flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-colors',
+                paymentMethod === m.key
+                  ? 'bg-brand-600 text-white border-brand-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+              )}
+            >
+              <m.icon size={18} />
+              {m.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* RÉFÉRENCE */}
+      {/* Référence */}
       {paymentMethod !== 'cash' && (
-        <Input
-          placeholder="Référence"
-          value={paymentReference}
-          onChange={(e) => onPaymentReferenceChange(e.target.value)}
-          className="h-8 text-xs"
-        />
+        <div>
+          <label className="text-xs font-medium text-gray-500 mb-1 block">
+            Référence de transaction
+          </label>
+          <Input
+            placeholder="N° de transaction"
+            value={paymentReference}
+            onChange={(e) => onPaymentReferenceChange(e.target.value)}
+            className="h-9 text-sm rounded-lg"
+          />
+        </div>
       )}
 
-      {/* MONTANT VERSÉ */}
+      {/* Montant versé */}
       <div>
-        <label className="text-xs text-gray-500">
+        <label className="text-xs font-medium text-gray-500 mb-1 block">
           Montant versé
         </label>
-
-        <Input
-          type="number"
-          value={amountPaid}
-          onChange={(e) =>
-            onAmountPaidChange(parseFloat(e.target.value) || 0)
-          }
-          className="h-9 text-sm"
-        />
+        <div className="relative">
+          <Input
+            type="number"
+            value={amountPaid || ''}
+            onChange={(e) => onAmountPaidChange(parseFloat(e.target.value) || 0)}
+            className="h-11 text-lg font-semibold rounded-xl pr-16"
+            min="0"
+          />
+          <button
+            type="button"
+            onClick={() => onAmountPaidChange(total)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-brand-100 text-brand-700 px-2 py-1 rounded-lg font-medium hover:bg-brand-200 transition-colors"
+          >
+            Total
+          </button>
+        </div>
       </div>
 
-      {/* MONNAIE */}
-      <div className="flex justify-between text-sm bg-gray-50 p-2 rounded">
-        <span>Monnaie à rendre</span>
-        <span className="font-bold text-green-600">
-          {change.toLocaleString()} FCFA
-        </span>
-      </div>
+      {/* Monnaie */}
+      {change > 0 && (
+        <div className="flex items-center justify-between bg-green-50 rounded-xl p-3">
+          <span className="text-sm text-green-700 flex items-center gap-1.5">
+            <Wallet size={16} />
+            Monnaie à rendre
+          </span>
+          <span className="text-lg font-bold text-green-700">{change.toLocaleString()} FCFA</span>
+        </div>
+      )}
     </div>
   );
 }

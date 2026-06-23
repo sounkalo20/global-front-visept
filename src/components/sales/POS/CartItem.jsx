@@ -1,74 +1,77 @@
+// app/shop/sales/new/CartItem.jsx (REMPLACER)
 'use client';
-import { Plus, Minus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemove }) {
-  // Fonction pour gérer le changement de type de prix
   const handlePriceTypeChange = (newType) => {
-    // Récupérer le prix original du produit selon le type choisi
-    const newPrice = newType === 'wholesale' 
-      ? (item.original_wholesale_price || item.wholesale_price) 
+    const newPrice = newType === 'wholesale'
+      ? (item.original_wholesale_price || item.wholesale_price)
       : (item.original_retail_price || item.retail_price);
-    
-    // Mettre à jour le prix ET le type de prix
     onUpdatePrice(item.product_id, newPrice, newType);
   };
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-100">
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">{item.product_name}</p>
-        <div className="flex items-center gap-2 mt-1">
-          {/* Prix unitaire éditable */}
-          <input
-            type="number"
-            value={item.unit_price}
-            onChange={(e) => onUpdatePrice(item.product_id, e.target.value)}
-            className="w-20 h-7 text-xs border rounded px-1.5 text-center"
-            min="0"
-            step="1"
-          />
-          <span className="text-xs text-gray-400">FCFA</span>
+    <div className="px-4 py-3 hover:bg-gray-50/50 transition-colors">
+      {/* Nom + supprimer */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <p className="font-medium text-sm text-gray-900 line-clamp-2 flex-1">
+          {item.product_name}
+        </p>
+        <button
+          onClick={() => onRemove(item.product_id)}
+          className="shrink-0 text-gray-300 hover:text-red-500 transition-colors mt-0.5"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
 
-          {/* Type de prix */}
-          <select
-            value={item.price_type || 'retail'}
-            onChange={(e) => handlePriceTypeChange(e.target.value)}
-            className="text-xs border rounded px-1 h-7"
+      {/* Contrôles */}
+      <div className="flex items-center gap-3">
+        {/* Type de prix */}
+        <select
+          value={item.price_type || 'retail'}
+          onChange={(e) => handlePriceTypeChange(e.target.value)}
+          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:outline-none focus:border-brand-300"
+        >
+          <option value="retail">Détail</option>
+          {item.wholesale_price > 0 && <option value="wholesale">Gros</option>}
+        </select>
+
+        {/* Prix unitaire */}
+        <input
+          type="number"
+          value={item.unit_price}
+          onChange={(e) => onUpdatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+          className="w-20 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 focus:outline-none focus:border-brand-300"
+          min="0"
+        />
+
+        {/* Quantité */}
+        <div className="flex items-center gap-0.5 ml-auto">
+          <button
+            onClick={() => onUpdateQuantity(item.product_id, item.quantity - 1)}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
           >
-            <option value="retail">Détail</option>
-            {item.wholesale_price > 0 && <option value="wholesale">Gros</option>}
-          </select>
+            <Minus size={13} />
+          </button>
+          <span className="w-8 text-center text-sm font-semibold tabular-nums">
+            {item.quantity}
+          </span>
+          <button
+            onClick={() => onUpdateQuantity(item.product_id, item.quantity + 1)}
+            disabled={item.manage_stock && item.quantity >= item.current_stock}
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-30"
+          >
+            <Plus size={13} />
+          </button>
         </div>
       </div>
 
-      {/* Quantité */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => onUpdateQuantity(item.product_id, item.quantity - 1)}
-          className="h-7 w-7 flex items-center justify-center rounded border hover:bg-gray-100"
-        >
-          <Minus size={12} />
-        </button>
-        <span className="w-7 text-center text-sm font-medium">{item.quantity}</span>
-        <button
-          onClick={() => onUpdateQuantity(item.product_id, item.quantity + 1)}
-          disabled={item.manage_stock && item.quantity >= item.current_stock}
-          className="h-7 w-7 flex items-center justify-center rounded border hover:bg-gray-100 disabled:opacity-30"
-        >
-          <Plus size={12} />
-        </button>
-      </div>
-
       {/* Total ligne */}
-      <p className="w-20 text-right font-medium text-sm">
-        {(item.unit_price * item.quantity).toLocaleString()} F
+      <p className="text-right text-sm font-semibold text-brand-700 mt-1">
+        {(item.unit_price * item.quantity).toLocaleString()} FCFA
       </p>
-
-      {/* Supprimer */}
-      <button onClick={() => onRemove(item.product_id)} className="text-red-400 hover:text-red-600">
-        <Trash2 size={15} />
-      </button>
     </div>
   );
 }

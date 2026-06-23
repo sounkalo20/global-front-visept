@@ -53,7 +53,7 @@ const businessTypes = [
     icon: Utensils,
     label: 'Restaurant',
     description: 'Commandes, tables et service en salle.',
-    available: false,
+    available: true,
   },
   {
     id: 4,
@@ -112,7 +112,8 @@ export default function CompanyForm() {
       const response = await companiesApi.create(formData);
       addCompany(response.data.data.company);
       toast.success('Entreprise créée avec succès !');
-      router.push('/dashboard/companies');
+      //recharger la page
+      router.reload();
     } catch (error) {
       toast.error(error.response?.data?.message || "Erreur lors de la création.");
     } finally {
@@ -135,8 +136,8 @@ export default function CompanyForm() {
                 step > s
                   ? 'bg-brand-600 text-white'
                   : step === s
-                  ? 'bg-brand-100 text-brand-700 border-2 border-brand-500'
-                  : 'bg-gray-100 text-gray-400'
+                    ? 'bg-brand-100 text-brand-700 border-2 border-brand-500'
+                    : 'bg-gray-100 text-gray-400'
               )}
             >
               {step > s ? <Check size={16} /> : s}

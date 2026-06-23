@@ -73,7 +73,7 @@ export default function SalesTable({ sales }) {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{sale.seller_name || '-'}</td>
                   <td className="px-4 py-3 text-right">
-                    <Button variant="ghost" size="icon" onClick={() => router.push(`/dashboard/sales/${sale.id}`)} className="h-8 w-8">
+                    <Button variant="ghost" size="icon" onClick={() => router.push(`/shop/sales/${sale.id}`)} className="h-8 w-8">
                       <Eye size={15} />
                     </Button>
                   </td>
@@ -95,7 +95,7 @@ export default function SalesTable({ sales }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.02 }}
               className="rounded-xl border bg-white p-4 cursor-pointer"
-              onClick={() => router.push(`/dashboard/sales/${sale.id}`)}
+              onClick={() => router.push(`/shop/sales/${sale.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div>

@@ -15,7 +15,7 @@ const statusBadge = (status) => {
   return map[status] || { label: status, color: 'bg-gray-100' };
 };
 
-export default function SaleDetail({ sale, onBack, onCancel }) {
+export default function SaleDetail({ sale, onBack, onCancel, editLink }) {
   if (!sale) return null;
   const payStatus = statusBadge(sale.payment_status);
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function SaleDetail({ sale, onBack, onCancel }) {
             <>
               <Button
                 variant="outline"
-                onClick={() => router.push(`/dashboard/sales/${sale.id}/edit`)}
+                onClick={() => router.push(editLink + `/${sale.id}/edit`)}
               >
                 <Edit size={16} className="mr-2" /> Modifier
               </Button>

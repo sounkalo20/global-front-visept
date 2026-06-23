@@ -24,4 +24,10 @@ export const productsApi = {
 
   getMovements: (id, companyId) =>
     api.get(`/products/${id}/movements?company_id=${companyId}`),
+
+  getCompositions: (productId, companyId) =>
+    api.get(`/products/${productId}/compositions`, { params: { company_id: companyId } }),
+
+  updateCompositions: (productId, data) =>
+    api.put(`/products/${productId}/compositions`, data),
 };

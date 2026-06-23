@@ -57,7 +57,7 @@ export default function DebtTable({ debts }) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.02 }}
                   className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => router.push(`/dashboard/debts/${debt.id}`)}
+                  onClick={() => router.push(`/shop/debts/${debt.id}`)}
                 >
                   <td className="px-4 py-3">
                     <p className="font-medium text-sm">{debt.client_name || 'Inconnu'}</p>
@@ -74,7 +74,7 @@ export default function DebtTable({ debts }) {
                     {debt.due_date ? new Date(debt.due_date).toLocaleDateString('fr-FR') : '-'}
                   </td>
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`/dashboard/debts/${debt.id}`)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`/shop/debts/${debt.id}`)}>
                       <Eye size={15} />
                     </Button>
                   </td>
@@ -98,7 +98,7 @@ export default function DebtTable({ debts }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.02 }}
               className="rounded-xl border bg-white p-4 cursor-pointer"
-              onClick={() => router.push(`/dashboard/debts/${debt.id}`)}
+              onClick={() => router.push(`/shop/debts/${debt.id}`)}
             >
               <div className="flex justify-between items-start">
                 <div>

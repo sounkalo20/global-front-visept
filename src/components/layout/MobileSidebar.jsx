@@ -1,30 +1,19 @@
+// components/layout/MobileSidebar.jsx
 'use client';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    X,
-    LayoutDashboard,
-    ShoppingCart,
-    Receipt,
-    DollarSign,
-    Package,
-    FolderTree,
-    Users,
-    Building2,
-    Settings,
-    User,
-    LogOut,
-} from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 import SidebarSection from './SidebarSection';
 import SidebarItem from './SidebarItem';
 import useSidebarStore from '@/store/sidebarStore';
 import useAuthStore from '@/store/authStore';
-import { cn } from '@/lib/utils';
+import useNavigation from '@/hooks/useNavigation';
 
 export default function MobileSidebar() {
     const { isMobileOpen, setMobileOpen } = useSidebarStore();
     const { user, logout } = useAuthStore();
     const router = useRouter();
+    const navigation = useNavigation();
 
     const handleLogout = () => {
         logout();
@@ -32,48 +21,10 @@ export default function MobileSidebar() {
         setMobileOpen(false);
     };
 
-    const navigation = [
-        {
-            section: 'Général',
-            items: [
-                { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-            ],
-        },
-        {
-            section: 'Finance',
-            items: [
-                { href: '/dashboard/sales', label: 'Ventes', icon: ShoppingCart },
-                { href: '/dashboard/expenses', label: 'Dépenses', icon: Receipt },
-                { href: '/dashboard/debts', label: 'Dettes', icon: DollarSign },
-            ],
-        },
-        {
-            section: 'Inventaire',
-            items: [
-                { href: '/dashboard/products', label: 'Produits', icon: Package },
-                { href: '/dashboard/categories', label: 'Catégories', icon: FolderTree },
-            ],
-        },
-        {
-            section: 'CRM',
-            items: [
-                { href: '/dashboard/clients', label: 'Clients', icon: Users },
-            ],
-        },
-        {
-            section: 'Entreprise',
-            items: [
-                { href: '/dashboard/companies', label: 'Entreprises', icon: Building2 },
-                // { href: '/dashboard/settings', label: 'Paramètres', icon: Settings },
-            ],
-        },
-    ];
-
     return (
         <AnimatePresence>
             {isMobileOpen && (
                 <>
-                    {/* Overlay */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -83,7 +34,6 @@ export default function MobileSidebar() {
                         onClick={() => setMobileOpen(false)}
                     />
 
-                    {/* Drawer */}
                     <motion.aside
                         initial={{ x: '-100%' }}
                         animate={{ x: 0 }}
@@ -113,7 +63,7 @@ export default function MobileSidebar() {
                             <p className="text-xs text-gray-500">{user?.email}</p>
                         </div>
 
-                        {/* Navigation */}
+                        {/* Navigation dynamique */}
                         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
                             {navigation.map((section) => (
                                 <SidebarSection key={section.section} title={section.section}>
@@ -132,12 +82,6 @@ export default function MobileSidebar() {
 
                         {/* Footer */}
                         <div className="border-t p-3 space-y-1">
-                            {/* <SidebarItem
-                                href="/dashboard/profile"
-                                icon={User}
-                                label="Mon profil"
-                                onClick={() => setMobileOpen(false)}
-                            /> */}
                             <button
                                 onClick={handleLogout}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors"

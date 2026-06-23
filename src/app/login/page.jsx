@@ -31,12 +31,19 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  // app/login/page.jsx (modifier uniquement la fonction onSubmit)
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
-      await login(data);
+      const response = await login(data);
       toast.success('Connexion réussie !');
-      router.push('/dashboard');
+
+      if (response.data.user.is_super_admin) {
+        router.push('/super_admin/dashboard');
+      } else {
+        // Rediriger vers la page companies qui décidera automatiquement
+        router.push('/companies');
+      }
     } catch (error) {
       const message = error.response?.data?.message || 'Erreur de connexion.';
       toast.error(message);

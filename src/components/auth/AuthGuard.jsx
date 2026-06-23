@@ -1,32 +1,69 @@
+// components/auth/AuthGuard.jsx
 'use client';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
+import useCompanyStore from '@/store/companyStore';
+import { getBasePath } from '@/lib/config/navigation';
 
 const publicRoutes = ['/login', '/register'];
+const noCompanyRoutes = ['/companies', '/companies/new'];
 
 export default function AuthGuard({ children }) {
-  const { isAuthenticated, isLoading, init } = useAuthStore();
+  const { isAuthenticated, isLoading, isSuperAdmin } = useAuthStore();
+  const { activeCompany, companies, isLoading: companiesLoading } = useCompanyStore();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    init();
-  }, []);
+    if (isLoading || companiesLoading) return;
 
-  useEffect(() => {
-    if (isLoading) return;
-
+    // Non connecté → login
     if (!isAuthenticated && !publicRoutes.includes(pathname)) {
-      router.push('/login');
+      router.replace('/login');
+      return;
     }
 
+    // Connecté sur une page publique → rediriger
     if (isAuthenticated && publicRoutes.includes(pathname)) {
-      router.push('/dashboard');
+      if (isSuperAdmin) {
+        router.replace('/super_admin/dashboard');
+      } else if (companies.length === 0) {
+        router.replace('/companies');
+      } else {
+        const company = activeCompany || companies[0];
+        const base = getBasePath(company.business_type?.code || 'SHOP');
+        router.replace(`${base}/dashboard`);
+      }
+      return;
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
 
-  if (isLoading) {
+    // Super admin sur route non admin
+    if (isAuthenticated && isSuperAdmin && !pathname.startsWith('/super_admin') && !publicRoutes.includes(pathname)) {
+      router.replace('/super_admin/dashboard');
+      return;
+    }
+
+    // Non-admin sur route super_admin
+    if (isAuthenticated && !isSuperAdmin && pathname.startsWith('/super_admin')) {
+      router.replace('/shop/dashboard');
+      return;
+    }
+
+    // Utilisateur lambda sans entreprise → bloquer sur /companies
+    if (
+      isAuthenticated &&
+      !isSuperAdmin &&
+      companies.length === 0 &&
+      !noCompanyRoutes.includes(pathname) &&
+      !publicRoutes.includes(pathname)
+    ) {
+      router.replace('/companies');
+      return;
+    }
+  }, [isAuthenticated, isLoading, isSuperAdmin, companies, activeCompany, companiesLoading, pathname, router]);
+
+  if (isLoading || companiesLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />

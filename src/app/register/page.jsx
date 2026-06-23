@@ -39,7 +39,7 @@ export default function RegisterPage() {
     try {
       await registerUser(data);
       toast.success('Compte créé avec succès !');
-      router.push('/dashboard');
+      router.push('/companies');
     } catch (error) {
       const message = error.response?.data?.message || "Erreur lors de l'inscription.";
       toast.error(message);
