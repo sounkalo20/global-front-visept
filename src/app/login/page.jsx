@@ -58,7 +58,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const response = await login(data);
-      toast.success('Connexion réussie !');
+      toast.success('Connexion réussie ! - redirection en cours......');
 
       if (response.data.user.is_super_admin) {
         router.push('/super_admin/dashboard');

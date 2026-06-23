@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, ArrowRight, Check, Plus } from 'lucide-react';
+import { Loader2, Check, Plus, HelpCircle, Package, Tags, Coins, Box, ImageIcon, Info } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -36,8 +36,31 @@ const productSchema = z.object({
     unit_id: z.string().optional(),
 });
 
+// --- Tooltip component maison ---
+const Tooltip = ({ content, children }) => (
+    <span className="group relative ml-1.5 inline-flex cursor-help">
+        <HelpCircle size={14} className="text-slate-400 hover:text-slate-600 transition-colors" />
+        <span className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-48 rounded-lg bg-slate-800 px-3 py-2 text-[11px] leading-relaxed text-slate-100 opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50 text-center">
+            {content}
+            <span className="absolute left-1/2 -bottom-1 -translate-x-1/2 h-2 w-2 rotate-45 bg-slate-800" />
+        </span>
+    </span>
+);
+
+// --- Section Header ---
+const SectionHeader = ({ icon: Icon, title, subtitle, color }) => (
+    <div className="flex items-start gap-3 pb-3 mb-1">
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', color)}>
+            <Icon size={20} className="text-white" />
+        </div>
+        <div>
+            <h3 className="font-semibold text-slate-800">{title}</h3>
+            <p className="text-xs text-slate-400">{subtitle}</p>
+        </div>
+    </div>
+);
+
 export default function ProductModal({ open, onOpenChange, product, onSuccess }) {
-    const [step, setStep] = useState(1);
     const [imageFile, setImageFile] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showNewCategory, setShowNewCategory] = useState(false);
@@ -91,11 +114,9 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                 unit_id: product.unit_id?.toString() || '1',
             });
             setImageFile(null);
-            setStep(1);
         } else if (!product && open) {
             reset();
             setImageFile(null);
-            setStep(1);
         }
     }, [product, open, reset]);
 
@@ -134,7 +155,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
         setIsSubmitting(false);
 
         if (result.success) {
-            toast.success(isEditing ? 'Produit modifié.' : 'Produit créé.');
+            toast.success(isEditing ? 'Produit modifié.' : 'Produit créé avec succès !');
             onOpenChange(false);
             if (onSuccess) onSuccess();
         } else {
@@ -158,155 +179,349 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
         }
     };
 
-    const totalSteps = 3;
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isEditing ? 'Modifier le produit' : 'Nouveau produit'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isEditing ? 'Modifiez les informations du produit.' : 'Ajoutez un nouveau produit à votre inventaire.'}
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="!max-w-4xl max-h-[90vh] overflow-y-auto p-0">
 
-                {/* Étapes */}
-                <div className="flex items-center justify-center gap-2 mb-6">
-                    {[1, 2, 3].map((s) => (
-                        <div key={s} className="flex items-center gap-2">
-                            <div
-                                className={cn(
-                                    'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
-                                    step > s ? 'bg-brand-600 text-white' :
-                                        step === s ? 'bg-brand-100 text-brand-700 border-2 border-brand-500' :
-                                            'bg-gray-100 text-gray-400'
-                                )}
-                            >
-                                {step > s ? <Check size={14} /> : s}
-                            </div>
-                            {s < totalSteps && <div className={cn('h-0.5 w-6', step > s ? 'bg-brand-600' : 'bg-gray-200')} />}
-                        </div>
-                    ))}
+                {/* --- Header --- */}
+                <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b px-8 py-5">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold text-slate-800">
+                            {isEditing ? '✏️ Modifier le produit' : '✨ Nouveau produit'}
+                        </DialogTitle>
+                        <DialogDescription className="text-sm text-slate-500 mt-1">
+                            {isEditing
+                                ? 'Modifiez les informations du produit existant.'
+                                : 'Remplissez le formulaire ci-dessous pour ajouter un produit à votre inventaire.'}
+                        </DialogDescription>
+                    </DialogHeader>
                 </div>
 
-                <AnimatePresence mode="wait">
-                    {/* STEP 1 */}
-                    {step === 1 && (
-                        <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                            <h3 className="font-medium">Informations produit</h3>
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">Nom *</label>
-                                <Input placeholder="Nom du produit" error={errors.name?.message} {...register('name')} />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">Description</label>
-                                <Input placeholder="Description courte" error={errors.description?.message} {...register('description')} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">SKU</label>
-                                    <Input placeholder="Réf. interne" error={errors.sku?.message} {...register('sku')} />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">Code-barres</label>
-                                    <Input placeholder="Scanner ou saisir" error={errors.barcode?.message} {...register('barcode')} />
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
+                {/* --- Formulaire --- */}
+                <form onSubmit={handleSubmit(onSubmit)} className="px-8 py-6 space-y-8">
 
-                    {/* STEP 2 */}
-                    {step === 2 && (
-                        <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                            <h3 className="font-medium">Prix & Stock</h3>
-                            <div className="grid grid-cols-2 gap-3">
+                    {/* ───────── SECTION 1 : Informations générales ───────── */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                    >
+                        <SectionHeader
+                            icon={Package}
+                            title="Informations générales"
+                            subtitle="Identité du produit"
+                            color="bg-blue-500"
+                        />
+
+                        <div className="space-y-5 mt-4">
+                            {/* Nom */}
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Nom du produit <span className="text-red-400 ml-0.5">*</span>
+                                    <Tooltip content="Le nom complet du produit tel qu'il apparaîtra dans votre catalogue et sur les tickets de caisse." />
+                                </label>
+                                <Input
+                                    placeholder="Ex: Riz parfumé 25kg"
+                                    error={errors.name?.message}
+                                    {...register('name')}
+                                    className="h-11"
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Description
+                                    <Tooltip content="Une description courte (optionnelle) pour donner plus de détails sur le produit. Visible dans le catalogue." />
+                                </label>
+                                <Input
+                                    placeholder="Description courte du produit..."
+                                    error={errors.description?.message}
+                                    {...register('description')}
+                                    className="h-11"
+                                />
+                            </div>
+
+                            {/* SKU + Code-barres */}
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700">Prix de revient</label>
-                                    <Input type="number" step="0.01" {...register('cost_price')} />
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        SKU (Référence)
+                                        <Tooltip content="Code interne unique pour identifier le produit dans votre gestion. Laissez vide pour génération automatique." />
+                                    </label>
+                                    <Input
+                                        placeholder="Ex: RIZ-001"
+                                        error={errors.sku?.message}
+                                        {...register('sku')}
+                                        className="h-11 font-mono text-sm"
+                                    />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-700">Prix vente détail *</label>
-                                    <Input type="number" step="0.01" error={errors.retail_price?.message} {...register('retail_price')} />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">Prix de gros</label>
-                                    <Input type="number" step="0.01" {...register('wholesale_price')} />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">Qté min. gros</label>
-                                    <Input type="number" {...register('wholesale_min_qty')} />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">Stock initial</label>
-                                    <Input type="number" {...register('current_stock')} />
-                                </div>
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">Seuil alerte</label>
-                                    <Input type="number" {...register('low_stock_threshold')} />
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        Code-barres
+                                        <Tooltip content="Code-barres EAN/UPC du produit. Utilisé pour le scan rapide en caisse. Vous pouvez le scanner directement." />
+                                    </label>
+                                    <Input
+                                        placeholder="Ex: 6181100310297"
+                                        error={errors.barcode?.message}
+                                        {...register('barcode')}
+                                        className="h-11 font-mono text-sm"
+                                    />
                                 </div>
                             </div>
-                        </motion.div>
-                    )}
+                        </div>
+                    </motion.section>
 
-                    {/* STEP 3 */}
-                    {step === 3 && (
-                        <motion.div key="s3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                            <h3 className="font-medium">Catégorie & Image</h3>
+                    {/* ───────── SECTION 2 : Prix ───────── */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 }}
+                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                    >
+                        <SectionHeader
+                            icon={Coins}
+                            title="Tarification"
+                            subtitle="Prix de revient et de vente"
+                            color="bg-amber-500"
+                        />
+
+                        <div className="space-y-5 mt-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Prix de revient */}
+                                <div>
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        Prix de revient
+                                        <Tooltip content="Le prix auquel vous achetez ce produit (coût d'achat). Sert à calculer vos marges." />
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0"
+                                            {...register('cost_price')}
+                                            className="h-11 pl-12"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Prix vente détail */}
+                                <div>
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        Prix vente détail <span className="text-red-400 ml-0.5">*</span>
+                                        <Tooltip content="Le prix auquel vous vendez ce produit à l'unité. C'est le prix affiché en boutique." />
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0"
+                                            error={errors.retail_price?.message}
+                                            {...register('retail_price')}
+                                            className="h-11 pl-12"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Prix de gros */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        Prix de gros
+                                        <Tooltip content="Prix spécial pour les achats en grande quantité. Laissez 0 si vous ne proposez pas de tarif de gros." />
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0"
+                                            {...register('wholesale_price')}
+                                            className="h-11 pl-12"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                        Qté min. gros
+                                        <Tooltip content="Quantité minimum à partir de laquelle le prix de gros s'applique." />
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        placeholder="1"
+                                        {...register('wholesale_min_qty')}
+                                        className="h-11"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* ───────── SECTION 3 : Stock ───────── */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                    >
+                        <SectionHeader
+                            icon={Box}
+                            title="Gestion du stock"
+                            subtitle="Quantités et alertes"
+                            color="bg-emerald-500"
+                        />
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Catégorie</label>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Stock initial
+                                    <Tooltip content="La quantité actuelle en stock. Pour un nouveau produit, indiquez le stock de départ." />
+                                </label>
+                                <Input
+                                    type="number"
+                                    placeholder="0"
+                                    {...register('current_stock')}
+                                    className="h-11"
+                                />
+                            </div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Seuil d'alerte
+                                    <Tooltip content="Quantité minimum avant de recevoir une alerte de réapprovisionnement. Par défaut : 10 unités." />
+                                </label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        placeholder="10"
+                                        {...register('low_stock_threshold')}
+                                        className="h-11 pr-10"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                        unités
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* ───────── SECTION 4 : Catégorie & Image ───────── */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                    >
+                        <SectionHeader
+                            icon={Tags}
+                            title="Classification & Image"
+                            subtitle="Catégorie et visuel du produit"
+                            color="bg-violet-500"
+                        />
+
+                        <div className="space-y-5 mt-4">
+                            {/* Catégorie */}
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Catégorie
+                                    <Tooltip content="Classez votre produit dans une catégorie pour mieux organiser votre inventaire et vos rapports de vente." />
+                                </label>
                                 {!showNewCategory ? (
                                     <div className="flex gap-2">
                                         <select
                                             {...register('category_id')}
-                                            className="flex-1 h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm"
+                                            className="flex-1 h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition-all appearance-none"
+                                            style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2394a3b8%27 stroke-width=%272%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                                         >
                                             <option value="">Aucune catégorie</option>
                                             {categories.map((cat) => (
                                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
                                             ))}
                                         </select>
-                                        <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
-                                            <Plus size={16} />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => setShowNewCategory(true)}
+                                            className="h-11 w-11 rounded-xl border-dashed border-slate-300 hover:border-violet-400 hover:text-violet-600 transition-all"
+                                        >
+                                            <Plus size={18} />
                                         </Button>
                                     </div>
                                 ) : (
-                                    <div className="flex gap-2">
-                                        <Input
-                                            placeholder="Nouvelle catégorie"
-                                            value={newCategoryName}
-                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                        />
-                                        <Button type="button" size="sm" onClick={handleAddCategory}>Ajouter</Button>
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)}>Annuler</Button>
-                                    </div>
+                                    <AnimatePresence>
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="flex gap-2"
+                                        >
+                                            <Input
+                                                placeholder="Nom de la catégorie"
+                                                value={newCategoryName}
+                                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                                className="h-11"
+                                                autoFocus
+                                            />
+                                            <Button type="button" size="sm" onClick={handleAddCategory} className="h-11 px-4 bg-violet-500 hover:bg-violet-600">
+                                                Ajouter
+                                            </Button>
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)} className="h-11">
+                                                Annuler
+                                            </Button>
+                                        </motion.div>
+                                    </AnimatePresence>
                                 )}
                             </div>
-                            <ImageUpload currentImage={product?.image_url} onFileChange={setImageFile} />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
-                {/* Navigation */}
-                <div className="flex justify-between mt-6 pt-4 border-t">
-                    {step > 1 ? (
-                        <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
-                            <ArrowLeft size={16} className="mr-1" /> Retour
+                            {/* Image */}
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    Image du produit
+                                    <Tooltip content="Ajoutez une photo du produit. Format conseillé : carré, minimum 400x400px. Max 2 Mo." />
+                                </label>
+                                <ImageUpload currentImage={product?.image_url} onFileChange={setImageFile} />
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* ───────── BOUTON SUBMIT ───────── */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex justify-end gap-3 pt-4 border-t border-slate-100"
+                    >
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="h-11 px-6 rounded-xl"
+                        >
+                            Annuler
                         </Button>
-                    ) : <div />}
-                    {step < totalSteps ? (
-                        <Button type="button" onClick={() => setStep(step + 1)}>
-                            Suivant <ArrowRight size={16} className="ml-1" />
-                        </Button>
-                    ) : (
-                        <Button type="button" onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="h-11 px-8 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 transition-all duration-300"
+                        >
                             {isSubmitting ? (
-                                <><Loader2 size={16} className="animate-spin mr-2" /> Enregistrement...</>
-                            ) : isEditing ? 'Enregistrer' : 'Créer le produit'}
+                                <span className="flex items-center gap-2">
+                                    <Loader2 size={18} className="animate-spin" />
+                                    Enregistrement...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    <Check size={18} />
+                                    {isEditing ? 'Enregistrer les modifications' : 'Créer le produit'}
+                                </span>
+                            )}
                         </Button>
-                    )}
-                </div>
+                    </motion.div>
+
+                </form>
             </DialogContent>
         </Dialog>
     );
