@@ -71,6 +71,7 @@ export default function ClientsPage() {
           clients={clients}
           onEdit={(c) => { setEditingClient(c); setModalOpen(true); }}
           onDelete={setDeletingClient}
+          viewLink="/shop/clients"
         />
       )}
 

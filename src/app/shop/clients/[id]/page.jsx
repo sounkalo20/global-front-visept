@@ -37,7 +37,7 @@ export default function ClientDetailPage() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <ClientDetail
         client={clientDetails}
-        onBack={() => router.push('/dashboard/clients')}
+        onBack={() => router.push('/shop/clients')}
         onEdit={() => setEditOpen(true)}
       />
       <ClientModal

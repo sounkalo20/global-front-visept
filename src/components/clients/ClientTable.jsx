@@ -5,7 +5,7 @@ import { Edit, Trash2, Eye, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export default function ClientTable({ clients, onEdit, onDelete }) {
+export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
     const router = useRouter();
 
     const getBadge = (client) => {
@@ -67,7 +67,7 @@ export default function ClientTable({ clients, onEdit, onDelete }) {
                                     </td>
                                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`/dashboard/clients/${client.id}`)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`${viewLink}/${client.id}`)}>
                                                 <Eye size={15} />
                                             </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(client)}>
@@ -96,7 +96,7 @@ export default function ClientTable({ clients, onEdit, onDelete }) {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.02 }}
                             className="rounded-xl border bg-white p-4 cursor-pointer"
-                            onClick={() => router.push(`/dashboard/clients/${client.id}`)}
+                            onClick={() => router.push(`${viewLink}/${client.id}`)}
                         >
                             <div className="flex justify-between items-start">
                                 <div>
