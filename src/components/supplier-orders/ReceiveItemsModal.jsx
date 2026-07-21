@@ -6,11 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import useSupplierOrderStore from '@/store/supplierOrderStore';
+import useWarehouseStore from '@/store/warehouseStore';
+import { useEffect } from 'react';
 
 export default function ReceiveItemsModal({ isOpen, onClose, order, items }) {
     const [quantities, setQuantities] = useState({});
+    const [destinationType, setDestinationType] = useState('shop');
+    const [warehouseId, setWarehouseId] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
     const { receiveItems } = useSupplierOrderStore();
+    const { warehouses, fetchWarehouses } = useWarehouseStore();
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchWarehouses();
+        }
+    }, [isOpen]);
 
     const handleQuantityChange = (itemId, value) => {
         setQuantities(prev => ({ ...prev, [itemId]: value }));
@@ -33,8 +45,13 @@ export default function ReceiveItemsModal({ isOpen, onClose, order, items }) {
             return;
         }
 
+        if (destinationType === 'warehouse' && !warehouseId) {
+            toast.error("Veuillez sélectionner un entrepôt.");
+            return;
+        }
+
         setIsSubmitting(true);
-        const result = await receiveItems(order.id, itemsToReceive);
+        const result = await receiveItems(order.id, itemsToReceive, destinationType, warehouseId);
         setIsSubmitting(false);
 
         if (result.success) {
@@ -54,6 +71,36 @@ export default function ReceiveItemsModal({ isOpen, onClose, order, items }) {
                 </DialogHeader>
 
                 <div className="space-y-3">
+                    {/* Choix de la destination */}
+                    {warehouses.length > 0 && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 mb-4 space-y-3">
+                            <label className="text-sm font-medium text-blue-900 block">Destination de la réception</label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="dest" checked={destinationType === 'shop'} onChange={() => setDestinationType('shop')} />
+                                    Boutique
+                                </label>
+                                <label className="flex items-center gap-2 text-sm">
+                                    <input type="radio" name="dest" checked={destinationType === 'warehouse'} onChange={() => setDestinationType('warehouse')} />
+                                    Entrepôt
+                                </label>
+                            </div>
+                            
+                            {destinationType === 'warehouse' && (
+                                <select 
+                                    className="w-full text-sm p-2 rounded border"
+                                    value={warehouseId}
+                                    onChange={e => setWarehouseId(e.target.value)}
+                                >
+                                    <option value="">Sélectionner un entrepôt...</option>
+                                    {warehouses.map(w => (
+                                        <option key={w.id} value={w.id}>{w.name}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                    )}
+
                     {items?.map((item) => {
                         const remaining = getRemaining(item);
                         if (remaining <= 0) return null;

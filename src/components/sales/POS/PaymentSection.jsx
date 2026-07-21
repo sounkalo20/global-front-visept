@@ -2,7 +2,7 @@
 'use client';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Percent, Banknote, Smartphone, Building2, Wallet } from 'lucide-react';
+import { Percent, Banknote, Smartphone, Building2, Wallet, Check } from 'lucide-react';
 
 export default function PaymentSection({
   paymentMethod,
@@ -52,13 +52,14 @@ export default function PaymentSection({
               type="button"
               onClick={() => handleDiscountTypeChange(opt.key)}
               className={cn(
-                'flex-1 py-2 text-xs font-medium rounded-lg border transition-colors',
+                'flex-1 py-2 text-xs font-medium rounded-lg border transition-all duration-200 flex items-center justify-center gap-1',
                 discountType === opt.key
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
               )}
             >
-              {opt.key === 'percentage' && <Percent size={12} className="inline mr-1" />}
+              {discountType === opt.key && <Check size={12} className="shrink-0" />}
+              {opt.key === 'percentage' && <Percent size={12} className="inline" />}
               {opt.label}
             </button>
           ))}
@@ -91,12 +92,13 @@ export default function PaymentSection({
               type="button"
               onClick={() => onPaymentMethodChange(m.key)}
               className={cn(
-                'flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-colors',
+                'flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-all duration-200 relative',
                 paymentMethod === m.key
-                  ? 'bg-brand-600 text-white border-brand-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
               )}
             >
+              {paymentMethod === m.key && <Check size={10} className="absolute top-1 right-1" />}
               <m.icon size={18} />
               {m.label}
             </button>

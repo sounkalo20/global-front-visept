@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
 import { getBasePath } from '@/lib/config/navigation';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 const publicRoutes = ['/login', '/register'];
 const noCompanyRoutes = ['/companies', '/companies/new'];
@@ -64,11 +65,7 @@ export default function AuthGuard({ children }) {
   }, [isAuthenticated, isLoading, isSuperAdmin, companies, activeCompany, companiesLoading, pathname, router]);
 
   if (isLoading || companiesLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
-      </div>
-    );
+    return <LoadingScreen variant="fullscreen" message="Chargement" />;
   }
 
   if (!isAuthenticated && !publicRoutes.includes(pathname)) {

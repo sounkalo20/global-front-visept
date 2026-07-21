@@ -19,6 +19,7 @@ import ImageUpload from './ImageUpload';
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
+import useWarehouseStore from '@/store/warehouseStore';
 import { cn } from '@/lib/utils';
 
 const productSchema = z.object({
@@ -69,6 +70,9 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
     const { addProduct, updateProduct } = useProductStore();
     const { activeCompany } = useCompanyStore();
     const { categories, addCategory } = useCategoryStore();
+    const { warehouses, fetchWarehouses } = useWarehouseStore();
+
+    const [warehouseStocks, setWarehouseStocks] = useState({});
 
     const isEditing = !!product;
 
@@ -117,8 +121,19 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
         } else if (!product && open) {
             reset();
             setImageFile(null);
+            setWarehouseStocks({});
+            if (activeCompany?.my_role === 'owner') {
+                fetchWarehouses();
+            }
         }
-    }, [product, open, reset]);
+    }, [product, open, reset, activeCompany]);
+
+    const handleWarehouseStockChange = (warehouseId, qty) => {
+        setWarehouseStocks(prev => ({
+            ...prev,
+            [warehouseId]: qty
+        }));
+    };
 
     const onSubmit = async (data) => {
         if (!activeCompany) return;
@@ -144,6 +159,18 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
 
         if (imageFile) {
             formData.append('image', imageFile);
+        }
+
+        if (!isEditing && activeCompany?.my_role === 'owner') {
+            const stocksArray = Object.entries(warehouseStocks)
+                .filter(([_, qty]) => parseFloat(qty) > 0)
+                .map(([warehouseId, qty]) => ({
+                    warehouse_id: parseInt(warehouseId),
+                    quantity: parseFloat(qty)
+                }));
+            if (stocksArray.length > 0) {
+                formData.append('warehouse_stocks', JSON.stringify(stocksArray));
+            }
         }
 
         let result;
@@ -404,6 +431,34 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                     </span>
                                 </div>
                             </div>
+                            
+                            {!isEditing && activeCompany?.my_role === 'owner' && warehouses.length > 0 && (
+                                <div className="col-span-2 mt-2 pt-4 border-t border-slate-100">
+                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-3">
+                                        Stock initial en entrepôt
+                                        <Tooltip content="Définissez les quantités initiales de ce produit dans vos entrepôts." />
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {warehouses.map(w => (
+                                            <div key={w.id} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-medium text-slate-800 line-clamp-1">{w.name}</p>
+                                                </div>
+                                                <div className="w-24">
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        min="0"
+                                                        value={warehouseStocks[w.id] || ''}
+                                                        onChange={(e) => handleWarehouseStockChange(w.id, e.target.value)}
+                                                        className="h-9 text-right"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </motion.section>
 

@@ -5,6 +5,8 @@ import SaleDetail from '@/components/sales/SaleDetail';
 import CancelSaleDialog from '@/components/sales/CancelSaleDialog';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal';
 
 export default function SaleDetailPage() {
   const { id } = useParams();
@@ -12,17 +14,14 @@ export default function SaleDetailPage() {
   const { currentSale, fetchSaleById, isLoading } = useSaleStore();
   const { activeCompany } = useCompanyStore();
   const [showCancel, setShowCancel] = useState(false);
+  const [printingSale, setPrintingSale] = useState(null);
 
   useEffect(() => {
     if (activeCompany) fetchSaleById(id, activeCompany.id);
   }, [id, activeCompany]);
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
-      </div>
-    );
+    return <LoadingScreen variant="inline" message="Chargement de la vente" />;
   }
 
   return (
@@ -31,8 +30,18 @@ export default function SaleDetailPage() {
         sale={currentSale}
         onBack={() => router.push('/shop/sales')}
         onCancel={() => setShowCancel(true)}
+        onPrintReceipt={(sale) => setPrintingSale(sale)}
         editLink={'/shop/sales/'}
       />
+      
+      {printingSale && (
+        <ReceiptPreviewModal 
+          sale={printingSale} 
+          open={!!printingSale} 
+          onOpenChange={(open) => !open && setPrintingSale(null)} 
+        />
+      )}
+
       <CancelSaleDialog
         sale={currentSale}
         open={showCancel}

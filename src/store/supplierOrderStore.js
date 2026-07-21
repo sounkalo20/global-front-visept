@@ -123,10 +123,10 @@ const useSupplierOrderStore = create((set, get) => ({
         }
     },
 
-    receiveItems: async (id, items) => {
+    receiveItems: async (id, items, destination_type = 'shop', warehouse_id = null) => {
         try {
             const companyId = useCompanyStore.getState().activeCompany?.id;
-            await supplierOrdersApi.receiveItems(id, { items, company_id: companyId });
+            await supplierOrdersApi.receiveItems(id, { items, company_id: companyId, destination_type, warehouse_id });
             get().fetchOrders();
             return { success: true };
         } catch (error) {

@@ -18,7 +18,8 @@ import {
     Calendar,
     Clock,
     Truck,
-    CircleDollarSign
+    DollarSign as CircleDollarSign,
+    Box
 } from 'lucide-react';
 
 /**
@@ -73,7 +74,8 @@ export const shopNavigation = [
             { href: '/shop/products', label: 'Produits', icon: Package },
             { href: '/shop/categories', label: 'Catégories', icon: FolderTree },
             { href: '/shop/suppliers', label: 'Fournisseurs', icon: Truck },
-            { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart }
+            { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart },
+            { href: '/shop/warehouses', label: 'Entrepôts', icon: Box, requireRole: 'owner' }
         ],
     },
     {

@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import useAuthStore from '@/store/authStore';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 const loginSchema = z.object({
   login: z.string().min(1, 'Email ou téléphone requis.'),
@@ -42,6 +43,7 @@ const itemVariants = {
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const { login } = useAuthStore();
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
@@ -58,7 +60,8 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       const response = await login(data);
-      toast.success('Connexion réussie ! - redirection en cours......');
+      setIsRedirecting(true);
+      toast.success('Connexion réussie !');
 
       if (response.data.user.is_super_admin) {
         router.push('/super_admin/dashboard');
@@ -76,6 +79,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-stone-50">
+      <LoadingScreen variant="overlay" message="Connexion réussie, redirection" show={isRedirecting} />
       {/* Panneau de marque — visible à partir de lg */}
       <div className="relative hidden w-[44%] flex-col justify-between overflow-hidden bg-stone-900 px-12 py-12 lg:flex">
         {/* texture grille */}

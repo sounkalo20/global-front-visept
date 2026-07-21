@@ -24,8 +24,9 @@ export default function ProductGrid({ products, cartItems, onAddToCart, onUpdate
 
   const filtered = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku?.toLowerCase().includes(search.toLowerCase())
+      (p.is_available === 1 || p.is_available === true) &&
+      (p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const getItemInCart = (productId) => cartItems.find((item) => item.product_id === productId);

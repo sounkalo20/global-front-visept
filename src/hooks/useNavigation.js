@@ -17,12 +17,24 @@ export default function useNavigation() {
         // 2. Mapping business_type_id -> code
         const typeCode = BUSINESS_TYPE_MAP[activeCompany?.business_type_id];
 
+        let baseNav = [];
         if (typeCode) {
-            return getNavigationByType(typeCode);
+            baseNav = getNavigationByType(typeCode);
+        } else {
+            baseNav = getNavigationByType('SHOP');
         }
 
-        // 3. fallback
-        return getNavigationByType('SHOP');
+        // Filter out items that require a role the user doesn't have
+        const isOwner = activeCompany?.my_role === 'owner';
+        return baseNav.map(section => {
+            return {
+                ...section,
+                items: section.items.filter(item => {
+                    if (item.requireRole === 'owner' && !isOwner) return false;
+                    return true;
+                })
+            };
+        }).filter(section => section.items.length > 0);
     }, [isSuperAdmin, activeCompany]);
 
     return navigation;

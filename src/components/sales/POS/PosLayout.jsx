@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProductGrid from './ProductGrid';
@@ -14,6 +14,10 @@ import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
+import useFullscreen from '@/hooks/useFullscreen';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal';
 
 export default function PosLayout({ mode = 'create', saleId = null, backLink }) {
   const router = useRouter();
@@ -24,6 +28,8 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSale, setIsLoadingSale] = useState(false);
   const [cartExpanded, setCartExpanded] = useState(true);
+  const [completedSale, setCompletedSale] = useState(null);
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const isEditMode = mode === 'edit';
 
@@ -58,19 +64,20 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
     if (result.success) {
       toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
-      cart.clearCart();
-      if (activeCompany) fetchProducts(activeCompany.id);
+      setCompletedSale(result.sale);
     } else {
       toast.error(result.message);
     }
   };
 
+  const handleReceiptClosed = () => {
+    cart.clearCart();
+    if (activeCompany) fetchProducts(activeCompany.id);
+    setCompletedSale(null);
+  };
+
   if (isLoadingSale) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <Loader2 size={32} className="animate-spin text-brand-600" />
-      </div>
-    );
+    return <LoadingScreen variant="fullscreen" message="Chargement de la vente" />;
   }
 
   const itemsCount = cart.getItemsCount();
@@ -102,6 +109,20 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleFullscreen}
+                  className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-700"
+                  aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+                >
+                  {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+              </TooltipContent>
+            </Tooltip>
             <ShoppingCart size={16} />
             <span>{itemsCount} article{itemsCount > 1 ? 's' : ''}</span>
             {itemsCount > 0 && (
@@ -226,6 +247,16 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           )}
         </Button>
       </div>
+      
+      {completedSale && (
+        <ReceiptPreviewModal 
+          sale={completedSale} 
+          open={!!completedSale} 
+          onOpenChange={(open) => {
+            if (!open) handleReceiptClosed();
+          }} 
+        />
+      )}
     </div>
   );
 }
