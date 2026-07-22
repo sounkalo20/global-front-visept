@@ -9,8 +9,15 @@ export const superAdminApi = {
     getCompanies: (params = {}) => api.get('/super-admin/companies', { params }),
     getCompanyStats: () => api.get('/super-admin/companies/stats'),
     getCompanyDetail: (id) => api.get(`/super-admin/companies/${id}`),
+    createCompany: (data) => api.post('/super-admin/companies', data),
     suspendCompany: (id, data = {}) => api.put(`/super-admin/companies/${id}/suspend`, data),
     reactivateCompany: (id) => api.put(`/super-admin/companies/${id}/reactivate`),
+
+    // Owners
+    getOwners: () => api.get('/super-admin/owners'),
+    createOwner: (data) => api.post('/super-admin/owners', data),
+    grantUnlimitedAccess: (id) => api.put(`/super-admin/owners/${id}/grant-unlimited`),
+    revokeUnlimitedAccess: (id) => api.put(`/super-admin/owners/${id}/revoke-unlimited`),
 
     // Payments
     getPendingPayments: (params = {}) => api.get('/super-admin/payments/pending', { params }),

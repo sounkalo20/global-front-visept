@@ -4,7 +4,7 @@ import {
   ArrowLeft, User, CreditCard, AlertCircle, Edit, Calendar,
   Receipt, Banknote, Smartphone, Building2, Package, Hash,
   Printer, Clock, Tag, ShoppingBag, UserCheck, Percent,
-  CheckCircle2, XCircle, AlertTriangle as AlertTriangleIcon
+  CheckCircle2, XCircle, AlertTriangle as AlertTriangleIcon, RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const statusConfig = {
   paid: { label: 'Payé', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2, dot: 'bg-emerald-500' },
@@ -43,7 +51,7 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 };
 
-export default function SaleDetail({ sale, onBack, onCancel, editLink, variant = 'shop', onPrintReceipt }) {
+export default function SaleDetail({ sale, onBack, onCancel, onReturn, editLink, variant = 'shop', onPrintReceipt }) {
   if (!sale) return null;
 
   const payStatus = statusConfig[sale.payment_status] || statusConfig.unpaid;
@@ -58,6 +66,17 @@ export default function SaleDetail({ sale, onBack, onCancel, editLink, variant =
   const paid = parseInt(sale.amount_paid || 0);
   const due = parseInt(sale.amount_due || 0);
   const paymentProgress = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
+  
+  const [showEditErrorModal, setShowEditErrorModal] = useState(false);
+  const hasReturns = sale.returns && sale.returns.length > 0;
+
+  const handleEditClick = () => {
+    if (hasReturns) {
+      setShowEditErrorModal(true);
+    } else {
+      router.push(editLink + `/${sale.id}/edit`);
+    }
+  };
 
   return (
     <motion.div
@@ -128,10 +147,19 @@ export default function SaleDetail({ sale, onBack, onCancel, editLink, variant =
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(editLink + `/${sale.id}/edit`)}
+                    onClick={handleEditClick}
                   >
                     <Edit size={14} className="mr-1.5" /> Modifier
                   </Button>
+                  {onReturn && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onReturn(sale)}
+                    >
+                      <RotateCcw size={14} className="mr-1.5" /> Retourner
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -324,6 +352,66 @@ export default function SaleDetail({ sale, onBack, onCancel, editLink, variant =
               </Card>
             </motion.div>
           )}
+
+          {/* Retours */}
+          {sale.returns && sale.returns.length > 0 && (
+            <motion.div variants={itemVariants} className="space-y-4">
+              <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                <RotateCcw size={20} className="text-red-500" />
+                Retours enregistrés
+              </h3>
+              {sale.returns.map((ret, idx) => (
+                <Card key={ret.id} className="border-red-100 shadow-sm overflow-hidden border">
+                  <CardHeader className="bg-red-50/50 pb-3">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-red-700">{ret.return_number}</span>
+                        <span className="text-xs text-stone-500 font-normal">
+                          le {new Date(ret.created_at).toLocaleDateString('fr-FR')} par {ret.created_by_name}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="text-red-600 border-red-200 bg-white">
+                        -{parseInt(ret.total_amount_returned).toLocaleString()} F
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-stone-100">
+                      {ret.items?.map((item) => (
+                        <div key={item.id} className="px-5 py-3 flex items-center justify-between bg-white hover:bg-stone-50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-stone-100 flex items-center justify-center shrink-0">
+                              <Package size={14} className="text-stone-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-stone-900">{item.product_name}</p>
+                              <p className="text-xs text-stone-500">
+                                {item.return_type === 'reintegrable' ? 'Réintégré au stock' : 'Perte / Défectueux'}
+                                {item.reason && ` • Motif: ${item.reason}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-bold text-stone-900">
+                              {parseInt(item.total_price).toLocaleString()} F
+                            </p>
+                            <p className="text-xs text-stone-500">
+                              {item.quantity} x {parseInt(item.unit_price).toLocaleString()} F
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {ret.notes && (
+                      <div className="px-5 py-3 bg-red-50/30 border-t border-red-50 text-sm text-stone-600">
+                        <span className="font-medium text-stone-900">Note:</span> {ret.notes}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </motion.div>
+          )}
         </motion.div>
 
         {/* ── COL DROITE : Résumé paiement ── */}
@@ -459,6 +547,25 @@ export default function SaleDetail({ sale, onBack, onCancel, editLink, variant =
           </Card>
         </motion.div>
       </div>
+
+      <Dialog open={showEditErrorModal} onOpenChange={setShowEditErrorModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangleIcon size={20} />
+              Modification impossible
+            </DialogTitle>
+            <DialogDescription className="pt-3">
+              Cette vente ne peut plus être modifiée car <strong>des retours produits ont déjà été enregistrés</strong>. 
+              <br/><br/>
+              Pour garantir l'intégrité comptable et l'historique des mouvements de stock, une vente ayant fait l'objet d'un retour est verrouillée en écriture. Si vous devez absolument corriger cette vente, vous devrez l'annuler entièrement et en créer une nouvelle.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button onClick={() => setShowEditErrorModal(false)}>Compris</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

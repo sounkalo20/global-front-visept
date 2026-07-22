@@ -19,7 +19,8 @@ import {
     Clock,
     Truck,
     DollarSign as CircleDollarSign,
-    Box
+    Box,
+    RotateCcw
 } from 'lucide-react';
 
 /**
@@ -36,6 +37,7 @@ export const superAdminNavigation = [
         section: 'Gestion',
         items: [
             { href: '/super_admin/companies', label: 'Entreprises', icon: Building2 },
+            { href: '/super_admin/owners', label: 'Propriétaires', icon: Users },
             { href: '/super_admin/subscriptions', label: 'Abonnements', icon: CreditCard },
             { href: '/super_admin/payments', label: 'Paiements', icon: DollarSign },
         ],
@@ -63,6 +65,7 @@ export const shopNavigation = [
         section: 'Finance',
         items: [
             { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart },
+            { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw },
             { href: '/shop/expenses', label: 'Dépenses', icon: Receipt },
             { href: '/shop/debts', label: 'Dettes', icon: DollarSign },
             { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign }
@@ -87,7 +90,8 @@ export const shopNavigation = [
     {
         section: 'Entreprise',
         items: [
-            { href: '/shop/companies', label: 'Entreprises', icon: Building2 },
+            { href: '/shop/companies', label: 'Entreprises', icon: Building2, requireRole: 'owner' },
+            { href: '/shop/employees', label: 'Employés', icon: Users, requireRole: 'owner' },
         ],
     },
 ];

@@ -77,9 +77,10 @@ export default function ShopDashboard() {
 
     const kpis = [
         { label: 'Ventes du jour', value: data.today?.total_sales || 0, sub: `Panier moyen: ${Number(data.today?.average_sale || 0).toLocaleString()} FCFA`, icon: ShoppingCart, color: 'bg-blue-50 text-blue-600', trend: null },
-        { label: 'Revenu du jour', value: formatFCFA(data.today?.total_revenue || 0), icon: DollarSign, color: 'bg-green-50 text-green-600', trend: null },
-        { label: 'Revenu du mois', value: formatFCFA(data.this_month?.total_revenue || 0), sub: `${data.this_month?.total_sales || 0} ventes`, icon: TrendingUp, color: 'bg-purple-50 text-purple-600', trend: 'up' },
-        { label: 'Dettes clients', value: formatFCFA(data.debts?.total_remaining || 0), sub: `${data.debts?.overdue_count || 0} en retard`, icon: CreditCard, color: 'bg-red-50 text-red-600', trend: 'down' },
+        { label: 'Revenu net du jour', value: formatFCFA(data.today?.total_revenue || 0), sub: `Retours: ${formatFCFA(data.today?.total_returned || 0)}`, icon: DollarSign, color: 'bg-green-50 text-green-600', trend: null },
+        { label: 'Revenu net du mois', value: formatFCFA(data.this_month?.total_revenue || 0), sub: `${data.this_month?.total_sales || 0} ventes`, icon: TrendingUp, color: 'bg-purple-50 text-purple-600', trend: 'up' },
+        { label: 'Total Retours (mois)', value: formatFCFA(data.this_month?.total_returned || 0), icon: DollarSign, color: 'bg-red-50 text-red-600', trend: null },
+        { label: 'Dettes clients', value: formatFCFA(data.debts?.total_remaining || 0), sub: `${data.debts?.overdue_count || 0} en retard`, icon: CreditCard, color: 'bg-orange-50 text-orange-600', trend: 'down' },
         { label: 'Dépenses du mois', value: formatFCFA(data.expenses?.total_amount || 0), icon: Receipt, color: 'bg-orange-50 text-orange-600', trend: null },
         { label: 'Stock bas / Rupture', value: `${data.products?.low_stock || 0} / ${data.products?.out_of_stock || 0}`, icon: AlertTriangle, color: 'bg-amber-50 text-amber-600', trend: null },
     ];

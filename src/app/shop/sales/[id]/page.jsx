@@ -8,12 +8,15 @@ import useCompanyStore from '@/store/companyStore';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal';
 
+import ReturnSaleModal from '@/components/sales/ReturnSaleModal';
+
 export default function SaleDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const { currentSale, fetchSaleById, isLoading } = useSaleStore();
   const { activeCompany } = useCompanyStore();
   const [showCancel, setShowCancel] = useState(false);
+  const [showReturn, setShowReturn] = useState(false);
   const [printingSale, setPrintingSale] = useState(null);
 
   useEffect(() => {
@@ -30,6 +33,7 @@ export default function SaleDetailPage() {
         sale={currentSale}
         onBack={() => router.push('/shop/sales')}
         onCancel={() => setShowCancel(true)}
+        onReturn={() => setShowReturn(true)}
         onPrintReceipt={(sale) => setPrintingSale(sale)}
         editLink={'/shop/sales/'}
       />
@@ -46,6 +50,13 @@ export default function SaleDetailPage() {
         sale={currentSale}
         open={showCancel}
         onOpenChange={setShowCancel}
+        onSuccess={() => fetchSaleById(id, activeCompany.id)}
+      />
+
+      <ReturnSaleModal
+        sale={currentSale}
+        open={showReturn}
+        onOpenChange={setShowReturn}
         onSuccess={() => fetchSaleById(id, activeCompany.id)}
       />
     </div>

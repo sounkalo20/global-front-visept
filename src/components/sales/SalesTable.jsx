@@ -1,7 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { Eye } from 'lucide-react';
+import { Eye, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -57,8 +57,16 @@ export default function SalesTable({ sales }) {
                   className="hover:bg-gray-50"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium text-sm">{sale.sale_number}</p>
-                    <p className="text-xs text-gray-400">{new Date(sale.sale_date).toLocaleDateString('fr-FR')}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm">{sale.sale_number}</p>
+                      {sale.returned_amount > 0 && (
+                        <span className="flex items-center gap-1 bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-red-100" title={`Retour de ${parseInt(sale.returned_amount).toLocaleString()} F`}>
+                          <RotateCcw size={10} />
+                          -{parseInt(sale.returned_amount).toLocaleString()} F
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">{new Date(sale.sale_date).toLocaleDateString('fr-FR')}</p>
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
@@ -99,8 +107,16 @@ export default function SalesTable({ sales }) {
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="font-medium">{sale.sale_number}</p>
-                  <p className="text-sm text-gray-500">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{sale.sale_number}</p>
+                    {sale.returned_amount > 0 && (
+                      <span className="flex items-center gap-1 bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-red-100">
+                        <RotateCcw size={10} />
+                        -{parseInt(sale.returned_amount).toLocaleString()} F
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-0.5">
                     {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
                   </p>
                 </div>

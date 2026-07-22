@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Ban, CheckCircle } from 'lucide-react';
+import { Eye, Ban, CheckCircle, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -136,14 +136,25 @@ export default function CompaniesTable() {
                                     <span className="text-sm">{company.business_type_name}</span>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="outline" className="text-xs">
-                                        {company.plan_name}
-                                    </Badge>
+                                    {company.plan_code === 'UNLIMITED' ? (
+                                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 text-xs">
+                                            <Crown size={12} />
+                                            Admin Illimité
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-xs">
+                                            {company.plan_name}
+                                        </Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell>
-                                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[company.subscription_status]?.className}`}>
-                                        {statusConfig[company.subscription_status]?.label || company.subscription_status}
-                                    </span>
+                                    {company.plan_code === 'UNLIMITED' ? (
+                                        <span className="text-xs text-amber-700 font-medium">À vie</span>
+                                    ) : (
+                                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[company.subscription_status]?.className}`}>
+                                            {statusConfig[company.subscription_status]?.label || company.subscription_status}
+                                        </span>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-center">{company.total_users}</TableCell>
                                 <TableCell className="text-center">{company.total_products}</TableCell>

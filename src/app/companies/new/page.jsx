@@ -92,6 +92,7 @@ export default function NewCompanyPage() {
     const [logoPreview, setLogoPreview] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { addCompany, setActiveCompany } = useCompanyStore();
+    const { user } = useAuthStore();
     const router = useRouter();
 
     const {
@@ -448,10 +449,16 @@ export default function NewCompanyPage() {
                                     )}
                                     <div className="flex justify-between py-2">
                                         <span className="text-gray-500 text-sm">Plan</span>
-                                        <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">
-                                            <Sparkles size={12} />
-                                            Gratuit
-                                        </span>
+                                        {user?.has_unlimited_access ? (
+                                            <span className="inline-flex items-center gap-1 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                                👑 Admin Illimité
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">
+                                                <Sparkles size={12} />
+                                                Gratuit
+                                            </span>
+                                        )}
                                     </div>
                                     {logoPreview && (
                                         <div className="flex justify-between items-center py-2 border-t border-gray-100">
