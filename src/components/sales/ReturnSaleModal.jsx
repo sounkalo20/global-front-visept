@@ -41,7 +41,7 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
   };
 
   const hasItemsToReturn = itemsToReturn.some(i => i.returningQty > 0);
-  
+
   const totalAmountToReturn = itemsToReturn.reduce((sum, item) => {
     return sum + (item.returningQty * parseInt(item.unit_price));
   }, 0);
@@ -111,12 +111,12 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-2 self-start ml-auto sm:ml-0">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
                         className="h-9 w-9 md:h-10 md:w-10"
                         disabled={item.returningQty <= 0}
                         onClick={() => updateItem(item.id, 'returningQty', item.returningQty - 1)}
@@ -126,10 +126,10 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
                       <div className="w-16 text-center font-medium text-lg">
                         {item.returningQty}
                       </div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="icon" 
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
                         className="h-9 w-9 md:h-10 md:w-10"
                         disabled={item.returningQty >= item.quantity}
                         onClick={() => updateItem(item.id, 'returningQty', item.returningQty + 1)}
@@ -143,8 +143,8 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Type de retour</Label>
-                        <Select 
-                          value={item.returnType} 
+                        <Select
+                          value={item.returnType}
                           onValueChange={(val) => updateItem(item.id, 'returnType', val)}
                         >
                           <SelectTrigger className="h-10 text-sm">
@@ -158,9 +158,9 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Motif (optionnel)</Label>
-                        <Input 
-                          className="h-10 text-sm" 
-                          placeholder="Ex: Mauvaise taille..." 
+                        <Input
+                          className="h-10 text-sm"
+                          placeholder="Ex: Mauvaise taille..."
                           value={item.reason}
                           onChange={(e) => updateItem(item.id, 'reason', e.target.value)}
                         />
@@ -173,15 +173,15 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">Notes supplémentaires (Globales)</Label>
-              <Textarea 
-                placeholder="Informations supplémentaires sur le retour..." 
+              <Textarea
+                placeholder="Informations supplémentaires sur le retour..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="resize-none min-h-[80px]"
                 rows={3}
               />
             </div>
-            
+
             {hasItemsToReturn && (
               <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-3">
                 <AlertCircle size={18} className="text-blue-600 mt-0.5 shrink-0" />
@@ -194,20 +194,19 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
         </div>
 
         <DialogFooter className="px-6 md:px-8 py-4 md:py-5 border-t bg-gray-50 shrink-0 flex gap-3">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => onOpenChange(false)} 
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
             disabled={isLoading}
             className="h-11 px-6"
           >
             Annuler
           </Button>
-          <Button 
+          <Button
             type="submit"
             form="return-form"
             disabled={!hasItemsToReturn || isLoading}
-            className="h-11 px-6 bg-brand-600 hover:bg-brand-700 min-w-[200px]"
           >
             {isLoading ? 'Enregistrement...' : `Confirmer le retour (${totalAmountToReturn.toLocaleString()} F)`}
           </Button>
