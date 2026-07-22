@@ -106,6 +106,14 @@ const useCompanyStore = create((set, get) => ({
         isLoading: false,
         isFetched: true,
       });
+
+      // Persister dans le localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('visept_companies', JSON.stringify(companies));
+        if (activeCompany) {
+          localStorage.setItem('visept_activeCompany', JSON.stringify(activeCompany));
+        }
+      }
     } catch {
       set({ isLoading: false, isFetched: true });
     }
