@@ -9,6 +9,7 @@ import ExpenseModal from '@/components/expenses/ExpenseModal';
 import ExpenseDetailModal from '@/components/expenses/ExpenseDetailModal';
 import DeleteExpenseDialog from '@/components/expenses/DeleteExpenseDialog';
 import EmptyExpenseState from '@/components/expenses/EmptyExpenseState';
+import ExportExpensesPDFDialog from '@/components/expenses/ExportExpensesPDFDialog';
 import useExpenseStore from '@/store/expenseStore';
 import useCompanyStore from '@/store/companyStore';
 
@@ -60,9 +61,12 @@ export default function ExpensesPage() {
           <h1 className="text-2xl font-bold">Dépenses</h1>
           <p className="text-gray-500 text-sm">Suivi et gestion de vos dépenses</p>
         </div>
-        <Button onClick={() => { setEditingExpense(null); setModalOpen(true); }}>
-          <Plus size={18} className="mr-2" /> Nouvelle dépense
-        </Button>
+        <div className="flex items-center gap-3">
+          <ExportExpensesPDFDialog />
+          <Button onClick={() => { setEditingExpense(null); setModalOpen(true); }}>
+            <Plus size={18} className="mr-2" /> Nouvelle dépense
+          </Button>
+        </div>
       </div>
 
       <ExpenseStats stats={stats} />

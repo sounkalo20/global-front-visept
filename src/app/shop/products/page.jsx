@@ -9,6 +9,7 @@ import DeleteProductDialog from '@/components/products/DeleteProductDialog';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductStats from '@/components/products/ProductStats';
 import EmptyProductState from '@/components/products/EmptyProductState';
+import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButton';
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
@@ -62,9 +63,12 @@ export default function ProductsPage() {
             <p className="text-gray-500 mt-1">{totalProducts} produit{totalProducts > 1 ? 's' : ''}</p>
           </div>
           {products.length > 0 && (
-            <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
-              <Plus size={18} className="mr-2" /> Nouveau produit
-            </Button>
+            <div className="flex items-center gap-3">
+              <ExportProductsPDFButton />
+              <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
+                <Plus size={18} className="mr-2" /> Nouveau produit
+              </Button>
+            </div>
           )}
         </div>
 

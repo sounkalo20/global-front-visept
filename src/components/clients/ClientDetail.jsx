@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Phone, Mail, MapPin, ShoppingBag, DollarSign, Calendar, FileText, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import ExportClientProfilePDFButton from './ExportClientProfilePDFButton';
 
 export default function ClientDetail({ client, onBack, onEdit }) {
     if (!client) return null;
@@ -20,9 +21,12 @@ export default function ClientDetail({ client, onBack, onEdit }) {
                         <p className="text-sm text-gray-500">Client depuis {new Date(client.created_at).toLocaleDateString('fr-FR')}</p>
                     </div>
                 </div>
-                <Button variant="outline" onClick={() => onEdit(client)}>
-                    <Edit size={16} className="mr-2" /> Modifier
-                </Button>
+                <div className="flex items-center gap-3">
+                    <ExportClientProfilePDFButton client={client} />
+                    <Button variant="outline" onClick={() => onEdit(client)}>
+                        <Edit size={16} className="mr-2" /> Modifier
+                    </Button>
+                </div>
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">

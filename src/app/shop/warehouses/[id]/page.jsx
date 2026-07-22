@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRightLeft, Package, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useWarehouseStore from '@/store/warehouseStore';
 import TransferModal from '@/components/warehouses/TransferModal';
+import ExportWarehouseStockPDFButton from '@/components/warehouses/ExportWarehouseStockPDFButton';
+import ExportWarehouseHistoryPDFDialog from '@/components/warehouses/ExportWarehouseHistoryPDFDialog';
 
 export default function WarehouseDetailPage() {
     const { id } = useParams();
@@ -63,6 +65,14 @@ export default function WarehouseDetailPage() {
                             <p className="text-sm text-gray-500 mt-1">{currentWarehouse.address}</p>
                         )}
                     </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    {activeTab === 'stocks' && (
+                        <ExportWarehouseStockPDFButton warehouseId={id} warehouseName={currentWarehouse.name} />
+                    )}
+                    {activeTab === 'movements' && (
+                        <ExportWarehouseHistoryPDFDialog warehouseId={id} warehouseName={currentWarehouse.name} />
+                    )}
                 </div>
             </div>
 

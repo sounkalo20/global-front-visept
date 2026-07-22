@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import SalesStats from '@/components/sales/SalesStats';
 import SalesFilters from '@/components/sales/SalesFilters';
 import SalesTable from '@/components/sales/SalesTable';
+import ExportSalesPDFDialog from '@/components/sales/ExportSalesPDFDialog';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
 
@@ -39,9 +40,12 @@ export default function SalesPage() {
           <h1 className="text-2xl font-bold">Ventes</h1>
           <p className="text-gray-500 text-sm">Historique et gestion des ventes</p>
         </div>
-        <Button onClick={() => router.push('/shop/sales/new')} size="lg">
-          <Plus size={20} className="mr-2" /> Nouvelle vente
-        </Button>
+        <div className="flex items-center gap-3">
+          <ExportSalesPDFDialog />
+          <Button onClick={() => router.push('/shop/sales/new')} size="lg">
+            <Plus size={20} className="mr-2" /> Nouvelle vente
+          </Button>
+        </div>
       </div>
 
       <SalesStats stats={stats} />

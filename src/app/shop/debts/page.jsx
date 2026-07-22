@@ -7,6 +7,7 @@ import DebtStats from '@/components/debts/DebtStats';
 import DebtFilters from '@/components/debts/DebtFilters';
 import DebtTable from '@/components/debts/DebtTable';
 import EmptyDebtState from '@/components/debts/EmptyDebtState';
+import ExportDebtsPDFDialog from '@/components/debts/ExportDebtsPDFDialog';
 import useDebtStore from '@/store/debtStore';
 import useCompanyStore from '@/store/companyStore';
 
@@ -56,9 +57,12 @@ export default function DebtsPage() {
           <h1 className="text-2xl font-bold">Dettes clients</h1>
           <p className="text-gray-500 text-sm">Suivi des ventes à crédit</p>
         </div>
-        <Button onClick={() => router.push('/shop/debts/new')}>
-          <Plus size={18} className="mr-2" /> Nouvelle vente à crédit
-        </Button>
+        <div className="flex items-center gap-3">
+          <ExportDebtsPDFDialog />
+          <Button onClick={() => router.push('/shop/debts/new')}>
+            <Plus size={18} className="mr-2" /> Nouvelle vente à crédit
+          </Button>
+        </div>
       </div>
 
       <DebtStats stats={stats} />

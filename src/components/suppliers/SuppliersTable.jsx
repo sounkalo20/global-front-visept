@@ -18,18 +18,17 @@ import {
     PaginationPrevious,
     PaginationNext,
 } from '@/components/ui/pagination';
-import SupplierDetailModal from './SupplierDetailModal';
-import SupplierFormModal from './SupplierFormModal';
 import ConfirmModal from '@/components/super-admin/ConfirmModal';
+import SupplierFormModal from './SupplierFormModal';
 import useSupplierStore from '@/store/supplierStore';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function SuppliersTable() {
     const { suppliers, pagination, isLoading, setPage, deleteSupplier, toggleStatus } =
         useSupplierStore();
+    const router = useRouter();
 
-    const [selectedSupplierId, setSelectedSupplierId] = useState(null);
-    const [detailOpen, setDetailOpen] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState(null);
 
@@ -39,8 +38,7 @@ export default function SuppliersTable() {
     const [confirmLoading, setConfirmLoading] = useState(false);
 
     const openDetail = (id) => {
-        setSelectedSupplierId(id);
-        setDetailOpen(true);
+        router.push(`/shop/suppliers/${id}`);
     };
 
     const openEdit = (supplier) => {
@@ -186,15 +184,6 @@ export default function SuppliersTable() {
                     </Pagination>
                 </div>
             )}
-
-            <SupplierDetailModal
-                isOpen={detailOpen}
-                onClose={() => setDetailOpen(false)}
-                supplierId={selectedSupplierId}
-                onEdit={(s) => { setDetailOpen(false); openEdit(s); }}
-                onToggleStatus={openToggleConfirm}
-                onDelete={openDeleteConfirm}
-            />
 
             <SupplierFormModal
                 isOpen={formOpen}
