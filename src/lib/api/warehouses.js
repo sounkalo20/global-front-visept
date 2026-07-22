@@ -10,5 +10,7 @@ export const warehouseApi = {
     getStocks: (id) => api.get(`/warehouses/${id}/stocks`),
     getMovements: (id) => api.get(`/warehouses/${id}/movements`),
     getProductStocks: (catalog_product_id) => api.get(`/warehouses/product/${catalog_product_id}`),
+    getGlobalProductMovements: (catalog_product_id) => api.get(`/warehouses/product/${catalog_product_id}/movements`),
+    searchGlobalProducts: (query) => api.get(`/warehouses/search`, { params: { q: query } }),
     transferToShop: (id, data) => api.post(`/warehouses/${id}/transfer`, data)
 };

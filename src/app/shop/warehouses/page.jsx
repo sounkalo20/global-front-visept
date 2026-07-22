@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import useWarehouseStore from '@/store/warehouseStore';
 import { useRouter } from 'next/navigation';
 import WarehouseFormModal from '@/components/warehouses/WarehouseFormModal';
+import GlobalProductSearch from '@/components/warehouses/GlobalProductSearch';
+import GlobalProductDetails from '@/components/warehouses/GlobalProductDetails';
 
 export default function WarehousesPage() {
     const { warehouses, fetchWarehouses, isLoading } = useWarehouseStore();
     const [formOpen, setFormOpen] = useState(false);
     const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+    const [searchedProduct, setSearchedProduct] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -45,7 +48,21 @@ export default function WarehousesPage() {
                 </Button>
             </div>
 
-            {isLoading ? (
+            {/* Barre de recherche intelligente */}
+            {!searchedProduct && (
+                <div className="bg-brand-50 p-6 rounded-xl border border-brand-100 flex flex-col items-center text-center gap-3">
+                    <div className="w-full max-w-xl mx-auto">
+                        <GlobalProductSearch onSelectProduct={(product) => setSearchedProduct(product)} />
+                    </div>
+                </div>
+            )}
+
+            {searchedProduct ? (
+                <GlobalProductDetails 
+                    product={searchedProduct} 
+                    onClose={() => setSearchedProduct(null)} 
+                />
+            ) : isLoading ? (
                 <div className="flex justify-center p-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
                 </div>
