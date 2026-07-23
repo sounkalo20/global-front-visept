@@ -3,9 +3,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import ClientSelector from './ClientSelector';
@@ -16,6 +23,7 @@ import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
+import useAuthStore from '@/store/authStore';
 import useFullscreen from '@/hooks/useFullscreen';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import LoadingScreen from '@/components/ui/LoadingScreen';
@@ -34,8 +42,15 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [isProforma, setIsProforma] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
+  const { user, logout } = useAuthStore();
 
   const isEditMode = mode === 'edit';
+  const isCashier = activeCompany?.my_role === 'cashier';
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
 
   useEffect(() => {
     if (activeCompany) fetchProducts(activeCompany.id);
@@ -107,7 +122,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
     setCompletedSale(null);
   };
 
-  if (isLoadingSale) {
+  if (isLoadingSale || !activeCompany) {
     return <LoadingScreen variant="fullscreen" message="Chargement de la vente" />;
   }
 
@@ -123,13 +138,15 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         {/* Header */}
         <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(isEditMode ? `${backLink}/${saleId}` : `${backLink}`)}
-            >
-              <ArrowLeft size={20} />
-            </Button>
+            {!isCashier && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push(isEditMode ? `${backLink}/${saleId}` : `${backLink}`)}
+              >
+                <ArrowLeft size={20} />
+              </Button>
+            )}
             <div>
               <h1 className="font-semibold text-lg">
                 {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
@@ -166,6 +183,28 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                 {cartTotal.toLocaleString()} FCFA
               </Badge>
             )}
+            <div className="w-px h-6 bg-gray-200 mx-1"></div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200">
+                  <User size={16} className="text-gray-700" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-xs text-brand-600 mt-0.5 capitalize">{activeCompany?.my_role === 'cashier' ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <User size={16} className="mr-2 text-gray-500" /> Mon profil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                  <LogOut size={16} className="mr-2" /> Déconnexion
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

@@ -72,16 +72,16 @@ export default function AuthGuard({ children }) {
     if (isAuthenticated && !isSuperAdmin && activeCompany && !publicRoutes.includes(pathname)) {
       const role = activeCompany.my_role;
       const base = getBasePath(activeCompany.business_type?.code || 'SHOP');
-      const isDashboard = pathname.endsWith('/dashboard');
-      const isCompanies = pathname.endsWith('/companies') || pathname === '/companies';
-      const isSettings = pathname.includes('/settings');
-      const isEmployees = pathname.includes('/employees');
 
-      if (role === 'cashier' && (isDashboard || isCompanies || isSettings || isEmployees)) {
-        router.replace(`${base}/sales/new`);
-        return;
+      if (role === 'cashier') {
+        const allowedCashierRoutes = [`${base}/sales/new`, '/profile'];
+        if (!allowedCashierRoutes.includes(pathname)) {
+          router.replace(`${base}/sales/new`);
+          return;
+        }
       }
 
+      const isCompanies = pathname.endsWith('/companies') || pathname === '/companies';
       if (role === 'manager' && isCompanies) {
         router.replace(`${base}/dashboard`);
         return;
