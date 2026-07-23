@@ -25,12 +25,16 @@ export default function useNavigation() {
         }
 
         // Filter out items that require a role the user doesn't have
-        const isOwner = activeCompany?.my_role === 'owner';
+        const role = activeCompany?.my_role || 'manager'; // owner, manager, cashier
+        const isOwner = role === 'owner';
+        const isCashier = role === 'cashier';
+
         return baseNav.map(section => {
             return {
                 ...section,
                 items: section.items.filter(item => {
                     if (item.requireRole === 'owner' && !isOwner) return false;
+                    if (isCashier && !item.allowCashier) return false;
                     return true;
                 })
             };

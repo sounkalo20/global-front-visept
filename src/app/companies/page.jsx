@@ -28,7 +28,11 @@ export default function CompaniesPage() {
         if (!isLoading && isFetched && companies.length > 0) {
             const company = activeCompany || companies[0];
             const base = getBasePath(company.business_type?.code || 'SHOP');
-            router.replace(`${base}/dashboard`);
+            if (company.my_role === 'cashier') {
+                router.replace(`${base}/sales`);
+            } else {
+                router.replace(`${base}/dashboard`);
+            }
         }
     }, [isLoading, isFetched, companies.length, activeCompany, router]);
 

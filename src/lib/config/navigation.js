@@ -64,10 +64,10 @@ export const shopNavigation = [
     {
         section: 'Finance',
         items: [
-            { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart },
-            { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw },
-            { href: '/shop/expenses', label: 'Dépenses', icon: Receipt },
-            { href: '/shop/debts', label: 'Dettes', icon: DollarSign },
+            { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, allowCashier: true },
+            { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, allowCashier: true },
+            { href: '/shop/expenses', label: 'Dépenses', icon: Receipt, allowCashier: true },
+            { href: '/shop/debts', label: 'Dettes', icon: DollarSign, allowCashier: true },
             { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign }
         ],
     },

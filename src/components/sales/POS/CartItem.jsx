@@ -55,9 +55,33 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
           >
             <Minus size={13} />
           </button>
-          <span className="w-8 text-center text-sm font-semibold tabular-nums">
-            {item.quantity}
-          </span>
+          <input
+            type="number"
+            value={item.quantity === '' ? '' : item.quantity}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '') {
+                onUpdateQuantity(item.product_id, '');
+                return;
+              }
+              const numVal = parseInt(val, 10);
+              if (!isNaN(numVal) && numVal >= 0) {
+                if (item.manage_stock && numVal > item.current_stock) {
+                  onUpdateQuantity(item.product_id, item.current_stock);
+                } else {
+                  onUpdateQuantity(item.product_id, numVal);
+                }
+              }
+            }}
+            onBlur={(e) => {
+              const val = e.target.value;
+              if (val === '' || parseInt(val, 10) <= 0) {
+                 onUpdateQuantity(item.product_id, 1);
+              }
+            }}
+            className="w-12 text-center text-sm font-semibold tabular-nums border border-gray-200 rounded px-1 py-1 focus:outline-none focus:border-brand-400 bg-white"
+            min="1"
+          />
           <button
             onClick={() => onUpdateQuantity(item.product_id, item.quantity + 1)}
             disabled={item.manage_stock && item.quantity >= item.current_stock}

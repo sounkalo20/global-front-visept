@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { createEmployee, updateEmployee } from '@/lib/api/employees';
@@ -15,6 +16,7 @@ const employeeSchema = z.object({
   last_name: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Email invalide'),
   phone: z.string().optional(),
+  role: z.enum(['manager', 'cashier'], { required_error: 'Le rôle est requis' }),
   password: z.string().optional(),
 });
 
@@ -28,6 +30,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
       last_name: '',
       email: '',
       phone: '',
+      role: 'manager',
       password: '',
     }
   });
@@ -39,6 +42,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: employeeToEdit.last_name || '',
         email: employeeToEdit.email || '',
         phone: employeeToEdit.phone || '',
+        role: employeeToEdit.role || 'manager',
         password: '',
       });
     } else {
@@ -47,6 +51,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: '',
         email: '',
         phone: '',
+        role: 'manager',
         password: '',
       });
     }
@@ -72,7 +77,6 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         await createEmployee({
           ...data,
           company_id: companyId,
-          role: 'manager' // Actuellement, on force le gérant
         });
         toast.success('Employé ajouté');
       }
@@ -90,7 +94,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {employeeToEdit ? 'Modifier l\'employé' : 'Ajouter un employé (Gérant)'}
+            {employeeToEdit ? 'Modifier l\'employé' : 'Ajouter un employé'}
           </DialogTitle>
         </DialogHeader>
 
@@ -118,6 +122,25 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
           <div className="space-y-2">
             <Label htmlFor="phone">Téléphone</Label>
             <Input id="phone" type="tel" {...register('phone')} disabled={isLoading} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="role">Rôle</Label>
+            <Select 
+              value={register('role').value} 
+              onValueChange={(val) => register('role').onChange({ target: { value: val, name: 'role' }})} 
+              defaultValue="manager"
+              {...register('role')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="manager">Gérant</SelectItem>
+                <SelectItem value="cashier">Caissier</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
           </div>
 
           <div className="space-y-2">

@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import ReceiptTemplate from '@/components/sales/receipt/ReceiptTemplate';
+import InvoiceA4Template from '@/components/sales/receipt/InvoiceA4Template';
 
 export default function useReceiptPrinter() {
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const printReceipt = useCallback((sale, company, user, paperSize = '80mm') => {
+  const printReceipt = useCallback((sale, company, user, paperSize = '80mm', isProforma = false) => {
     setIsPrinting(true);
 
     const iframe = document.createElement('iframe');
@@ -20,17 +21,23 @@ export default function useReceiptPrinter() {
     const contentWindow = iframe.contentWindow;
     const documentBody = iframe.contentDocument.body;
 
-    // Ajouter les styles de base pour l'impression thermique
+    const isA4 = paperSize === 'A4';
+    const widthCSS = isA4 ? '210mm' : paperSize;
+
+    // Ajouter les styles de base
     const style = document.createElement('style');
     style.textContent = `
-      @page { margin: 0; size: auto; }
+      @page { 
+        margin: 0; 
+        size: ${isA4 ? 'A4' : 'auto'}; 
+      }
       body {
         margin: 0;
-        padding: 8px;
-        font-family: monospace;
+        padding: ${isA4 ? '10mm' : '8px'};
+        font-family: ${isA4 ? 'Arial, sans-serif' : 'monospace'};
         font-size: 12px;
         color: #000;
-        width: ${paperSize};
+        width: ${widthCSS};
       }
       * { box-sizing: border-box; }
       .text-center { text-align: center; }
@@ -60,7 +67,9 @@ export default function useReceiptPrinter() {
     
     // Rendre le composant
     root.render(
-      <ReceiptTemplate sale={sale} company={company} user={user} />
+      isA4 
+        ? <InvoiceA4Template sale={sale} company={company} user={user} isProforma={isProforma} /> 
+        : <ReceiptTemplate sale={sale} company={company} user={user} isProforma={isProforma} />
     );
 
     // Attendre le rendu puis imprimer

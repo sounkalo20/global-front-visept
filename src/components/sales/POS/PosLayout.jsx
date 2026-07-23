@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import ClientSelector from './ClientSelector';
 import PaymentSection from './PaymentSection';
+import PosClock from './PosClock';
+import QuickHistoryModal from './QuickHistoryModal';
 import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
@@ -29,6 +31,8 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [isLoadingSale, setIsLoadingSale] = useState(false);
   const [cartExpanded, setCartExpanded] = useState(true);
   const [completedSale, setCompletedSale] = useState(null);
+  const [isProforma, setIsProforma] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const isEditMode = mode === 'edit';
@@ -64,10 +68,37 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
     if (result.success) {
       toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
+      setIsProforma(false);
       setCompletedSale(result.sale);
     } else {
       toast.error(result.message);
     }
+  };
+
+  const handleProforma = () => {
+    if (!activeCompany || cart.items.length === 0) {
+      toast.error('Le panier est vide.');
+      return;
+    }
+    // Créer un objet de vente "factice" basé sur le panier actuel pour l'impression
+    const proformaSale = {
+      sale_number: `PRF-${Date.now()}`,
+      sale_date: new Date().toISOString(),
+      client_name: cart.clientName,
+      subtotal: cart.getSubtotal(),
+      discount_amount: cart.getDiscountAmount(),
+      total_amount: cart.getTotal(),
+      amount_paid: cart.amountPaid || 0,
+      payment_method: cart.paymentMethod,
+      items: cart.items.map(item => ({
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.unit_price * item.quantity
+      }))
+    };
+    setIsProforma(true);
+    setCompletedSale(proformaSale);
   };
 
   const handleReceiptClosed = () => {
@@ -84,7 +115,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const cartTotal = cart.getTotal();
 
   return (
-    <div className="h-[calc(100vh-65px)] flex bg-gray-50">
+    <div className="h-screen flex bg-gray-50">
       {/* ======================== */}
       {/* COLONNE GAUCHE : Produits + Panier */}
       {/* ======================== */}
@@ -107,8 +138,13 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                 <span className="text-xs text-gray-400">{currentSale.sale_number}</span>
               )}
             </div>
+            <PosClock />
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
+            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="hidden md:flex gap-2 text-gray-600">
+              <History size={16} />
+              Historique
+            </Button>
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
@@ -203,23 +239,31 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           />
         </div>
 
-        {/* Bouton Valider */}
-        <div className="p-4 border-t bg-white">
+        {/* Boutons Valider / Proforma */}
+        <div className="p-4 border-t bg-white flex gap-2">
+          <Button
+            onClick={handleProforma}
+            variant="outline"
+            className="flex-1 h-12 text-sm font-semibold rounded-xl"
+            disabled={cart.items.length === 0}
+          >
+            Proforma
+          </Button>
           <Button
             onClick={handleSubmit}
-            className="w-full h-12 text-base font-semibold rounded-xl"
+            className="flex-1 h-12 text-sm font-semibold rounded-xl"
             disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
           >
             {isSubmitting ? (
-              <Loader2 size={20} className="animate-spin mr-2" />
+              <Loader2 size={20} className="animate-spin" />
             ) : cart.items.length === 0 ? (
               'Panier vide'
             ) : cart.amountPaid < cartTotal ? (
-              `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
+              `Manque ${(cartTotal - cart.amountPaid).toLocaleString()}`
             ) : (
               <>
-                <Save size={18} className="mr-2" />
-                Valider • {cartTotal.toLocaleString()} FCFA
+                <Save size={18} className="mr-2 hidden xl:block" />
+                Valider ({cartTotal.toLocaleString()})
               </>
             )}
           </Button>
@@ -252,11 +296,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         <ReceiptPreviewModal 
           sale={completedSale} 
           open={!!completedSale} 
+          isProforma={isProforma}
           onOpenChange={(open) => {
             if (!open) handleReceiptClosed();
           }} 
         />
       )}
+
+      <QuickHistoryModal open={showHistory} onOpenChange={setShowHistory} />
     </div>
   );
 }

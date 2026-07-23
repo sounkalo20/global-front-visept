@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import useShopDashboardStore from '@/store/shopDashboardStore';
 import useCompanyStore from '@/store/companyStore';
+import { useRouter } from 'next/navigation';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const RADIAN = Math.PI / 180;
@@ -30,10 +31,17 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
 export default function ShopDashboard() {
     const { data, isLoading, fetchDashboard } = useShopDashboardStore();
     const activeCompany = useCompanyStore((s) => s.activeCompany);
+    const router = useRouter();
 
     useEffect(() => {
-        if (activeCompany) fetchDashboard();
-    }, [activeCompany]);
+        if (activeCompany) {
+            if (activeCompany.my_role === 'cashier') {
+                router.replace('/shop/sales');
+            } else {
+                fetchDashboard();
+            }
+        }
+    }, [activeCompany, router]);
 
     if (isLoading || !data) {
         return (

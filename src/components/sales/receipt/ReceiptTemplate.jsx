@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ReceiptTemplate({ sale, company, user }) {
+export default function ReceiptTemplate({ sale, company, user, isProforma = false }) {
   if (!sale) return null;
 
   const total = parseInt(sale.total_amount || 0);
@@ -21,7 +21,7 @@ export default function ReceiptTemplate({ sale, company, user }) {
       </div>
       
       <div className="text-center mb-2">
-        <div>Ticket N° {sale.sale_number}</div>
+        <div className="font-bold">{isProforma ? 'PROFORMA' : 'TICKET'} N° {sale.sale_number}</div>
         <div>Date: {formatDate(sale.sale_date || new Date())}</div>
       </div>
       
@@ -84,7 +84,15 @@ export default function ReceiptTemplate({ sale, company, user }) {
       </div>
       
       <div className="text-center mt-2">
-        <div>Merci de votre visite !</div>
+        {isProforma ? (
+          <>
+            <div className="font-bold">PROFORMA</div>
+            <div style={{ fontSize: '10px' }}>Ce document n'est pas une facture</div>
+            <div style={{ fontSize: '10px' }}>Valable 30 jours</div>
+          </>
+        ) : (
+          <div>Merci de votre visite !</div>
+        )}
         <div style={{ fontSize: '10px', marginTop: '4px' }}>Propulsé par VISEPT</div>
       </div>
     </div>

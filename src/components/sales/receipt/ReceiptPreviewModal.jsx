@@ -7,7 +7,7 @@ import useReceiptPrinter from '@/hooks/useReceiptPrinter';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
 
-export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed }) {
+export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed, isProforma = false }) {
   const [paperSize, setPaperSize] = useState('80mm');
   const { printReceipt, isPrinting } = useReceiptPrinter();
   const { user } = useAuthStore();
@@ -16,7 +16,7 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
   if (!sale) return null;
 
   const handlePrint = () => {
-    printReceipt(sale, activeCompany, user, paperSize);
+    printReceipt(sale, activeCompany, user, paperSize, isProforma);
     onOpenChange(false);
   };
 
@@ -49,12 +49,21 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
             >
               80 mm
             </button>
+            <button
+              onClick={() => setPaperSize('A4')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === 'A4' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+            >
+              A4
+            </button>
           </div>
 
           {/* Aperçu */}
           <div 
             className="bg-white border shadow-sm p-4 overflow-y-auto"
-            style={{ width: paperSize === '58mm' ? '220px' : '300px', maxHeight: '400px' }}
+            style={{ 
+              width: paperSize === '58mm' ? '220px' : paperSize === '80mm' ? '300px' : '100%', 
+              maxHeight: '400px' 
+            }}
           >
             <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#000' }}>
               <style>{`
@@ -75,7 +84,11 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
                 .receipt-preview th.text-center, .receipt-preview td.text-center { text-align: center; }
               `}</style>
               <div className="receipt-preview">
-                <ReceiptTemplate sale={sale} company={activeCompany} user={user} />
+                {paperSize === 'A4' ? (
+                   <p className="text-sm text-center text-gray-500 my-8">Aperçu A4 non disponible dans cette petite fenêtre.<br/>Veuillez imprimer pour voir le résultat.</p>
+                ) : (
+                  <ReceiptTemplate sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
+                )}
               </div>
             </div>
           </div>
