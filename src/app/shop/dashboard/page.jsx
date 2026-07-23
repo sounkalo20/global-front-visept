@@ -35,13 +35,9 @@ export default function ShopDashboard() {
 
     useEffect(() => {
         if (activeCompany) {
-            if (activeCompany.my_role === 'cashier') {
-                router.replace('/shop/sales');
-            } else {
-                fetchDashboard();
-            }
+            fetchDashboard();
         }
-    }, [activeCompany, router]);
+    }, [activeCompany, fetchDashboard]);
 
     if (isLoading || !data) {
         return (

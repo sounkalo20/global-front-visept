@@ -8,8 +8,11 @@ const useAuthStore = create((set) => ({
   isAuthenticated: false,
   isSuperAdmin: false,
   isLoading: true,
+  isSessionExpired: false,
 
   setUser: (user) => set({ user, isAuthenticated: !!user, isSuperAdmin: !!user.is_super_admin }),
+
+  setSessionExpired: (status) => set({ isSessionExpired: status }),
 
   setToken: (token) => {
     if (typeof window !== 'undefined') {
@@ -27,7 +30,7 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('visept_user', JSON.stringify(user));
     }
 
-    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin });
+    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin, isSessionExpired: false });
 
     // Charger les entreprises après login
     if (!user.is_super_admin) {
@@ -45,21 +48,20 @@ const useAuthStore = create((set) => ({
       localStorage.setItem('visept_user', JSON.stringify(user));
     }
 
-    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin });
+    set({ user, token, isAuthenticated: true, isSuperAdmin: !!user.is_super_admin, isSessionExpired: false });
     return response.data;
   },
 
-  logout: () => {
+  logout: (expired = false) => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('visept_token');
       localStorage.removeItem('visept_user');
       localStorage.removeItem('visept_companies');
       localStorage.removeItem('visept_activeCompany');
     }
-    set({ user: null, token: null, isAuthenticated: false });
+    set({ user: null, token: null, isAuthenticated: false, isSessionExpired: expired });
     useCompanyStore.getState().setCompanies([]);
     useCompanyStore.getState().setActiveCompany(null);
-    window.location.href = '/login';
   },
 
   checkAuth: async () => {

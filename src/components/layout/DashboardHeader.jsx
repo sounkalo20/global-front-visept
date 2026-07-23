@@ -165,6 +165,11 @@ export default function DashboardHeader() {
               </div>
               <DropdownMenuSeparator />
 
+              <DropdownMenuItem onClick={() => router.push('/profile')}>
+                <User size={16} className="mr-2" /> Mon profil
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
               {isSuperAdmin ? (
                 <>
                   <DropdownMenuItem onClick={() => router.push('/super_admin/dashboard')}>
@@ -176,12 +181,16 @@ export default function DashboardHeader() {
                 </>
               ) : (
                 <>
-                  <DropdownMenuItem onClick={() => router.push('/shop/dashboard')}>
-                    <User size={16} className="mr-2" /> Tableau de bord
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/shop/companies')}>
-                    <Building2 size={16} className="mr-2" /> Mes entreprises
-                  </DropdownMenuItem>
+                  {activeCompany?.my_role !== 'cashier' && (
+                    <DropdownMenuItem onClick={() => router.push(`${getBasePath(activeCompany?.business_type?.code || 'SHOP')}/dashboard`)}>
+                      <PanelLeft size={16} className="mr-2" /> Tableau de bord
+                    </DropdownMenuItem>
+                  )}
+                  {activeCompany?.my_role === 'owner' && (
+                    <DropdownMenuItem onClick={() => router.push(`${getBasePath(activeCompany?.business_type?.code || 'SHOP')}/companies`)}>
+                      <Building2 size={16} className="mr-2" /> Mes entreprises
+                    </DropdownMenuItem>
+                  )}
                 </>
               )}
 

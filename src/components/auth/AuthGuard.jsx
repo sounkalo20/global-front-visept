@@ -7,17 +7,22 @@ import useCompanyStore from '@/store/companyStore';
 import { getBasePath } from '@/lib/config/navigation';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 
-const publicRoutes = ['/login', '/register'];
+const publicRoutes = ['/login', '/register', '/session-expired'];
 const noCompanyRoutes = ['/companies', '/companies/new'];
 
 export default function AuthGuard({ children }) {
-  const { isAuthenticated, isLoading, isSuperAdmin } = useAuthStore();
+  const { isAuthenticated, isLoading, isSuperAdmin, isSessionExpired } = useAuthStore();
   const { activeCompany, companies, isLoading: companiesLoading } = useCompanyStore();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (isLoading || companiesLoading) return;
+
+    if (isSessionExpired && pathname !== '/session-expired') {
+      router.replace('/session-expired');
+      return;
+    }
 
     // Non connecté → login
     if (!isAuthenticated && !publicRoutes.includes(pathname)) {
@@ -62,7 +67,27 @@ export default function AuthGuard({ children }) {
       router.replace('/companies');
       return;
     }
-  }, [isAuthenticated, isLoading, isSuperAdmin, companies, activeCompany, companiesLoading, pathname, router]);
+
+    // Contrôle d'accès basé sur les rôles
+    if (isAuthenticated && !isSuperAdmin && activeCompany && !publicRoutes.includes(pathname)) {
+      const role = activeCompany.my_role;
+      const base = getBasePath(activeCompany.business_type?.code || 'SHOP');
+      const isDashboard = pathname.endsWith('/dashboard');
+      const isCompanies = pathname.endsWith('/companies') || pathname === '/companies';
+      const isSettings = pathname.includes('/settings');
+      const isEmployees = pathname.includes('/employees');
+
+      if (role === 'cashier' && (isDashboard || isCompanies || isSettings || isEmployees)) {
+        router.replace(`${base}/sales/new`);
+        return;
+      }
+
+      if (role === 'manager' && isCompanies) {
+        router.replace(`${base}/dashboard`);
+        return;
+      }
+    }
+  }, [isAuthenticated, isLoading, isSuperAdmin, isSessionExpired, companies, activeCompany, companiesLoading, pathname, router]);
 
   if (isLoading || companiesLoading) {
     return <LoadingScreen variant="fullscreen" message="Chargement" />;

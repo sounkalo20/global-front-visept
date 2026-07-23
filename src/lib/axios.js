@@ -24,7 +24,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      useAuthStore.getState().logout();
+      const isLoginRequest = error.config?.url?.includes('/auth/login');
+      if (!isLoginRequest) {
+        useAuthStore.getState().logout(true);
+      }
     }
     return Promise.reject(error);
   }
