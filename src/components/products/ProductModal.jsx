@@ -431,8 +431,8 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                     </span>
                                 </div>
                             </div>
-                            
-                            {!isEditing && activeCompany?.my_role === 'owner' && warehouses.length > 0 && (
+
+                            {!isEditing && warehouses.length > 0 && (
                                 <div className="col-span-2 mt-2 pt-4 border-t border-slate-100">
                                     <label className="flex items-center text-sm font-medium text-slate-700 mb-3">
                                         Stock initial en entrepôt
