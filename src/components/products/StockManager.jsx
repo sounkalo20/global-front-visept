@@ -10,7 +10,7 @@ import useWarehouseStore from '@/store/warehouseStore';
 
 export default function StockManager({ product, onClose }) {
   const [activeTab, setActiveTab] = useState('manual'); // 'manual' or 'transfer'
-  
+
   // Tab 1: Manual
   const [quantity, setQuantity] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,27 +108,25 @@ export default function StockManager({ product, onClose }) {
   return (
     <div className="space-y-5">
       {/* Tabs */}
-      {activeCompany?.my_role === 'owner' && product.catalog_product_id && (
+      {product.catalog_product_id && (
         <div className="flex border-b">
           <button
             type="button"
             onClick={() => setActiveTab('manual')}
-            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${
-              activeTab === 'manual'
-                ? 'border-brand-600 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === 'manual'
+              ? 'border-brand-600 text-brand-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
           >
             Ajustement Manuel
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('transfer')}
-            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${
-              activeTab === 'transfer'
-                ? 'border-brand-600 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
+            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === 'transfer'
+              ? 'border-brand-600 text-brand-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
           >
             Transfert Entrepôt → Boutique
           </button>
