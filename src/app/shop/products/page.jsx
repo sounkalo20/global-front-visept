@@ -13,11 +13,14 @@ import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButt
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
+import { useSubscription } from '@/hooks/useSubscription';
+import { toast } from 'sonner';
 
 export default function ProductsPage() {
   const { products, totalProducts, isLoading, fetchProducts } = useProductStore();
   const { activeCompany } = useCompanyStore();
   const { fetchCategories } = useCategoryStore();
+  const { canAddMore, limits } = useSubscription();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -65,7 +68,16 @@ export default function ProductsPage() {
           {products.length > 0 && (
             <div className="flex items-center gap-3">
               <ExportProductsPDFButton />
-              <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
+              <Button 
+                onClick={() => { 
+                  if (!canAddMore('max_products', totalProducts)) {
+                    toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+                    return;
+                  }
+                  setEditingProduct(null); 
+                  setModalOpen(true); 
+                }}
+              >
                 <Plus size={18} className="mr-2" /> Nouveau produit
               </Button>
             </div>
@@ -77,7 +89,13 @@ export default function ProductsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
           </div>
         ) : products.length === 0 && !search && !stockFilter ? (
-          <EmptyProductState onCreate={() => setModalOpen(true)} />
+          <EmptyProductState onCreate={() => {
+            if (!canAddMore('max_products', totalProducts)) {
+              toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+              return;
+            }
+            setModalOpen(true);
+          }} />
         ) : (
           <>
             {products.length > 0 && <ProductStats products={filteredProducts} />}

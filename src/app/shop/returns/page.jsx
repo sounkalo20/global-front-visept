@@ -7,9 +7,12 @@ import { returnService } from '@/lib/api/returns';
 import useCompanyStore from '@/store/companyStore';
 import { motion } from 'framer-motion';
 import ReturnDetailModal from '@/components/sales/ReturnDetailModal';
+import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function ReturnsPage() {
   const { activeCompany } = useCompanyStore();
+  const { hasFeature } = useSubscription();
   const router = useRouter();
   const [returns, setReturns] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,12 +20,18 @@ export default function ReturnsPage() {
 
   const fetchReturns = async () => {
     if (!activeCompany) return;
+    if (!hasFeature('module_returns')) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const response = await returnService.getReturns({ company_id: activeCompany.id });
       setReturns(response.data.returns || []);
     } catch (error) {
-      console.error("Erreur de chargement des retours", error);
+      if (error.response?.status !== 403) {
+        console.error("Erreur de chargement des retours", error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -30,9 +39,14 @@ export default function ReturnsPage() {
 
   useEffect(() => {
     fetchReturns();
-  }, [activeCompany]);
+  }, [activeCompany, hasFeature]);
 
   return (
+    <FeatureLockedOverlay 
+      featureName="module_returns"
+      title="Module Retours bloqué"
+      description="Le module de gestion des retours clients n'est pas inclus dans votre forfait actuel."
+    >
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -121,5 +135,6 @@ export default function ReturnsPage() {
         onOpenChange={(open) => !open && setSelectedReturnId(null)} 
       />
     </div>
+    </FeatureLockedOverlay>
   );
 }

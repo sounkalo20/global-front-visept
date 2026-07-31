@@ -9,9 +9,12 @@ import { getEmployees } from '@/lib/api/employees';
 import EmployeeModal from '@/components/employees/EmployeeModal';
 import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
 import { toast } from 'sonner';
+import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function EmployeesPage() {
   const { activeCompany } = useCompanyStore();
+  const { hasFeature } = useSubscription();
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,16 +26,22 @@ export default function EmployeesPage() {
 
   const fetchEmployeesList = useCallback(async () => {
     if (!activeCompany?.id) return;
+    if (!hasFeature('module_employees')) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     try {
       const data = await getEmployees(activeCompany.id);
       setEmployees(data.data.employees);
     } catch (error) {
-      toast.error('Erreur lors du chargement des employés');
+      if (error.response?.status !== 403) {
+        toast.error('Erreur lors du chargement des employés');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [activeCompany?.id]);
+  }, [activeCompany?.id, hasFeature]);
 
   useEffect(() => {
     fetchEmployeesList();
@@ -55,6 +64,11 @@ export default function EmployeesPage() {
   if (!activeCompany) return null;
 
   return (
+    <FeatureLockedOverlay 
+      featureName="module_employees"
+      title="Module Employés bloqué"
+      description="Le module de gestion des employés et des accès n'est pas inclus dans votre forfait actuel."
+    >
     <div className="mx-auto max-w-6xl px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         
@@ -203,5 +217,6 @@ export default function EmployeesPage() {
         onEmployeeDeleted={fetchEmployeesList}
       />
     </div>
+    </FeatureLockedOverlay>
   );
 }
