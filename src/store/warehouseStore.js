@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { warehouseApi } from '@/lib/api/warehouses';
+import useCompanyStore from './companyStore';
 
 const useWarehouseStore = create((set, get) => ({
     // État
@@ -16,7 +17,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchWarehouses: async () => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getAll();
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getAll(companyId);
             set({ warehouses: res.data.data, isLoading: false });
         } catch (error) {
             set({ isLoading: false });
@@ -27,7 +29,8 @@ const useWarehouseStore = create((set, get) => ({
     getWarehouseById: async (id) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getById(id);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getById(id, companyId);
             set({ currentWarehouse: res.data.data, isLoading: false });
         } catch (error) {
             set({ isLoading: false });
@@ -37,7 +40,8 @@ const useWarehouseStore = create((set, get) => ({
 
     createWarehouse: async (data) => {
         try {
-            await warehouseApi.create(data);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            await warehouseApi.create({ ...data, company_id: companyId });
             get().fetchWarehouses();
         } catch (error) {
             console.error(error);
@@ -47,7 +51,8 @@ const useWarehouseStore = create((set, get) => ({
 
     updateWarehouse: async (id, data) => {
         try {
-            await warehouseApi.update(id, data);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            await warehouseApi.update(id, { ...data, company_id: companyId });
             get().fetchWarehouses();
         } catch (error) {
             console.error(error);
@@ -57,7 +62,8 @@ const useWarehouseStore = create((set, get) => ({
 
     deleteWarehouse: async (id) => {
         try {
-            await warehouseApi.delete(id);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            await warehouseApi.delete(id, companyId);
             get().fetchWarehouses();
         } catch (error) {
             console.error(error);
@@ -69,7 +75,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchWarehouseStocks: async (id) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getStocks(id);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getStocks(id, companyId);
             set({ stocks: res.data.data, isLoading: false });
         } catch (error) {
             set({ isLoading: false });
@@ -80,7 +87,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchWarehouseMovements: async (id) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getMovements(id);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getMovements(id, companyId);
             set({ movements: res.data.data, isLoading: false });
         } catch (error) {
             set({ isLoading: false });
@@ -102,7 +110,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchProductWarehouseStocks: async (catalogProductId) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getProductStocks(catalogProductId);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getProductStocks(catalogProductId, companyId);
             set({ isLoading: false });
             return res.data.data;
         } catch (error) {
@@ -140,7 +149,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchWarehouseAdjustments: async (warehouseId, params = {}) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getWarehouseAdjustments(warehouseId, params);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getWarehouseAdjustments(warehouseId, { ...params, company_id: companyId });
             set({
                 adjustments: res.data.data,
                 pagination: res.data.pagination,
@@ -155,7 +165,8 @@ const useWarehouseStore = create((set, get) => ({
     fetchProductAdjustments: async (catalogProductId, params = {}) => {
         set({ isLoading: true });
         try {
-            const res = await warehouseApi.getProductAdjustments(catalogProductId, params);
+            const companyId = useCompanyStore.getState().activeCompany?.id;
+            const res = await warehouseApi.getProductAdjustments(catalogProductId, { ...params, company_id: companyId });
             set({
                 adjustments: res.data.data,
                 pagination: res.data.pagination,
