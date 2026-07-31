@@ -20,7 +20,8 @@ import {
     Truck,
     DollarSign as CircleDollarSign,
     Box,
-    RotateCcw
+    RotateCcw,
+    ClipboardCheck
 } from 'lucide-react';
 
 /**
@@ -78,7 +79,8 @@ export const shopNavigation = [
             { href: '/shop/categories', label: 'Catégories', icon: FolderTree },
             { href: '/shop/suppliers', label: 'Fournisseurs', icon: Truck },
             { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart },
-            { href: '/shop/warehouses', label: 'Entrepôts', icon: Box, requireRole: 'owner' }
+            { href: '/shop/warehouses', label: 'Entrepôts', icon: Box, requireRole: 'owner' },
+            { href: '/shop/inventory', label: 'Inventaires Physiques', icon: ClipboardCheck },
         ],
     },
     {
