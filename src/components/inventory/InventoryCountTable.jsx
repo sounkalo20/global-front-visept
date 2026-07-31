@@ -209,7 +209,7 @@ function InventoryItemRow({ item, sessionId, readonly }) {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 isSaving
                   ? 'bg-gray-100 text-gray-400'
-                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-sm'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm'
               }`}
             >
               {isSaving ? '...' : 'Sauver'}
@@ -254,7 +254,7 @@ export default function InventoryCountTable({ session, readonly = false }) {
           </div>
           <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-brand-500 rounded-full transition-all duration-500"
+              className="h-full bg-blue-500 transition-all duration-500"
               style={{ width: `${items.length > 0 ? (countedCount / items.length) * 100 : 0}%` }}
             />
           </div>
@@ -290,7 +290,7 @@ export default function InventoryCountTable({ session, readonly = false }) {
               onClick={() => setFilter(opt.value)}
               className={`px-3 py-2 text-xs font-medium transition-colors ${
                 filter === opt.value
-                  ? 'bg-brand-600 text-white'
+                  ? 'bg-gray-900 text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-50'
               }`}
             >

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from './StatusBadge';
 import { toast } from 'sonner';
 import useInventoryStore from '@/store/inventoryStore';
+import ConfirmModal from './ConfirmModal';
 
 const formatDate = (date) => {
   if (!date) return '—';
@@ -24,6 +25,7 @@ export default function InventorySessionList({ sessions, onRefresh }) {
   const router = useRouter();
   const { startSession, cancelSession } = useInventoryStore();
   const [loadingId, setLoadingId] = useState(null);
+  const [sessionToCancel, setSessionToCancel] = useState(null);
 
   const handleStart = async (session) => {
     setLoadingId(session.id);
@@ -38,17 +40,22 @@ export default function InventorySessionList({ sessions, onRefresh }) {
     }
   };
 
-  const handleCancel = async (session) => {
-    if (!confirm(`Annuler la session "${session.name}" ? Cette action est irréversible.`)) return;
-    setLoadingId(session.id);
+  const handleCancelClick = (session) => {
+    setSessionToCancel(session);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!sessionToCancel) return;
+    setLoadingId(sessionToCancel.id);
     try {
-      await cancelSession(session.id);
+      await cancelSession(sessionToCancel.id);
       toast.success('Session annulée');
       onRefresh?.();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors de l\'annulation');
     } finally {
       setLoadingId(null);
+      setSessionToCancel(null);
     }
   };
 
@@ -187,7 +194,7 @@ export default function InventorySessionList({ sessions, onRefresh }) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCancel(session)}
+                        onClick={() => handleCancelClick(session)}
                         disabled={loadingId === session.id}
                         className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
                         title="Annuler"
@@ -202,6 +209,16 @@ export default function InventorySessionList({ sessions, onRefresh }) {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        isOpen={!!sessionToCancel}
+        onClose={() => setSessionToCancel(null)}
+        onConfirm={handleCancelConfirm}
+        title="Annuler la session"
+        description={`Êtes-vous sûr de vouloir annuler la session d'inventaire "${sessionToCancel?.name}" ? Cette action est irréversible et aucun stock ne sera modifié.`}
+        confirmLabel="Oui, annuler"
+        isLoading={loadingId === sessionToCancel?.id}
+      />
     </div>
   );
 }

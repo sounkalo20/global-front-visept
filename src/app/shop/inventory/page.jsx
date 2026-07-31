@@ -93,7 +93,7 @@ export default function InventoryPage() {
               onClick={() => setStatusFilter(opt.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 statusFilter === opt.value
-                  ? 'bg-brand-600 text-white shadow-sm'
+                  ? 'bg-gray-900 text-white shadow-sm'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >

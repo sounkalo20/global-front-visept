@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import StatusBadge from '@/components/inventory/StatusBadge';
 import InventoryCountTable from '@/components/inventory/InventoryCountTable';
+import ConfirmModal from '@/components/inventory/ConfirmModal';
 import useInventoryStore from '@/store/inventoryStore';
 
 const formatDate = (date) => {
@@ -21,13 +22,15 @@ export default function InventorySessionPage() {
   const { id } = useParams();
   const { currentSession, isLoading, fetchSession, completeSession, cancelSession } = useInventoryStore();
   const [actionLoading, setActionLoading] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); // 'complete' | 'cancel'
 
   useEffect(() => {
     if (id) fetchSession(id);
   }, [id]);
 
-  const handleComplete = async () => {
-    if (!confirm('Terminer le comptage et passer en attente de validation ?')) return;
+  const handleCompleteClick = () => setConfirmAction('complete');
+  
+  const handleCompleteConfirm = async () => {
     setActionLoading('complete');
     try {
       await completeSession(id);
@@ -37,11 +40,13 @@ export default function InventorySessionPage() {
       toast.error(err.response?.data?.message || 'Erreur lors de la complétion');
     } finally {
       setActionLoading(null);
+      setConfirmAction(null);
     }
   };
 
-  const handleCancel = async () => {
-    if (!confirm('Annuler cet inventaire ? Cette action est irréversible.')) return;
+  const handleCancelClick = () => setConfirmAction('cancel');
+
+  const handleCancelConfirm = async () => {
     setActionLoading('cancel');
     try {
       await cancelSession(id);
@@ -51,6 +56,7 @@ export default function InventorySessionPage() {
       toast.error(err.response?.data?.message || 'Erreur');
     } finally {
       setActionLoading(null);
+      setConfirmAction(null);
     }
   };
 
@@ -116,7 +122,7 @@ export default function InventorySessionPage() {
             {isInProgress && (
               <>
                 <Button
-                  onClick={handleComplete}
+                  onClick={handleCompleteClick}
                   disabled={actionLoading === 'complete'}
                   className="gap-2"
                 >
@@ -125,7 +131,7 @@ export default function InventorySessionPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={handleCancel}
+                  onClick={handleCancelClick}
                   disabled={actionLoading === 'cancel'}
                   className="gap-2 border-red-200 text-red-600 hover:bg-red-50"
                 >
@@ -178,6 +184,30 @@ export default function InventorySessionPage() {
         {/* Table de comptage */}
         <InventoryCountTable session={session} readonly={isReadonly} />
       </motion.div>
+
+      {/* Modal Compléter */}
+      <ConfirmModal
+        isOpen={confirmAction === 'complete'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleCompleteConfirm}
+        title="Terminer le comptage"
+        description="Souhaitez-vous terminer le comptage et passer cet inventaire en attente de validation ? Vous ne pourrez plus modifier les quantités comptées."
+        confirmLabel="Terminer le comptage"
+        variant="default"
+        isLoading={actionLoading === 'complete'}
+      />
+
+      {/* Modal Annuler */}
+      <ConfirmModal
+        isOpen={confirmAction === 'cancel'}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleCancelConfirm}
+        title="Annuler l'inventaire"
+        description="Êtes-vous sûr de vouloir annuler cet inventaire ? Cette action est irréversible et aucun stock ne sera modifié."
+        confirmLabel="Oui, annuler"
+        variant="destructive"
+        isLoading={actionLoading === 'cancel'}
+      />
     </div>
   );
 }

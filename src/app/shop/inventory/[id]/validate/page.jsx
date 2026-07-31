@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import StatusBadge from '@/components/inventory/StatusBadge';
 import InventoryValidationSummary from '@/components/inventory/InventoryValidationSummary';
 import InventoryCountTable from '@/components/inventory/InventoryCountTable';
+import ConfirmModal from '@/components/inventory/ConfirmModal';
 import useInventoryStore from '@/store/inventoryStore';
 
 const formatDate = (date) => {
@@ -23,13 +24,15 @@ export default function InventoryValidatePage() {
   const { currentSession, isLoading, fetchSession, validateSession, resumeSession } = useInventoryStore();
   const [isValidating, setIsValidating] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (id) fetchSession(id);
   }, [id]);
 
-  const handleValidate = async () => {
-    if (!confirm('Valider définitivement cet inventaire ?\n\nLes stocks seront ajustés automatiquement. Cette action est irréversible.')) return;
+  const handleValidateClick = () => setIsConfirmOpen(true);
+
+  const handleValidateConfirm = async () => {
     setIsValidating(true);
     try {
       const result = await validateSession(id);
@@ -39,6 +42,7 @@ export default function InventoryValidatePage() {
       toast.error(err.response?.data?.message || 'Erreur lors de la validation');
     } finally {
       setIsValidating(false);
+      setIsConfirmOpen(false);
     }
   };
 
@@ -145,13 +149,24 @@ export default function InventoryValidatePage() {
             {/* Synthèse de validation */}
             <InventoryValidationSummary
               session={session}
-              onValidate={handleValidate}
+              onValidate={handleValidateClick}
               onResume={handleResume}
               isValidating={isValidating}
             />
           </>
         )}
       </motion.div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleValidateConfirm}
+        title="Validation finale de l'inventaire"
+        description="Êtes-vous sûr de vouloir valider cet inventaire ? Les stocks seront ajustés automatiquement avec les écarts constatés. Cette action est irréversible."
+        confirmLabel="Oui, valider l'inventaire"
+        variant="default"
+        isLoading={isValidating}
+      />
     </div>
   );
 }
