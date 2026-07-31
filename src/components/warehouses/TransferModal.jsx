@@ -93,7 +93,7 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
 
                     <div>
                         <p className="text-sm text-gray-600 mb-2">Produit : <span className="font-semibold text-gray-900">{stock.product_name}</span></p>
-                        <p className="text-sm text-gray-600">Stock disponible : <span className="font-semibold text-brand-600">{stock.quantity}</span></p>
+                        <p className="text-sm text-gray-600">Stock disponible : <span className="font-semibold text-brand-600">{Number(stock.quantity)}</span></p>
                     </div>
 
                     <div>

@@ -2,8 +2,8 @@
 import { motion } from 'framer-motion';
 import { Package, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
 
-export default function ProductStats({ products }) {
-  const totalProducts = products.length;
+export default function ProductStats({ products, totalProductsCount }) {
+  const totalProducts = totalProductsCount ?? products.length;
   const lowStock = products.filter(
     (p) => p.manage_stock && p.current_stock > 0 && p.current_stock <= p.low_stock_threshold
   ).length;
@@ -11,8 +11,8 @@ export default function ProductStats({ products }) {
     (p) => p.manage_stock && p.current_stock <= 0
   ).length;
   const totalValue = products.reduce((sum, p) => sum + p.current_stock * p.cost_price, 0);
-  const avgPrice = totalProducts > 0
-    ? products.reduce((sum, p) => sum + parseFloat(p.retail_price), 0) / totalProducts
+  const avgPrice = products.length > 0
+    ? products.reduce((sum, p) => sum + parseFloat(p.retail_price), 0) / products.length
     : 0;
 
   const stats = [

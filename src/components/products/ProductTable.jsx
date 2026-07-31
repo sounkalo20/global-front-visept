@@ -90,7 +90,7 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                         {product.wholesale_price > 0 ? `${parseFloat(product.wholesale_price).toLocaleString()} FCFA` : '-'}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <span className="font-medium">{product.current_stock}</span>
+                                        <span className="font-medium">{Number(product.current_stock)}</span>
                                         <span className="text-xs text-gray-400 ml-1">{product.unit_symbol || 'pcs'}</span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
@@ -163,7 +163,7 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                     ) : (
                                         <p className="font-semibold">{parseFloat(product.retail_price).toLocaleString()} F</p>
                                     )}
-                                    <p className="text-sm text-gray-500">{product.current_stock} {product.unit_symbol || 'pcs'}</p>
+                                    <p className="text-sm text-gray-500">{Number(product.current_stock)} {product.unit_symbol || 'pcs'}</p>
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-3 pt-3 border-t">

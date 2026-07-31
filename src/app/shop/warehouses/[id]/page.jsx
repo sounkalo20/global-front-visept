@@ -196,7 +196,7 @@ export default function WarehouseDetailPage() {
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${parseFloat(stock.quantity) > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                    {stock.quantity}
+                                                    {Number(stock.quantity)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right space-x-2">
@@ -274,11 +274,11 @@ export default function WarehouseDetailPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={parseFloat(mov.quantity) > 0 ? 'text-green-600' : 'text-red-600'}>
-                                                    {parseFloat(mov.quantity) > 0 ? '+' : ''}{mov.quantity}
+                                                    {parseFloat(mov.quantity) > 0 ? '+' : ''}{Number(mov.quantity)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-gray-500">
-                                                {mov.stock_before} → {mov.stock_after}
+                                                {Number(mov.stock_before)} → {Number(mov.stock_after)}
                                             </td>
                                             <td className="px-6 py-4 text-gray-500 text-xs max-w-xs truncate">
                                                 {mov.notes}
@@ -403,11 +403,11 @@ export default function WarehouseDetailPage() {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span className={parseFloat(adj.quantity) > 0 ? 'text-green-600' : 'text-red-600'}>
-                                                            {parseFloat(adj.quantity) > 0 ? '+' : ''}{adj.quantity}
+                                                            {parseFloat(adj.quantity) > 0 ? '+' : ''}{Number(adj.quantity)}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500">
-                                                        {adj.stock_before} → {adj.stock_after}
+                                                        {Number(adj.stock_before)} → {Number(adj.stock_after)}
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500">
                                                         {adj.first_name} {adj.last_name}

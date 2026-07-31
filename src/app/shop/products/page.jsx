@@ -13,9 +13,16 @@ import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButt
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ProductsPage() {
-  const { products, totalProducts, isLoading, fetchProducts } = useProductStore();
+  const { products, totalProducts, totalPages, isLoading, fetchProducts } = useProductStore();
   const { activeCompany } = useCompanyStore();
   const { fetchCategories } = useCategoryStore();
 
@@ -26,16 +33,17 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
+  const [page, setPage] = useState(1);
 
   const loadData = useCallback(() => {
     if (activeCompany) {
-      const params = { sort_by: sortBy };
+      const params = { sort_by: sortBy, page };
       if (search) params.search = search;
       if (stockFilter === 'low') params.low_stock = 'true';
       fetchProducts(activeCompany.id, params);
       fetchCategories(activeCompany.id);
     }
-  }, [activeCompany, search, stockFilter, sortBy]);
+  }, [activeCompany, search, stockFilter, sortBy, page]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -80,7 +88,7 @@ export default function ProductsPage() {
           <EmptyProductState onCreate={() => setModalOpen(true)} />
         ) : (
           <>
-            {products.length > 0 && <ProductStats products={filteredProducts} />}
+            {products.length > 0 && <ProductStats products={filteredProducts} totalProductsCount={totalProducts} />}
             <ProductFilters
               search={search}
               onSearchChange={setSearch}
@@ -94,6 +102,33 @@ export default function ProductsPage() {
               onEdit={(p) => { setEditingProduct(p); setModalOpen(true); }}
               onDelete={setDeletingProduct}
             />
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <span className="text-sm text-gray-500 mx-4">
+                        Page {page} sur {totalPages}
+                      </span>
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
           </>
         )}
       </motion.div>

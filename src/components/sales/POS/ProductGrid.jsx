@@ -14,9 +14,9 @@ function getStockInfo(product) {
   if (!product.manage_stock) return null;
   if (product.current_stock <= 0) return { ...STOCK_BADGES.out };
   if (product.current_stock <= product.low_stock_threshold) {
-    return { ...STOCK_BADGES.low, label: `${product.current_stock} restants` };
+    return { ...STOCK_BADGES.low, label: `${Number(product.current_stock)} restants` };
   }
-  return { ...STOCK_BADGES.ok, label: `${product.current_stock} en stock` };
+  return { ...STOCK_BADGES.ok, label: `${Number(product.current_stock)} en stock` };
 }
 
 export default function ProductGrid({ products, cartItems, onAddToCart, onUpdateQuantity, onRemoveItem }) {

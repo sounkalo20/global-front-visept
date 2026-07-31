@@ -8,10 +8,17 @@ import SalesFilters from '@/components/sales/SalesFilters';
 import SalesTable from '@/components/sales/SalesTable';
 import ExportSalesPDFDialog from '@/components/sales/ExportSalesPDFDialog';
 import useSaleStore from '@/store/saleStore';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import useCompanyStore from '@/store/companyStore';
 
 export default function SalesPage() {
-  const { sales, stats, isLoading, fetchSales, fetchStats } = useSaleStore();
+  const { sales, stats, totalPages, isLoading, fetchSales, fetchStats } = useSaleStore();
   const { activeCompany } = useCompanyStore();
   const router = useRouter();
 
@@ -19,10 +26,11 @@ export default function SalesPage() {
   const [paymentStatus, setPaymentStatus] = useState('');
   const [status, setStatus] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (activeCompany) {
-      const params = { search, payment_status: paymentStatus, status };
+      const params = { search, payment_status: paymentStatus, status, page };
       if (dateFilter === 'today') {
         const today = new Date().toISOString().split('T')[0];
         params.start_date = today;
@@ -31,7 +39,7 @@ export default function SalesPage() {
       fetchSales(activeCompany.id, params);
       fetchStats(activeCompany.id);
     }
-  }, [activeCompany, search, paymentStatus, status, dateFilter]);
+  }, [activeCompany, search, paymentStatus, status, dateFilter, page]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -62,7 +70,36 @@ export default function SalesPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
         </div>
       ) : (
-        <SalesTable sales={sales} />
+        <>
+          <SalesTable sales={sales} />
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="text-sm text-gray-500 mx-4">
+                      Page {page} sur {totalPages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

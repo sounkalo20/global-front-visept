@@ -140,7 +140,7 @@ export default function StockManager({ product, onClose }) {
           <span className="text-sm font-medium">Stock boutique actuel :</span>
         </div>
         <span className="font-bold text-slate-800 text-base">
-          {product.current_stock} {product.unit_symbol || 'pcs'}
+          {Number(product.current_stock)} {product.unit_symbol || 'pcs'}
         </span>
       </div>
 
