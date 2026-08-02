@@ -16,12 +16,15 @@ const employeeSchema = z.object({
   last_name: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Email invalide'),
   phone: z.string().optional(),
-  role: z.enum(['manager', 'cashier'], { required_error: 'Le rôle est requis' }),
+  role_id: z.string().min(1, 'Le rôle est requis'),
   password: z.string().optional(),
 });
 
 export default function EmployeeModal({ isOpen, onClose, employeeToEdit, companyId, onEmployeeSaved }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const { getRoles } = require('@/lib/api/rbac');
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(employeeSchema),
@@ -30,7 +33,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
       last_name: '',
       email: '',
       phone: '',
-      role: 'manager',
+      role_id: '',
       password: '',
     }
   });
@@ -42,7 +45,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: employeeToEdit.last_name || '',
         email: employeeToEdit.email || '',
         phone: employeeToEdit.phone || '',
-        role: employeeToEdit.role || 'manager',
+        role_id: employeeToEdit.role_id?.toString() || '',
         password: '',
       });
     } else {
@@ -51,11 +54,30 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: '',
         email: '',
         phone: '',
-        role: 'manager',
+        role_id: '',
         password: '',
       });
     }
   }, [employeeToEdit, reset, isOpen]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (companyId && isOpen) {
+        setIsLoadingRoles(true);
+        try {
+          const res = await getRoles(companyId);
+          // On ne permet pas d'assigner le rôle Propriétaire
+          const assignableRoles = res.data.roles.filter(r => r.name !== 'Propriétaire');
+          setRoles(assignableRoles);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoadingRoles(false);
+        }
+      }
+    };
+    fetchRoles();
+  }, [companyId, isOpen]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -125,22 +147,25 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Rôle</Label>
+            <Label htmlFor="role_id">Rôle</Label>
             <Select 
-              value={register('role').value} 
-              onValueChange={(val) => register('role').onChange({ target: { value: val, name: 'role' }})} 
-              defaultValue="manager"
-              {...register('role')}
+              value={register('role_id').value} 
+              onValueChange={(val) => register('role_id').onChange({ target: { value: val, name: 'role_id' }})} 
+              {...register('role_id')}
+              disabled={isLoading || isLoadingRoles}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un rôle" />
+                <SelectValue placeholder={isLoadingRoles ? "Chargement des rôles..." : "Sélectionnez un rôle"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="manager">Gérant</SelectItem>
-                <SelectItem value="cashier">Caissier</SelectItem>
+                {roles.map(role => (
+                  <SelectItem key={role.id} value={role.id.toString()}>
+                    {role.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
+            {errors.role_id && <p className="text-xs text-red-500">{errors.role_id.message}</p>}
           </div>
 
           <div className="space-y-2">

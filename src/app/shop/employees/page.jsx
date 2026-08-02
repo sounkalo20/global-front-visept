@@ -11,6 +11,8 @@ import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
 import { toast } from 'sonner';
 import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
 import { useSubscription } from '@/hooks/useSubscription';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function EmployeesPage() {
   const { activeCompany } = useCompanyStore();
@@ -69,7 +71,8 @@ export default function EmployeesPage() {
       title="Module Employés bloqué"
       description="Le module de gestion des employés et des accès n'est pas inclus dans votre forfait actuel."
     >
-    <div className="mx-auto max-w-6xl px-4 py-8">
+      <PermissionGuard requiredPermission="employees.view">
+        <div className="mx-auto max-w-6xl px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         
         {/* Header */}
@@ -80,10 +83,12 @@ export default function EmployeesPage() {
               Gérez les accès et les membres de votre boutique.
             </p>
           </div>
-          <Button onClick={() => handleOpenModal()} className="w-full sm:w-auto">
-            <Plus size={18} className="mr-2" />
-            Ajouter un employé
-          </Button>
+          <HasPermission required="employees.create">
+            <Button onClick={() => handleOpenModal()} className="w-full sm:w-auto">
+              <Plus size={18} className="mr-2" />
+              Ajouter un employé
+            </Button>
+          </HasPermission>
         </div>
 
         {/* Search */}
@@ -162,7 +167,7 @@ export default function EmployeesPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                          {emp.role === 'manager' ? 'Gérant' : emp.role === 'cashier' ? 'Caissier' : emp.role}
+                          {emp.role_name}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-gray-500">
@@ -170,24 +175,28 @@ export default function EmployeesPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenModal(emp)}
-                            className="text-gray-500 hover:text-brand-600"
-                            title="Modifier"
-                          >
-                            <Edit2 size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEmployeeToDelete(emp)}
-                            className="text-gray-500 hover:text-red-600"
-                            title="Retirer"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                          <HasPermission required="employees.edit">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenModal(emp)}
+                              className="text-gray-500 hover:text-brand-600"
+                              title="Modifier"
+                            >
+                              <Edit2 size={16} />
+                            </Button>
+                          </HasPermission>
+                          <HasPermission required="employees.delete">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setEmployeeToDelete(emp)}
+                              className="text-gray-500 hover:text-red-600"
+                              title="Retirer"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </HasPermission>
                         </div>
                       </td>
                     </tr>
@@ -217,6 +226,7 @@ export default function EmployeesPage() {
         onEmployeeDeleted={fetchEmployeesList}
       />
     </div>
+    </PermissionGuard>
     </FeatureLockedOverlay>
   );
 }

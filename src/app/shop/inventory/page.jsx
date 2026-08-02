@@ -11,6 +11,8 @@ import useInventoryStore from '@/store/inventoryStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
 import { useRouter } from 'next/navigation';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -52,7 +54,8 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <PermissionGuard requiredPermission="inventory.view">
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -67,10 +70,12 @@ export default function InventoryPage() {
               <RefreshCw size={15} className={isLoading ? 'animate-spin' : ''} />
               Actualiser
             </Button>
-            <Button onClick={() => setModalOpen(true)} className="gap-2">
-              <Plus size={16} />
-              Nouvel inventaire
-            </Button>
+            <HasPermission required="inventory.count">
+              <Button onClick={() => setModalOpen(true)} className="gap-2">
+                <Plus size={16} />
+                Nouvel inventaire
+              </Button>
+            </HasPermission>
           </div>
         </div>
 
@@ -118,5 +123,6 @@ export default function InventoryPage() {
         onCreated={handleSessionCreated}
       />
     </div>
+    </PermissionGuard>
   );
 }

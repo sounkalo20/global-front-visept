@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import ReturnDetailModal from '@/components/sales/ReturnDetailModal';
 import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
 import { useSubscription } from '@/hooks/useSubscription';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
 
 export default function ReturnsPage() {
   const { activeCompany } = useCompanyStore();
@@ -47,7 +48,8 @@ export default function ReturnsPage() {
       title="Module Retours bloqué"
       description="Le module de gestion des retours clients n'est pas inclus dans votre forfait actuel."
     >
-    <div className="mx-auto max-w-6xl px-4 py-8">
+      <PermissionGuard requiredPermission="returns.view">
+        <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Retours Produits</h1>
@@ -135,6 +137,7 @@ export default function ReturnsPage() {
         onOpenChange={(open) => !open && setSelectedReturnId(null)} 
       />
     </div>
+    </PermissionGuard>
     </FeatureLockedOverlay>
   );
 }

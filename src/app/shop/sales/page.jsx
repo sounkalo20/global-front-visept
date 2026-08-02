@@ -9,6 +9,8 @@ import SalesTable from '@/components/sales/SalesTable';
 import ExportSalesPDFDialog from '@/components/sales/ExportSalesPDFDialog';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function SalesPage() {
   const { sales, stats, isLoading, fetchSales, fetchStats } = useSaleStore();
@@ -34,7 +36,8 @@ export default function SalesPage() {
   }, [activeCompany, search, paymentStatus, status, dateFilter]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <PermissionGuard requiredPermission="sales.view">
+      <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Ventes</h1>
@@ -42,9 +45,11 @@ export default function SalesPage() {
         </div>
         <div className="flex items-center gap-3">
           <ExportSalesPDFDialog />
-          <Button onClick={() => router.push('/shop/sales/new')} size="lg">
-            <Plus size={20} className="mr-2" /> Nouvelle vente
-          </Button>
+          <HasPermission required="sales.create">
+            <Button onClick={() => router.push('/shop/sales/new')} size="lg">
+              <Plus size={20} className="mr-2" /> Nouvelle vente
+            </Button>
+          </HasPermission>
         </div>
       </div>
 
@@ -65,5 +70,6 @@ export default function SalesPage() {
         <SalesTable sales={sales} />
       )}
     </div>
+    </PermissionGuard>
   );
 }

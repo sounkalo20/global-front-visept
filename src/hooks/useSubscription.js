@@ -1,4 +1,5 @@
 import useCompanyStore from '@/store/companyStore';
+import { useCallback, useMemo } from 'react';
 
 /**
  * Hook pour gérer l'état et les fonctionnalités de l'abonnement SaaS (Visept)
@@ -29,34 +30,36 @@ export const useSubscription = () => {
   const status = getStatus();
   const isExpiredOrCanceled = status === 'expired' || status === 'canceled';
 
-  let features = {};
-  if (activeCompany && activeCompany.plan_features) {
-    try {
-      features = typeof activeCompany.plan_features === 'string' 
-        ? JSON.parse(activeCompany.plan_features) 
-        : activeCompany.plan_features;
-    } catch (e) {
-      features = {};
+  const features = useMemo(() => {
+    if (activeCompany && activeCompany.plan_features) {
+      try {
+        return typeof activeCompany.plan_features === 'string' 
+          ? JSON.parse(activeCompany.plan_features) 
+          : activeCompany.plan_features;
+      } catch (e) {
+        return {};
+      }
     }
-  }
+    return {};
+  }, [activeCompany]);
 
-  const limits = {
+  const limits = useMemo(() => ({
     max_employees: activeCompany?.max_employees ?? null,
     max_products: activeCompany?.max_products ?? null,
     max_clients: activeCompany?.max_clients ?? null,
-  };
+  }), [activeCompany]);
 
-  const hasFeature = (featureName) => {
+  const hasFeature = useCallback((featureName) => {
     if (isExpiredOrCanceled) return false;
     return features[featureName] === true;
-  };
+  }, [isExpiredOrCanceled, features]);
 
-  const canAddMore = (limitName, currentCount) => {
+  const canAddMore = useCallback((limitName, currentCount) => {
     if (isExpiredOrCanceled) return false;
     const limit = limits[limitName];
     if (limit === null || limit === undefined) return true; // Illimité
     return currentCount < limit;
-  };
+  }, [isExpiredOrCanceled, limits]);
 
   return {
     status,

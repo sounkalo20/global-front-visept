@@ -15,6 +15,8 @@ import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
 import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function ProductsPage() {
   const { products, totalProducts, isLoading, fetchProducts } = useProductStore();
@@ -57,7 +59,8 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <PermissionGuard requiredPermission="products.view">
+      <div className="mx-auto max-w-6xl px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -68,18 +71,20 @@ export default function ProductsPage() {
           {products.length > 0 && (
             <div className="flex items-center gap-3">
               <ExportProductsPDFButton />
-              <Button 
-                onClick={() => { 
-                  if (!canAddMore('max_products', totalProducts)) {
-                    toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
-                    return;
-                  }
-                  setEditingProduct(null); 
-                  setModalOpen(true); 
-                }}
-              >
-                <Plus size={18} className="mr-2" /> Nouveau produit
-              </Button>
+              <HasPermission required="products.create">
+                <Button 
+                  onClick={() => { 
+                    if (!canAddMore('max_products', totalProducts)) {
+                      toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+                      return;
+                    }
+                    setEditingProduct(null); 
+                    setModalOpen(true); 
+                  }}
+                >
+                  <Plus size={18} className="mr-2" /> Nouveau produit
+                </Button>
+              </HasPermission>
             </div>
           )}
         </div>
@@ -130,5 +135,6 @@ export default function ProductsPage() {
         onSuccess={loadData}
       />
     </div>
+    </PermissionGuard>
   );
 }
