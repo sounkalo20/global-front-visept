@@ -32,7 +32,7 @@ import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal'
 export default function PosLayout({ mode = 'create', saleId = null, backLink }) {
   const router = useRouter();
   const { activeCompany } = useCompanyStore();
-  const { products, fetchProducts } = useProductStore();
+  const { posProducts, fetchPosProducts } = useProductStore();
   const { createSale, updateSale, fetchSaleById, currentSale } = useSaleStore();
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +53,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   };
 
   useEffect(() => {
-    if (activeCompany) fetchProducts(activeCompany.id);
+    if (activeCompany) fetchPosProducts(activeCompany.id);
   }, [activeCompany]);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
   const handleReceiptClosed = () => {
     cart.clearCart();
-    if (activeCompany) fetchProducts(activeCompany.id);
+    if (activeCompany) fetchPosProducts(activeCompany.id);
     setCompletedSale(null);
   };
 
@@ -210,7 +210,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
         {/* Zone produits */}
         <div className="flex-1 overflow-hidden">
-          <ProductGrid products={products} onAddToCart={handleAddToCart} cartItems={cart.items} />
+          <ProductGrid products={posProducts} onAddToCart={handleAddToCart} cartItems={cart.items} />
         </div>
 
         {/* Zone panier (en bas) */}
