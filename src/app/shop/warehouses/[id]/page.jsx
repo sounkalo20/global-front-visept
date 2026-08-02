@@ -9,7 +9,8 @@ import {
     Plus,
     Minus,
     Filter,
-    Calendar
+    Calendar,
+    XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ import TransferModal from '@/components/warehouses/TransferModal';
 import AdjustStockModal from '@/components/warehouses/AdjustStockModal';
 import ExportWarehouseStockPDFButton from '@/components/warehouses/ExportWarehouseStockPDFButton';
 import ExportWarehouseHistoryPDFDialog from '@/components/warehouses/ExportWarehouseHistoryPDFDialog';
+import CancelTransferModal from '@/components/warehouses/CancelTransferModal';
 
 export default function WarehouseDetailPage() {
     const { id } = useParams();
@@ -46,6 +48,7 @@ export default function WarehouseDetailPage() {
     const [transferModalOpen, setTransferModalOpen] = useState(false);
     const [adjustModalOpen, setAdjustModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [cancelModalMovement, setCancelModalMovement] = useState(null);
     const [adjustmentFilter, setAdjustmentFilter] = useState({
         start_date: '',
         end_date: '',
@@ -240,6 +243,7 @@ export default function WarehouseDetailPage() {
                                     <th className="px-6 py-4 font-medium">Quantité</th>
                                     <th className="px-6 py-4 font-medium">Avant/Après</th>
                                     <th className="px-6 py-4 font-medium">Notes</th>
+                                    <th className="px-6 py-4 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y text-sm">
@@ -286,6 +290,22 @@ export default function WarehouseDetailPage() {
                                                     <div className="text-brand-600 mt-1">
                                                         Vers: {mov.destination_company_name}
                                                     </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {mov.movement_type === 'transfer_to_shop' && mov.is_cancelled !== 1 && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                        onClick={() => setCancelModalMovement(mov)}
+                                                    >
+                                                        <XCircle size={14} className="mr-1" />
+                                                        Annuler
+                                                    </Button>
+                                                )}
+                                                {mov.movement_type === 'transfer_to_shop' && mov.is_cancelled === 1 && (
+                                                    <span className="text-xs text-gray-400 italic">Annulé</span>
                                                 )}
                                             </td>
                                         </tr>
@@ -470,6 +490,16 @@ export default function WarehouseDetailPage() {
                     // Rafraîchir les données
                     fetchWarehouseStocks(id);
                     fetchWarehouseAdjustments(id, { page: adjustmentPage, limit: 50 });
+                }}
+            />
+            
+            <CancelTransferModal
+                isOpen={!!cancelModalMovement}
+                onClose={() => setCancelModalMovement(null)}
+                movement={cancelModalMovement}
+                onSuccess={() => {
+                    fetchWarehouseStocks(id);
+                    fetchWarehouseMovements(id);
                 }}
             />
         </div>
