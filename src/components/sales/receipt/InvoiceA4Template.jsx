@@ -15,9 +15,19 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
   const title = isProforma ? 'PROFORMA' : 'FACTURE';
   
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#333' }}>
+    <div style={{ padding: '0', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#333' }}>
       
-      {/* HEADER */}
+      {/* BANNIÈRE */}
+      <div style={{ width: '100%', marginBottom: '20px' }}>
+        <img 
+          src="/banderol.png" 
+          alt="Banderole" 
+          style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', display: 'block' }} 
+        />
+      </div>
+
+      <div style={{ padding: '0 20px 20px 20px' }}>
+        {/* HEADER */}
       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333', paddingBottom: '20px', marginBottom: '20px' }}>
         <div>
           <h1 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#000' }}>{company?.name || 'VISEPT'}</h1>
@@ -107,6 +117,18 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
         </div>
       </div>
 
+      {/* SIGNATURES */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '50px', marginBottom: '50px', padding: '0 20px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Pour acquit</div>
+          <div style={{ borderTop: '1px dashed #333', width: '150px', margin: '0 auto' }}></div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Le fournisseur</div>
+          <div style={{ borderTop: '1px dashed #333', width: '150px', margin: '0 auto' }}></div>
+        </div>
+      </div>
+
       {/* FOOTER */}
       <div style={{ marginTop: '50px', textAlign: 'center', color: '#777', borderTop: '1px solid #eee', paddingTop: '20px', fontSize: '10px' }}>
         {isProforma ? (
@@ -120,6 +142,7 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
         <div style={{ marginTop: '10px' }}>Généré avec VISEPT</div>
       </div>
 
+      </div>
     </div>
   );
 }
