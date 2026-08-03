@@ -20,7 +20,7 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
       {/* BANNIÈRE */}
       <div style={{ width: '100%', marginBottom: '20px' }}>
         <img 
-          src="/banderol.png" 
+          src={typeof window !== 'undefined' ? `${window.location.origin}/banderol.png` : '/banderol.png'} 
           alt="Banderole" 
           style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', display: 'block' }} 
         />
