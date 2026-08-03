@@ -3,6 +3,7 @@ import { productsApi } from "@/lib/api/products";
 
 const useProductStore = create((set, get) => ({
   products: [],
+  posProducts: [],
   totalProducts: 0,
   totalPages: 1,
   currentPage: 1,
@@ -29,6 +30,27 @@ const useProductStore = create((set, get) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement.",
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchPosProducts: async (companyId) => {
+    if (!companyId) {
+      set({ posProducts: [], isLoading: false });
+      return;
+    }
+    set({ isLoading: true, error: null });
+    try {
+      const response = await productsApi.getAll(companyId, { limit: 'all' });
+      const { products } = response.data.data;
+      set({
+        posProducts: products,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Erreur lors du chargement (POS).",
         isLoading: false,
       });
     }
@@ -98,7 +120,7 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  clearProducts: () => set({ products: [], isLoading: false, error: null }),
+  clearProducts: () => set({ products: [], posProducts: [], isLoading: false, error: null }),
 }));
 
 export default useProductStore;

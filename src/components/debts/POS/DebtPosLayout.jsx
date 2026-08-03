@@ -18,7 +18,7 @@ import useCompanyStore from '@/store/companyStore';
 export default function DebtPosLayout() {
   const router = useRouter();
   const { activeCompany } = useCompanyStore();
-  const { products, fetchProducts } = useProductStore();
+  const { posProducts, fetchPosProducts } = useProductStore();
   const { createDebt } = useDebtStore();
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +34,7 @@ export default function DebtPosLayout() {
   const [cartExpanded, setCartExpanded] = useState(true);
 
   useEffect(() => {
-    if (activeCompany) fetchProducts(activeCompany.id);
+    if (activeCompany) fetchPosProducts(activeCompany.id);
     cart.clearCart();
     cart.setDiscount('none', 0);
   }, [activeCompany]);
@@ -90,7 +90,7 @@ export default function DebtPosLayout() {
       setSelectedClient(null);
       setDiscountType('none');
       setDiscountValue(0);
-      if (activeCompany) fetchProducts(activeCompany.id);
+      if (activeCompany) fetchPosProducts(activeCompany.id);
       router.push('/shop/debts');
     } else {
       toast.error(result.message);
@@ -136,7 +136,7 @@ export default function DebtPosLayout() {
 
         {/* Zone produits */}
         <div className="flex-1 overflow-hidden">
-          <ProductGrid products={products} onAddToCart={handleAddToCart} cartItems={cart.items} />
+          <ProductGrid products={posProducts} onAddToCart={handleAddToCart} cartItems={cart.items} />
         </div>
 
         {/* Zone panier (en bas) */}

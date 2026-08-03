@@ -8,6 +8,8 @@ import HasPermission from '@/components/auth/HasPermission';
 import StockManager from './StockManager';
 import ProductDetailModal from './ProductDetailModal';
 import useCompanyStore from '@/store/companyStore';
+import useWarehouseStore from '@/store/warehouseStore';
+import { useEffect } from 'react';
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -34,6 +36,19 @@ export default function ProductTable({ products, onEdit, onDelete }) {
     const [stockModalProduct, setStockModalProduct] = useState(null);
     const [detailModalProduct, setDetailModalProduct] = useState(null);
     const { activeCompany } = useCompanyStore();
+    const { warehouses, fetchWarehouses } = useWarehouseStore();
+
+    useEffect(() => {
+        if (activeCompany) {
+            fetchWarehouses(activeCompany.id);
+        }
+    }, [activeCompany, fetchWarehouses]);
+
+    const getWarehouseStock = (product, warehouseId) => {
+        if (!product.warehouse_stocks) return 0;
+        const stockEntry = product.warehouse_stocks.find(ws => ws.warehouse_id === warehouseId);
+        return stockEntry ? Number(stockEntry.quantity) : 0;
+    };
 
     return (
         <>
@@ -91,8 +106,25 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                         {product.wholesale_price > 0 ? `${parseFloat(product.wholesale_price).toLocaleString()} FCFA` : '-'}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <span className="font-medium">{product.current_stock}</span>
-                                        <span className="text-xs text-gray-400 ml-1">{product.unit_symbol || 'pcs'}</span>
+                                        <div className="flex flex-col items-end gap-1">
+                                            <div className="font-semibold text-gray-900 bg-gray-100 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1">
+                                                <span>boutique:</span>
+                                                <span>{Number(product.current_stock)}</span>
+                                                <span className="text-[10px] text-gray-500">{product.unit_symbol || 'pcs'}</span>
+                                            </div>
+                                            {product.manage_stock === 1 && warehouses.length > 0 && (
+                                                <div className="flex flex-col gap-1 mt-1 border-t border-dashed pt-1 min-w-[140px] w-full">
+                                                    {warehouses.map(w => (
+                                                        <div key={w.id} className="text-[10px] text-gray-500 flex items-start justify-between w-full gap-2">
+                                                            <span className="text-left leading-tight">{w.name} :</span>
+                                                            <span className={cn("font-medium shrink-0", getWarehouseStock(product, w.id) > 0 ? "text-green-600" : "text-gray-400")}>
+                                                                {getWarehouseStock(product, w.id)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-center">
                                         <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium', stockStatus.color)}>
@@ -164,13 +196,29 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                         </span>
                                     </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex flex-col items-end">
                                     {!product.is_available && parseFloat(product.retail_price) === 0 ? (
                                         <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full mb-1 inline-block">Prix à définir</span>
                                     ) : (
                                         <p className="font-semibold">{parseFloat(product.retail_price).toLocaleString()} F</p>
                                     )}
-                                    <p className="text-sm text-gray-500">{product.current_stock} {product.unit_symbol || 'pcs'}</p>
+                                    <div className="mt-1 font-semibold text-gray-900 bg-gray-100 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1">
+                                        <span>Total:</span>
+                                        <span>{Number(product.current_stock)}</span>
+                                        <span className="text-[10px] text-gray-500">{product.unit_symbol || 'pcs'}</span>
+                                    </div>
+                                    {product.manage_stock === 1 && warehouses.length > 0 && (
+                                                <div className="flex flex-col gap-1 mt-2 border-t border-dashed pt-1 w-full min-w-[140px]">
+                                                    {warehouses.map(w => (
+                                                        <div key={w.id} className="text-[10px] text-gray-500 flex items-start justify-between w-full gap-2">
+                                                            <span className="text-left leading-tight">{w.name} :</span>
+                                                            <span className={cn("font-medium shrink-0 ml-2", getWarehouseStock(product, w.id) > 0 ? "text-green-600" : "text-gray-400")}>
+                                                                {getWarehouseStock(product, w.id)}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                 </div>
                             </div>
                             <div className="flex gap-2 mt-3 pt-3 border-t">

@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,24 @@ export default function ProductFilters({
   sortBy,
   onSortByChange,
 }) {
+  const [localSearch, setLocalSearch] = useState(search || '');
+
+  useEffect(() => {
+    setLocalSearch(search || '');
+  }, [search]);
+
+  const handleSearch = () => {
+    onSearchChange(localSearch);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   const clearFilters = () => {
+    setLocalSearch('');
     onSearchChange('');
     onStockFilterChange('');
     onSortByChange('created_at');
@@ -29,14 +47,20 @@ export default function ProductFilters({
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-4">
-      <div className="relative flex-1">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <Input
-          placeholder="Rechercher un produit..."
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
-        />
+      <div className="relative flex-1 flex gap-2">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Input
+            placeholder="Rechercher un produit..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="pl-10"
+          />
+        </div>
+        <Button onClick={handleSearch} className="shrink-0 bg-brand-600 hover:bg-brand-700 text-white">
+          Rechercher
+        </Button>
       </div>
 
       <div className="flex gap-2 flex-wrap">

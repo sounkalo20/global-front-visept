@@ -109,7 +109,7 @@ export default function ReceiveItemsModal({ isOpen, onClose, order, items }) {
                                 <div className="flex-1">
                                     <p className="font-medium text-sm">{item.product_name}</p>
                                     <p className="text-xs text-gray-400">
-                                        Commandé: {item.quantity_ordered} • Déjà reçu: {item.quantity_received || 0} • Reste: {remaining}
+                                        Commandé: {Number(item.quantity_ordered)} • Déjà reçu: {Number(item.quantity_received || 0)} • Reste: {remaining}
                                     </p>
                                 </div>
                                 <div className="w-24">

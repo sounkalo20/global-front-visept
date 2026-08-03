@@ -105,7 +105,7 @@ export default function ProductDetailModal({ open, onOpenChange, product, compan
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500">Stock boutique actuel</p>
-                      <p className="text-base font-bold text-gray-900 mt-0.5">{product.current_stock} {product.unit_symbol || 'pcs'}</p>
+                      <p className="text-base font-bold text-gray-900 mt-0.5">{Number(product.current_stock)} {product.unit_symbol || 'pcs'}</p>
                     </div>
                   </div>
                 </div>

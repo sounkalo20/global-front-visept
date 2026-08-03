@@ -150,7 +150,7 @@ const AdjustStockModal = ({ isOpen, onClose, stock, warehouseId, onSuccess }) =>
                         )}
                         {stock?.quantity !== undefined && (
                             <span className="text-sm text-gray-500 block">
-                                Stock actuel : {stock.quantity} unités
+                                Stock actuel : {Number(stock.quantity)} unités
                             </span>
                         )}
                     </DialogDescription>
