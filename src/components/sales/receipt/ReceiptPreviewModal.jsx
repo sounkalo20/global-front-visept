@@ -17,7 +17,7 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
 
   const handlePrint = () => {
     printReceipt(sale, activeCompany, user, paperSize, isProforma);
-    onOpenChange(false);
+    handleClose(false);
   };
 
   const handleClose = (openState) => {

@@ -9,6 +9,7 @@ const useCartStore = create((set, get) => ({
   paymentMethod: "cash",
   paymentReference: "",
   amountPaid: 0,
+  payments: [{ method: "cash", amount: 0, reference: "" }],
   notes: "",
 
   // CHARGER UNE VENTE EXISTANTE DANS LE PANIER (pour modification)
@@ -40,6 +41,9 @@ const useCartStore = create((set, get) => ({
       paymentMethod: sale.payment_method || "cash",
       paymentReference: sale.payment_reference || "",
       amountPaid: parseFloat(sale.amount_paid || 0),
+      payments: sale.payments && sale.payments.length > 0 
+        ? sale.payments.map(p => ({ method: p.payment_method, amount: parseFloat(p.amount), reference: p.reference || "" }))
+        : [{ method: sale.payment_method || "cash", amount: parseFloat(sale.amount_paid || 0), reference: sale.payment_reference || "" }],
       notes: sale.notes || "",
     });
   },
@@ -134,6 +138,7 @@ const useCartStore = create((set, get) => ({
       paymentMethod: "cash",
       paymentReference: "",
       amountPaid: 0,
+      payments: [],
       notes: "",
     });
   },
@@ -142,7 +147,12 @@ const useCartStore = create((set, get) => ({
   setClient: (clientId, clientName) => set({ clientId, clientName }),
   setDiscount: (type, value) =>
     set({ discountType: type, discountValue: value }),
-  setPaymentMethod: (method) => set({ paymentMethod: method }),
+  setPayment: (method, amount, reference = "") =>
+    set({ paymentMethod: method, amountPaid: amount, paymentReference: reference }),
+  setPayments: (payments) => {
+    const totalPaid = payments.reduce((acc, p) => acc + (parseFloat(p.amount) || 0), 0);
+    set({ payments, amountPaid: totalPaid, paymentMethod: payments.length > 0 ? payments[0].method : 'cash' });
+  },
   setPaymentReference: (ref) => set({ paymentReference: ref }),
   setAmountPaid: (amount) => set({ amountPaid: amount }),
   setNotes: (notes) => set({ notes }),
@@ -193,6 +203,7 @@ const useCartStore = create((set, get) => ({
       amount_paid: state.amountPaid,
       payment_method: state.paymentMethod,
       payment_reference: state.paymentReference || null,
+      payments: state.payments,
       notes: state.notes || null,
     };
   },
@@ -219,6 +230,7 @@ const useCartStore = create((set, get) => ({
       amount_paid: state.amountPaid,
       payment_method: state.paymentMethod,
       payment_reference: state.paymentReference || null,
+      payments: state.payments,
       notes: state.notes || null,
     };
   },

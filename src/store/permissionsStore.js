@@ -9,16 +9,17 @@ const usePermissionsStore = create((set, get) => ({
   isLoading: false,
   isFetched: false,
 
-  fetchPermissions: async () => {
+  fetchPermissions: async (companyIdOverride = null) => {
     const activeCompany = useCompanyStore.getState().activeCompany;
-    if (!activeCompany) {
-      set({ permissions: [], roleName: null, isSystemRole: false, isFetched: true });
+    const targetCompanyId = companyIdOverride || activeCompany?.id;
+    if (!targetCompanyId) {
+      set({ permissions: [], roleName: null, isSystemRole: false, isFetched: false });
       return;
     }
 
     set({ isLoading: true });
     try {
-      const res = await api.get(`/rbac/${activeCompany.id}/my-permissions`);
+      const res = await api.get(`/rbac/${targetCompanyId}/my-permissions`);
       if (res.data.success) {
         set({
           permissions: res.data.data.permissions || [],

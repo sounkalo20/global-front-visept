@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,6 +13,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import ClientSelector from './ClientSelector';
@@ -23,17 +31,21 @@ import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
+import useCashStore from '@/store/cashStore';
 import useAuthStore from '@/store/authStore';
 import useFullscreen from '@/hooks/useFullscreen';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal';
+import { cn } from '@/lib/utils';
+import api from '@/lib/axios';
 
 export default function PosLayout({ mode = 'create', saleId = null, backLink }) {
   const router = useRouter();
   const { activeCompany } = useCompanyStore();
   const { posProducts, fetchPosProducts } = useProductStore();
   const { createSale, updateSale, fetchSaleById, currentSale } = useSaleStore();
+  const { activeSession, fetchActiveSession } = useCashStore();
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSale, setIsLoadingSale] = useState(false);
@@ -43,6 +55,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [showHistory, setShowHistory] = useState(false);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuthStore();
+  
+  const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
+  const [closingAmount, setClosingAmount] = useState('');
+  const [closingNotes, setClosingNotes] = useState('');
+  const [isClosing, setIsClosing] = useState(false);
 
   const isEditMode = mode === 'edit';
   const isCashier = activeCompany?.my_role === 'cashier';
@@ -53,8 +70,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   };
 
   useEffect(() => {
-    if (activeCompany) fetchPosProducts(activeCompany.id);
-  }, [activeCompany]);
+    if (activeCompany) {
+      fetchPosProducts(activeCompany.id);
+      if (mode === 'create') {
+        cart.clearCart();
+        fetchActiveSession(activeCompany.id);
+      }
+    }
+  }, [activeCompany, mode]);
 
   useEffect(() => {
     if (isEditMode && saleId && activeCompany) {
@@ -95,7 +118,6 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       toast.error('Le panier est vide.');
       return;
     }
-    // Créer un objet de vente "factice" basé sur le panier actuel pour l'impression
     const proformaSale = {
       sale_number: `PRF-${Date.now()}`,
       sale_date: new Date().toISOString(),
@@ -117,9 +139,36 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   };
 
   const handleReceiptClosed = () => {
-    cart.clearCart();
-    if (activeCompany) fetchPosProducts(activeCompany.id);
+      fetchPosProducts(activeCompany.id);
+      if (mode === 'create') {
+        cart.clearCart();
+        fetchActiveSession(activeCompany.id);
+      }
     setCompletedSale(null);
+  };
+
+  const handleCloseShift = async () => {
+    setIsClosing(true);
+    try {
+      await api.post(`/cash/sessions/${activeSession.id}/close`, {
+        company_id: activeCompany.id,
+        actual_closing_amount: closingAmount !== '' ? Number(closingAmount) : Number(activeSession.expected_closing_amount),
+        notes: closingNotes
+      });
+      toast.success("Caisse fermée avec succès");
+      setShowCloseShiftModal(false);
+      fetchActiveSession(activeCompany.id);
+      
+      // Rediriger le caissier vers la page d'ouverture de caisse
+      if (isCashier) {
+        router.replace('/shop/pos/shift');
+      }
+    } catch (error) {
+      console.error("Erreur de fermeture de caisse", error);
+      toast.error(error.response?.data?.message || "Erreur lors de la fermeture de la caisse");
+    } finally {
+      setIsClosing(false);
+    }
   };
 
   if (isLoadingSale || !activeCompany) {
@@ -131,11 +180,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
   return (
     <div className="h-screen flex bg-gray-50">
-      {/* ======================== */}
-      {/* COLONNE GAUCHE : Produits + Panier */}
-      {/* ======================== */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             {!isCashier && (
@@ -148,9 +193,20 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
               </Button>
             )}
             <div>
-              <h1 className="font-semibold text-lg">
-                {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-semibold text-lg">
+                  {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
+                </h1>
+                {!isEditMode && (
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1",
+                    activeSession ? "bg-green-100 text-green-700 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200"
+                  )}>
+                    <div className={cn("w-1.5 h-1.5 rounded-full", activeSession ? "bg-green-500" : "bg-gray-400")} />
+                    {activeSession ? `Caisse Ouverte : ${activeSession.register_name} - ${parseFloat(activeSession.expected_closing_amount || 0).toLocaleString()} FCFA` : 'Vente Libre'}
+                  </span>
+                )}
+              </div>
               {isEditMode && currentSale && (
                 <span className="text-xs text-gray-400">{currentSale.sale_number}</span>
               )}
@@ -158,6 +214,21 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
             <PosClock />
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
+            {activeSession && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => {
+                  setClosingAmount(activeSession.expected_closing_amount);
+                  setClosingNotes('');
+                  setShowCloseShiftModal(true);
+                }} 
+                className="hidden md:flex gap-2"
+              >
+                <LogOut size={16} />
+                Fermer la caisse
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="hidden md:flex gap-2 text-gray-600">
               <History size={16} />
               Historique
@@ -208,15 +279,12 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           </div>
         </header>
 
-        {/* Zone produits */}
         <div className="flex-1 overflow-hidden">
           <ProductGrid products={posProducts} onAddToCart={handleAddToCart} cartItems={cart.items} />
         </div>
 
-        {/* Zone panier (en bas) */}
         {itemsCount > 0 && (
           <div className="border-t bg-white shadow-lg shrink-0">
-            {/* Toggle panier */}
             <button
               onClick={() => setCartExpanded(!cartExpanded)}
               className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -251,25 +319,16 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         )}
       </div>
 
-      {/* ======================== */}
-      {/* COLONNE DROITE : Client + Paiement + Valider */}
-      {/* ======================== */}
       <div className="w-[380px] xl:w-[420px] border-l bg-white flex flex-col shrink-0 hidden lg:flex">
-        {/* Client */}
         <ClientSelector
           clientName={cart.clientName}
           onSetClient={cart.setClient}
         />
 
-        {/* Paiement */}
         <div className="flex-1 overflow-y-auto">
           <PaymentSection
-            paymentMethod={cart.paymentMethod}
-            onPaymentMethodChange={cart.setPaymentMethod}
-            amountPaid={cart.amountPaid}
-            onAmountPaidChange={cart.setAmountPaid}
-            paymentReference={cart.paymentReference}
-            onPaymentReferenceChange={cart.setPaymentReference}
+            payments={cart.payments}
+            onPaymentsChange={cart.setPayments}
             discountType={cart.discountType}
             onDiscountChange={cart.setDiscount}
             discountValue={cart.discountValue}
@@ -278,7 +337,6 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           />
         </div>
 
-        {/* Boutons Valider / Proforma */}
         <div className="p-4 border-t bg-white flex gap-2">
           <Button
             onClick={handleProforma}
@@ -309,7 +367,6 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         </div>
       </div>
 
-      {/* Mobile : bouton valider flottant */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
         <Button
           onClick={handleSubmit}
@@ -343,6 +400,80 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       )}
 
       <QuickHistoryModal open={showHistory} onOpenChange={setShowHistory} />
+
+      <Dialog open={showCloseShiftModal} onOpenChange={setShowCloseShiftModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clôture de Caisse</DialogTitle>
+            <DialogDescription>Rapport Z - Vérification des montants</DialogDescription>
+          </DialogHeader>
+
+          {activeSession && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-gray-50 rounded-xl space-y-3 text-sm">
+                <div className="flex justify-between border-b pb-2">
+                  <span className="text-gray-500">Caisse</span>
+                  <span className="font-medium text-gray-900">{activeSession.register_name}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <span className="text-gray-500">Fond initial</span>
+                  <span className="font-medium text-gray-900">{parseFloat(activeSession.opening_amount).toLocaleString()} FCFA</span>
+                </div>
+                <div className="flex justify-between border-b pb-2">
+                  <span className="text-gray-500">Montant attendu (Espèces)</span>
+                  <span className="font-bold text-gray-900 text-lg">{parseFloat(activeSession.expected_closing_amount).toLocaleString()} FCFA</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Montant réel compté (FCFA)</label>
+                <input
+                  type="number"
+                  value={closingAmount}
+                  onChange={(e) => setClosingAmount(e.target.value)}
+                  className="w-full p-3 border rounded-xl font-bold text-xl"
+                  placeholder="0"
+                />
+                
+                {closingAmount !== '' && Number(closingAmount) !== Number(activeSession.expected_closing_amount) && (
+                  <div className={`mt-2 text-sm p-3 rounded-lg flex items-start gap-2 ${Number(closingAmount) > Number(activeSession.expected_closing_amount) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">
+                        Écart de {Math.abs(Number(closingAmount) - Number(activeSession.expected_closing_amount)).toLocaleString()} FCFA
+                      </p>
+                      <p className="opacity-90 text-xs">Une justification est requise pour cet écart.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {(closingAmount === '' || Number(closingAmount) !== Number(activeSession.expected_closing_amount)) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Justification (Obligatoire si écart)</label>
+                  <textarea
+                    value={closingNotes}
+                    onChange={(e) => setClosingNotes(e.target.value)}
+                    className="w-full p-3 border rounded-xl text-sm min-h-[80px]"
+                    placeholder="Expliquez la raison de l'écart..."
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCloseShiftModal(false)}>Annuler</Button>
+            <Button 
+              onClick={handleCloseShift} 
+              variant="destructive"
+              disabled={isClosing || (closingAmount !== '' && Number(closingAmount) !== Number(activeSession?.expected_closing_amount) && !closingNotes.trim())}
+            >
+              {isClosing ? 'Clôture...' : 'Confirmer la clôture'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

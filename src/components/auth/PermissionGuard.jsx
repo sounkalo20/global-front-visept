@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 
 export function PermissionGuard({ requiredPermission, children }) {
   const router = useRouter();
-  const { hasPermission, isLoading } = usePermissionsStore();
+  const { hasPermission, isLoading, isFetched, permissions, isSystemRole, roleName } = usePermissionsStore();
 
-  if (isLoading) {
+  if (isLoading || !isFetched) {
     return (
       <div className="flex justify-center items-center h-full min-h-[50vh]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

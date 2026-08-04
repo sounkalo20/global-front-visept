@@ -8,7 +8,7 @@ import { BUSINESS_TYPE_MAP } from '@/lib/config/businessTypeMap';
 export default function useNavigation() {
     const { isSuperAdmin } = useAuthStore();
     const { activeCompany } = useCompanyStore();
-    const { hasPermission, isFetched: permsFetched } = usePermissionsStore();
+    const { hasPermission, isFetched: permsFetched, permissions, isSystemRole, roleName } = usePermissionsStore();
 
     const navigation = useMemo(() => {
         // 1. Super admin
@@ -26,8 +26,8 @@ export default function useNavigation() {
             baseNav = getNavigationByType('SHOP');
         }
 
-        // Si les permissions ne sont pas chargées, on ne montre rien
-        if (!permsFetched) return [];
+        // Si les permissions ne sont pas chargées et qu'on n'est pas Super Admin, on ne montre rien
+        if (!isSuperAdmin && !permsFetched) return [];
 
         return baseNav.map(section => {
             return {
@@ -45,7 +45,7 @@ export default function useNavigation() {
                 })
             };
         }).filter(section => section.items.length > 0);
-    }, [isSuperAdmin, activeCompany, hasPermission, permsFetched]);
+    }, [isSuperAdmin, activeCompany, hasPermission, permsFetched, permissions, isSystemRole, roleName]);
 
     return navigation;
 }

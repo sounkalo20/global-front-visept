@@ -293,20 +293,21 @@ export default function WarehouseDetailPage() {
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {mov.movement_type === 'transfer_to_shop' && mov.is_cancelled !== 1 && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => setCancelModalMovement(mov)}
-                                                    >
-                                                        <XCircle size={14} className="mr-1" />
-                                                        Annuler
-                                                    </Button>
-                                                )}
-                                                {mov.movement_type === 'transfer_to_shop' && mov.is_cancelled === 1 && (
-                                                    <span className="text-xs text-gray-400 italic">Annulé</span>
-                                                )}
+                                                {mov.movement_type === 'transfer_to_shop' ? (
+                                                    mov.is_cancelled === 1 ? (
+                                                        <span className="text-xs text-gray-400 italic">Annulé</span>
+                                                    ) : (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                            onClick={() => setCancelModalMovement(mov)}
+                                                        >
+                                                            <XCircle size={14} className="mr-1" />
+                                                            Annuler
+                                                        </Button>
+                                                    )
+                                                ) : null}
                                             </td>
                                         </tr>
                                     ))

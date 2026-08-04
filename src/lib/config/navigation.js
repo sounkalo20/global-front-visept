@@ -66,8 +66,9 @@ export const shopNavigation = [
         section: 'Finance',
         items: [
             { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, requirePermission: 'sales.view' },
+            { href: '/shop/cash', label: 'Caisse', icon: Receipt, requirePermission: 'sales.view' },
             { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, requirePermission: 'sales.return' },
-            { href: '/shop/expenses', label: 'Dépenses', icon: Receipt, requirePermission: 'dashboard.view' }, // On peut ajuster
+            { href: '/shop/expenses', label: 'Dépenses', icon: DollarSign, requirePermission: 'dashboard.view' },
             { href: '/shop/debts', label: 'Dettes', icon: DollarSign, requirePermission: 'dashboard.view' },
             { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign, requirePermission: 'purchases.view' }
         ],

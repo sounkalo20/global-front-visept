@@ -15,9 +15,15 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
   const title = isProforma ? 'PROFORMA' : 'FACTURE';
   
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#333' }}>
+    <div style={{ padding: '0', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#333' }}>
       
-      {/* HEADER */}
+      {/* HEADER IMAGE (Banderole) */}
+      <div style={{ width: '100%', height: '120px', overflow: 'hidden', marginBottom: '20px' }}>
+        <img src="/banderol.png" alt="Banderole" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+
+      <div style={{ padding: '0 20px 20px 20px' }}>
+      {/* HEADER INFO */}
       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #333', paddingBottom: '20px', marginBottom: '20px' }}>
         <div>
           <h1 style={{ margin: '0 0 10px 0', fontSize: '24px', color: '#000' }}>{company?.name || 'VISEPT'}</h1>
@@ -92,10 +98,19 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
 
           {!isProforma && (
             <div style={{ marginTop: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#555' }}>
-                <span>Montant payé ({sale.payment_method?.replace('_', ' ') || 'espèces'})</span>
-                <span>{paid.toLocaleString()} FCFA</span>
-              </div>
+              {sale.payments && sale.payments.length > 0 ? (
+                sale.payments.map((p, i) => (
+                  <div className="flex justify-between" key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#555' }}>
+                    <span>Montant payé ({p.payment_method?.replace('_', ' ') || 'espèces'})</span>
+                    <span>{parseInt(p.amount).toLocaleString()} FCFA</span>
+                  </div>
+                ))
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#555' }}>
+                  <span>Montant payé ({sale.payment_method?.replace('_', ' ') || 'espèces'})</span>
+                  <span>{paid.toLocaleString()} FCFA</span>
+                </div>
+              )}
               {change > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: '#555' }}>
                   <span>Monnaie rendue</span>
@@ -107,19 +122,32 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
         </div>
       </div>
 
+      {/* SIGNATURES */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px', padding: '0 20px' }}>
+        <div style={{ textAlign: 'left', width: '200px' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Pour acquis</div>
+          <div style={{ borderTop: '1px solid #000' }}></div>
+        </div>
+        <div style={{ textAlign: 'right', width: '200px' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Le fournisseur</div>
+          <div style={{ borderTop: '1px solid #000' }}></div>
+        </div>
+      </div>
+
       {/* FOOTER */}
-      <div style={{ marginTop: '50px', textAlign: 'center', color: '#777', borderTop: '1px solid #eee', paddingTop: '20px', fontSize: '10px' }}>
+      <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #ccc', textAlign: 'center', color: '#777', fontSize: '10px' }}>
         {isProforma ? (
           <div>
             <strong>PROFORMA - Ce document ne constitue pas une facture.</strong><br/>
             Valable 30 jours.
           </div>
         ) : (
-          <div>Merci de votre confiance !</div>
+          <div>{company?.name} - Merci de votre confiance</div>
         )}
         <div style={{ marginTop: '10px' }}>Généré avec VISEPT</div>
       </div>
 
+      </div>
     </div>
   );
 }
