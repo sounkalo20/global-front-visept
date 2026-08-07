@@ -146,8 +146,10 @@ export default function DebtDetailPage() {
   }
 
   const badge = statusBadge(currentDebt.status);
-  const totalPaid = parseFloat(currentDebt.total_paid || 0);
-  const progress = parseFloat(currentDebt.total_amount) > 0 ? (totalPaid / parseFloat(currentDebt.total_amount)) * 100 : 0;
+  const totalAmountNum = Number(currentDebt.total_amount) || 0;
+  const remainingAmountNum = Number(currentDebt.remaining_amount) || 0;
+  const totalPaid = Math.max(0, totalAmountNum - remainingAmountNum);
+  const progress = totalAmountNum > 0 ? Math.max(0, Math.min(100, (totalPaid / totalAmountNum) * 100)) : 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -165,10 +167,17 @@ export default function DebtDetailPage() {
             {currentDebt.status !== 'canceled' && currentDebt.status !== 'paid' && (
               <Button onClick={() => setPaymentOpen(true)}><CreditCard size={16} className="mr-2" /> Ajouter un paiement</Button>
             )}
-            {currentDebt.status !== 'canceled' && (
-              <Button variant="outline" onClick={() => setEditOpen(true)}><Edit size={16} className="mr-2" /> Modifier</Button>
+            {currentDebt.status !== 'canceled' && totalPaid === 0 && (
+              <Button variant="outline" onClick={() => router.push(`/shop/sales/${currentDebt.sale_id}/edit`)}>
+                <Edit size={16} className="mr-2" /> Modifier la vente
+              </Button>
             )}
             {currentDebt.status !== 'canceled' && (
+              <Button variant="outline" onClick={() => setEditOpen(true)}>
+                <Edit size={16} className="mr-2" /> Échéance & Notes
+              </Button>
+            )}
+            {currentDebt.status !== 'canceled' && totalPaid === 0 && (
               <Button variant="outline" onClick={() => setCancelOpen(true)} className="text-red-600 border-red-300">
                 <AlertCircle size={16} className="mr-2" /> Annuler
               </Button>

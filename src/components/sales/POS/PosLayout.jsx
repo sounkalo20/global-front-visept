@@ -21,6 +21,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
 import ClientSelector from './ClientSelector';
@@ -33,6 +38,7 @@ import useSaleStore from '@/store/saleStore';
 import useCompanyStore from '@/store/companyStore';
 import useCashStore from '@/store/cashStore';
 import useAuthStore from '@/store/authStore';
+import usePermissionsStore from '@/store/permissionsStore';
 import useFullscreen from '@/hooks/useFullscreen';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import LoadingScreen from '@/components/ui/LoadingScreen';
@@ -61,8 +67,10 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [closingNotes, setClosingNotes] = useState('');
   const [isClosing, setIsClosing] = useState(false);
 
+  const { roleName, isSystemRole } = usePermissionsStore();
+  const isCashier = activeCompany?.my_role === 'cashier' || (isSystemRole && roleName === 'Caissier');
+
   const isEditMode = mode === 'edit';
-  const isCashier = activeCompany?.my_role === 'cashier';
 
   const handleLogout = () => {
     logout();
@@ -264,8 +272,29 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
                   <p className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</p>
-                  <p className="text-xs text-brand-600 mt-0.5 capitalize">{activeCompany?.my_role === 'cashier' ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
+                  <p className="text-xs text-brand-600 mt-0.5 capitalize">{isCashier ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
                 </div>
+                
+                {/* Actions sur mobile uniquement (elles sont cachées dans l'en-tête sur mobile) */}
+                <div className="md:hidden">
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowHistory(true)}>
+                    <History size={16} className="mr-2 text-gray-500" /> Historique
+                  </DropdownMenuItem>
+                  {activeSession && (
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setClosingAmount(activeSession.expected_closing_amount);
+                        setClosingNotes('');
+                        setShowCloseShiftModal(true);
+                      }}
+                      className="text-red-600"
+                    >
+                      <LogOut size={16} className="mr-2" /> Fermer la caisse
+                    </DropdownMenuItem>
+                  )}
+                </div>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push('/profile')}>
                   <User size={16} className="mr-2 text-gray-500" /> Mon profil
@@ -368,24 +397,83 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       </div>
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
-        <Button
-          onClick={handleSubmit}
-          className="w-full h-12 text-base font-semibold rounded-xl"
-          disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
-        >
-          {isSubmitting ? (
-            <Loader2 size={20} className="animate-spin mr-2" />
-          ) : cart.items.length === 0 ? (
-            'Panier vide'
-          ) : cart.amountPaid < cartTotal ? (
-            `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
-          ) : (
-            <>
-              <Save size={18} className="mr-2" />
-              Valider • {cartTotal.toLocaleString()} FCFA
-            </>
-          )}
-        </Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              className="w-full h-12 text-base font-semibold rounded-xl"
+              disabled={cart.items.length === 0}
+            >
+              {cart.items.length === 0 ? (
+                'Panier vide'
+              ) : (
+                <>
+                  Paiement & Client • {cartTotal.toLocaleString()} FCFA
+                </>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[95vh] p-0 flex flex-col bg-gray-50 z-[100]" showCloseButton={true}>
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 border-b bg-white mb-4">
+                <div className="flex justify-between items-center font-medium mb-2">
+                  <span className="text-gray-900">Résumé du panier ({itemsCount} articles)</span>
+                  <span className="text-brand-700 font-bold">{cartTotal.toLocaleString()} FCFA</span>
+                </div>
+                <div className="text-sm text-gray-600 max-h-24 overflow-y-auto space-y-1">
+                  {cart.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-start">
+                      <span className="flex-1 truncate pr-2">{item.quantity}x {item.product_name}</span>
+                      <span className="font-medium shrink-0">{(item.quantity * item.unit_price).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <ClientSelector
+                clientName={cart.clientName}
+                onSetClient={cart.setClient}
+              />
+              <div className="mt-4 mb-4">
+                <PaymentSection
+                  payments={cart.payments}
+                  onPaymentsChange={cart.setPayments}
+                  discountType={cart.discountType}
+                  onDiscountChange={cart.setDiscount}
+                  discountValue={cart.discountValue}
+                  onDiscountValueChange={(v) => cart.setDiscount(cart.discountType, v)}
+                  total={cartTotal}
+                />
+              </div>
+            </div>
+            
+            <div className="mt-auto shrink-0 p-4 bg-white border-t flex gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+               <Button
+                  onClick={handleProforma}
+                  variant="outline"
+                  className="flex-1 h-12 text-sm font-semibold rounded-xl"
+                  disabled={cart.items.length === 0}
+                >
+                  Proforma
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  className="flex-1 h-12 text-sm font-semibold rounded-xl"
+                  disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+                >
+                  {isSubmitting ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : cart.amountPaid < cartTotal ? (
+                    `Manque ${(cartTotal - cart.amountPaid).toLocaleString()}`
+                  ) : (
+                    <>
+                      <Save size={18} className="mr-2" />
+                      Valider
+                    </>
+                  )}
+                </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
       
       {completedSale && (
