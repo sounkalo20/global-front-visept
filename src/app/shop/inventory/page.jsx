@@ -37,10 +37,8 @@ export default function InventoryPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleSessionCreated = () => {
-    //refresh la page
-    window.location.reload();
-    //fermer le modal
     setModalOpen(false);
+    loadData();
   };
 
   if (!activeCompany) {

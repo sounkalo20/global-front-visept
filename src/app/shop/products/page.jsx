@@ -24,7 +24,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-
+import PageSizeSelector, { getStoredPageSize } from "@/components/ui/PageSizeSelector";
 
 export default function ProductsPage() {
   const { products, totalProducts, totalPages, isLoading, fetchProducts } = useProductStore();
@@ -40,16 +40,17 @@ export default function ProductsPage() {
   const [stockFilter, setStockFilter] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
   const loadData = useCallback(() => {
     if (activeCompany) {
-      const params = { sort_by: sortBy, page };
+      const params = { sort_by: sortBy, page, limit: pageSize };
       if (search) params.search = search;
       if (stockFilter === 'low') params.low_stock = 'true';
       fetchProducts(activeCompany.id, params);
       fetchCategories(activeCompany.id);
     }
-  }, [activeCompany, search, stockFilter, sortBy, page]);
+  }, [activeCompany, search, stockFilter, sortBy, page, pageSize]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -127,7 +128,11 @@ export default function ProductsPage() {
               onDelete={setDeletingProduct}
             />
             {totalPages > 1 && (
-              <div className="mt-6">
+              <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
+                <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
+                <div className="text-sm text-gray-500">
+                  {totalProducts} produit{totalProducts > 1 ? 's' : ''} au total
+                </div>
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>

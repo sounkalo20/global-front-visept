@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut, AlertCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut, AlertCircle, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -32,6 +32,7 @@ import ClientSelector from './ClientSelector';
 import PaymentSection from './PaymentSection';
 import PosClock from './PosClock';
 import QuickHistoryModal from './QuickHistoryModal';
+import PosReturnModal from './PosReturnModal';
 import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
@@ -59,6 +60,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [completedSale, setCompletedSale] = useState(null);
   const [isProforma, setIsProforma] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showReturn, setShowReturn] = useState(false);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuthStore();
   
@@ -237,6 +239,17 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                 Fermer la caisse
               </Button>
             )}
+            {activeSession && !isEditMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowReturn(true)}
+                className="hidden md:flex gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+              >
+                <RotateCcw size={16} />
+                Retour
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="hidden md:flex gap-2 text-gray-600">
               <History size={16} />
               Historique
@@ -281,6 +294,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                   <DropdownMenuItem onClick={() => setShowHistory(true)}>
                     <History size={16} className="mr-2 text-gray-500" /> Historique
                   </DropdownMenuItem>
+                  {activeSession && !isEditMode && (
+                    <DropdownMenuItem onClick={() => setShowReturn(true)} className="text-orange-600">
+                      <RotateCcw size={16} className="mr-2" /> Retour produit
+                    </DropdownMenuItem>
+                  )}
                   {activeSession && (
                     <DropdownMenuItem 
                       onClick={() => {
@@ -562,6 +580,12 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Modal Retour Produit ─── */}
+      <PosReturnModal
+        open={showReturn}
+        onOpenChange={setShowReturn}
+      />
     </div>
   );
-}
+}

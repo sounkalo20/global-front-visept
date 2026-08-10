@@ -2,6 +2,6 @@
 import api from '@/lib/axios';
 
 export const shopApi = {
-    getDashboard: (companyId) =>
-        api.get('/shop/dashboard', { params: { company_id: companyId } }),
+    getDashboard: (companyId, params = {}) =>
+        api.get('/shop/dashboard', { params: { company_id: companyId, ...params } }),
 };

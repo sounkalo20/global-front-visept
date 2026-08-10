@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import PageSizeSelector, { getStoredPageSize } from "@/components/ui/PageSizeSelector";
 import useCompanyStore from '@/store/companyStore';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import HasPermission from '@/components/auth/HasPermission';
@@ -29,10 +30,11 @@ export default function SalesPage() {
   const [status, setStatus] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
   useEffect(() => {
     if (activeCompany) {
-      const params = { search, payment_status: paymentStatus, status, page };
+      const params = { search, payment_status: paymentStatus, status, page, limit: pageSize };
       if (dateFilter === 'today') {
         const today = new Date().toISOString().split('T')[0];
         params.start_date = today;
@@ -41,7 +43,7 @@ export default function SalesPage() {
       fetchSales(activeCompany.id, params);
       fetchStats(activeCompany.id);
     }
-  }, [activeCompany, search, paymentStatus, status, dateFilter, page]);
+  }, [activeCompany, search, paymentStatus, status, dateFilter, page, pageSize]);
 
   return (
     <PermissionGuard requiredPermission="sales.view">
@@ -78,7 +80,8 @@ export default function SalesPage() {
         <>
           <SalesTable sales={sales} />
           {totalPages > 1 && (
-            <div className="mt-6">
+            <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
+              <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
