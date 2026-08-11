@@ -42,7 +42,7 @@ const useProductStore = create((set, get) => ({
     }
     set({ isLoading: true, error: null });
     try {
-      const response = await productsApi.getAll(companyId, { limit: 'all' });
+      const response = await productsApi.getAll(companyId, { limit: 'all', is_active: 'true' });
       const { products } = response.data.data;
       set({
         posProducts: products,
@@ -86,16 +86,35 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  deleteProduct: async (id, companyId) => {
+  deleteProduct: async (id, companyId, options = {}) => {
     try {
-      await productsApi.delete(id, companyId);
+      await productsApi.delete(id, companyId, options);
+      // Au lieu de supprimer la ligne, on met is_active à 0
       set((state) => ({
-        products: state.products.filter((p) => p.id !== id),
+        products: state.products.map((p) =>
+          p.id === id ? { ...p, is_active: 0 } : p
+        ),
       }));
       return { success: true };
     } catch (error) {
       const message =
         error.response?.data?.message || "Erreur suppression produit.";
+      return { success: false, message };
+    }
+  },
+
+  reactivateProduct: async (id, companyId) => {
+    try {
+      await productsApi.reactivate(id, companyId);
+      set((state) => ({
+        products: state.products.map((p) =>
+          p.id === id ? { ...p, is_active: 1 } : p
+        ),
+      }));
+      return { success: true };
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Erreur lors de la réactivation.";
       return { success: false, message };
     }
   },

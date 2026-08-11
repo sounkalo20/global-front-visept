@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/pagination";
 
 export default function ProductsPage() {
-  const { products, totalProducts, totalPages, isLoading, fetchProducts } = useProductStore();
+  const { products, totalProducts, totalPages, isLoading, fetchProducts, reactivateProduct } = useProductStore();
   const { activeCompany } = useCompanyStore();
   const { fetchCategories } = useCategoryStore();
 
@@ -32,6 +32,7 @@ export default function ProductsPage() {
 
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
 
@@ -49,7 +50,13 @@ export default function ProductsPage() {
 
   // Filtrage frontend complémentaire
   const filteredProducts = products.filter((product) => {
-    if (stockFilter === 'out') return product.current_stock <= 0;
+    // Statut
+    if (statusFilter === 'active' && product.is_active === 0) return false;
+    if (statusFilter === 'inactive' && product.is_active === 1) return false;
+
+    // Stock
+    if (stockFilter === 'out' && product.current_stock > 0) return false;
+    
     return true;
   });
 
@@ -94,6 +101,8 @@ export default function ProductsPage() {
               onSearchChange={setSearch}
               stockFilter={stockFilter}
               onStockFilterChange={setStockFilter}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
               sortBy={sortBy}
               onSortByChange={setSortBy}
             />
@@ -101,6 +110,12 @@ export default function ProductsPage() {
               products={filteredProducts}
               onEdit={(p) => { setEditingProduct(p); setModalOpen(true); }}
               onDelete={setDeletingProduct}
+              onReactivate={async (product) => {
+                const res = await reactivateProduct(product.id, activeCompany.id);
+                if (res.success) {
+                  loadData();
+                }
+              }}
             />
             {totalPages > 1 && (
               <div className="mt-6">

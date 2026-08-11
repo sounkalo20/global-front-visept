@@ -27,7 +27,7 @@ export default function CompositionsSection({ productId, isEditing }) {
         if (activeCompany && productId && isEditing) {
             loadCompositions();
             // Charger les ingrédients disponibles
-            fetchProducts(activeCompany.id).then(() => {
+            fetchProducts(activeCompany.id, { is_active: 'true' }).then(() => {
                 // Filtrer pour n'avoir que les ingrédients
                 const storeProducts = useProductStore.getState().products;
                 setIngredients(storeProducts.filter(p => p.product_type === 'ingredient'));

@@ -19,6 +19,8 @@ export default function ProductFilters({
   onStockFilterChange,
   sortBy,
   onSortByChange,
+  statusFilter,
+  onStatusFilterChange,
 }) {
   const [localSearch, setLocalSearch] = useState(search || '');
 
@@ -41,9 +43,10 @@ export default function ProductFilters({
     onSearchChange('');
     onStockFilterChange('');
     onSortByChange('created_at');
+    if (onStatusFilterChange) onStatusFilterChange('active');
   };
 
-  const hasFilters = search || stockFilter;
+  const hasFilters = search || stockFilter || (statusFilter && statusFilter !== 'active');
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -86,6 +89,18 @@ export default function ProductFilters({
           <option value="retail_price">Prix ↑</option>
           <option value="current_stock">Stock ↑</option>
         </select>
+
+        {onStatusFilterChange && (
+          <select
+            value={statusFilter}
+            onChange={(e) => onStatusFilterChange(e.target.value)}
+            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            <option value="all">Tous (Actifs & Désactivés)</option>
+            <option value="active">Actifs</option>
+            <option value="inactive">Supprimer</option>
+          </select>
+        )}
 
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-gray-500">
