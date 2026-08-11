@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Edit, Trash2, Eye, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
     const router = useRouter();
@@ -70,12 +71,16 @@ export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`${viewLink}/${client.id}`)}>
                                                 <Eye size={15} />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(client)}>
-                                                <Edit size={15} />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDelete(client)}>
-                                                <Trash2 size={15} />
-                                            </Button>
+                                            <HasPermission required="clients.edit">
+                                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(client)}>
+                                                  <Edit size={15} />
+                                              </Button>
+                                            </HasPermission>
+                                            <HasPermission required="clients.delete">
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDelete(client)}>
+                                                  <Trash2 size={15} />
+                                              </Button>
+                                            </HasPermission>
                                         </div>
                                     </td>
                                 </motion.tr>

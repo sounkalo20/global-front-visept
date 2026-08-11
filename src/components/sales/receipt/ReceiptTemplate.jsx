@@ -71,10 +71,20 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
       </div>
       
       <div className="border-t py-1 mb-2">
-        <div className="flex justify-between">
-          <span>Payé ({sale.payment_method?.replace('_', ' ') || 'espèces'}):</span>
-          <span>{paid.toLocaleString()}</span>
-        </div>
+        {sale.payments && sale.payments.length > 0 ? (
+          sale.payments.map((p, i) => (
+            <div className="flex justify-between" key={i}>
+              <span>Payé ({p.payment_method?.replace('_', ' ') || 'espèces'}):</span>
+              <span>{parseInt(p.amount).toLocaleString()}</span>
+            </div>
+          ))
+        ) : (
+          <div className="flex justify-between">
+            <span>Payé ({sale.payment_method?.replace('_', ' ') || 'espèces'}):</span>
+            <span>{paid.toLocaleString()}</span>
+          </div>
+        )}
+        
         {change > 0 && (
           <div className="flex justify-between">
             <span>Monnaie rendue:</span>

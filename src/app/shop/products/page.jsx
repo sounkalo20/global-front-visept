@@ -13,6 +13,10 @@ import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButt
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
+import { useSubscription } from '@/hooks/useSubscription';
+import { toast } from 'sonner';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 import {
   Pagination,
   PaginationContent,
@@ -20,11 +24,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import PageSizeSelector, { getStoredPageSize } from "@/components/ui/PageSizeSelector";
 
 export default function ProductsPage() {
   const { products, totalProducts, totalPages, isLoading, fetchProducts, reactivateProduct } = useProductStore();
   const { activeCompany } = useCompanyStore();
   const { fetchCategories } = useCategoryStore();
+  const { canAddMore, limits } = useSubscription();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -35,16 +41,17 @@ export default function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState('active');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
   const loadData = useCallback(() => {
     if (activeCompany) {
-      const params = { sort_by: sortBy, page };
+      const params = { sort_by: sortBy, page, limit: pageSize };
       if (search) params.search = search;
       if (stockFilter === 'low') params.low_stock = 'true';
       fetchProducts(activeCompany.id, params);
       fetchCategories(activeCompany.id);
     }
-  }, [activeCompany, search, stockFilter, sortBy, page]);
+  }, [activeCompany, search, stockFilter, sortBy, page, pageSize]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -69,7 +76,8 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <PermissionGuard requiredPermission="products.view">
+      <div className="mx-auto max-w-6xl px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -80,9 +88,20 @@ export default function ProductsPage() {
           {products.length > 0 && (
             <div className="flex items-center gap-3">
               <ExportProductsPDFButton />
-              <Button onClick={() => { setEditingProduct(null); setModalOpen(true); }}>
-                <Plus size={18} className="mr-2" /> Nouveau produit
-              </Button>
+              <HasPermission required="products.create">
+                <Button 
+                  onClick={() => { 
+                    if (!canAddMore('max_products', totalProducts)) {
+                      toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+                      return;
+                    }
+                    setEditingProduct(null); 
+                    setModalOpen(true); 
+                  }}
+                >
+                  <Plus size={18} className="mr-2" /> Nouveau produit
+                </Button>
+              </HasPermission>
             </div>
           )}
         </div>
@@ -92,7 +111,13 @@ export default function ProductsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
           </div>
         ) : products.length === 0 && !search && !stockFilter ? (
-          <EmptyProductState onCreate={() => setModalOpen(true)} />
+          <EmptyProductState onCreate={() => {
+            if (!canAddMore('max_products', totalProducts)) {
+              toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+              return;
+            }
+            setModalOpen(true);
+          }} />
         ) : (
           <>
             {products.length > 0 && <ProductStats products={filteredProducts} totalProductsCount={totalProducts} />}
@@ -118,7 +143,11 @@ export default function ProductsPage() {
               }}
             />
             {totalPages > 1 && (
-              <div className="mt-6">
+              <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
+                <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
+                <div className="text-sm text-gray-500">
+                  {totalProducts} produit{totalProducts > 1 ? 's' : ''} au total
+                </div>
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
@@ -162,5 +191,6 @@ export default function ProductsPage() {
         onSuccess={loadData}
       />
     </div>
+    </PermissionGuard>
   );
 }

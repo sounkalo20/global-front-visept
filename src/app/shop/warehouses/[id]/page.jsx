@@ -1,4 +1,5 @@
-﻿'use client';
+
+'use client';
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -7,16 +8,21 @@ import {
     Package,
     History,
     Plus,
-    Minus,
     Filter,
     Calendar,
     XCircle,
     Search,
     AlertTriangle,
+    X,
+    ArrowUpDown,
+    RotateCcw,
+    AlertTriangle,
+    CheckCircle2,
     Boxes
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -57,6 +63,21 @@ export default function WarehouseDetailPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [stockFilter, setStockFilter] = useState('all');
 
+    // ─── FILTRES STOCKS ───
+    const [stockSearch, setStockSearch] = useState('');
+    const [stockStatusFilter, setStockStatusFilter] = useState('all'); // 'all' | 'in_stock' | 'out_of_stock'
+    const [stockSortBy, setStockSortBy] = useState('name_asc'); // 'name_asc' | 'name_desc' | 'qty_desc' | 'qty_asc'
+
+    // ─── FILTRES MOUVEMENTS ───
+    const [movementSearch, setMovementSearch] = useState('');
+    const [movementTypeFilter, setMovementTypeFilter] = useState('all'); // 'all' | 'in_from_supplier' | 'transfer_to_shop' | 'adjustment'
+    const [movementStatusFilter, setMovementStatusFilter] = useState('all'); // 'all' | 'active' | 'cancelled'
+    const [movementStartDate, setMovementStartDate] = useState('');
+    const [movementEndDate, setMovementEndDate] = useState('');
+    const [movementSortBy, setMovementSortBy] = useState('date_desc'); // 'date_desc' | 'date_asc' | 'qty_desc' | 'qty_asc'
+
+    // ─── FILTRES AJUSTEMENTS ───
+    const [adjustmentSearch, setAdjustmentSearch] = useState('');
     const [adjustmentFilter, setAdjustmentFilter] = useState({
         start_date: '',
         end_date: '',
@@ -72,6 +93,162 @@ export default function WarehouseDetailPage() {
             fetchWarehouseAdjustments(id, { page: adjustmentPage, limit: 50 });
         }
     }, [id, adjustmentPage]);
+
+    // ─── CALCULS STATISTIQUES ───
+    const stats = useMemo(() => {
+        const totalItems = stocks ? stocks.length : 0;
+        let totalQuantity = 0;
+        let outOfStockCount = 0;
+        let inStockCount = 0;
+
+        (stocks || []).forEach(s => {
+            const qty = parseFloat(s.quantity) || 0;
+            if (qty > 0) {
+                totalQuantity += qty;
+                inStockCount += 1;
+            } else {
+                outOfStockCount += 1;
+            }
+        });
+
+        const totalMovementsCount = movements ? movements.length : 0;
+
+        return {
+            totalItems,
+            totalQuantity,
+            inStockCount,
+            outOfStockCount,
+            totalMovementsCount
+        };
+    }, [stocks, movements]);
+
+    // ─── FILTRAGE DES STOCKS ───
+    const filteredStocks = useMemo(() => {
+        if (!stocks) return [];
+        return stocks
+            .filter((item) => {
+                // Recherche texte (nom de produit ou code-barres / sku)
+                if (stockSearch.trim()) {
+                    const q = stockSearch.toLowerCase().trim();
+                    const nameMatch = item.product_name?.toLowerCase().includes(q);
+                    const skuMatch = item.sku?.toLowerCase().includes(q);
+                    if (!nameMatch && !skuMatch) return false;
+                }
+                // Filtre de stock
+                const qty = parseFloat(item.quantity) || 0;
+                if (stockStatusFilter === 'in_stock' && qty <= 0) return false;
+                if (stockStatusFilter === 'out_of_stock' && qty > 0) return false;
+
+                return true;
+            })
+            .sort((a, b) => {
+                if (stockSortBy === 'name_asc') {
+                    return (a.product_name || '').localeCompare(b.product_name || '');
+                }
+                if (stockSortBy === 'name_desc') {
+                    return (b.product_name || '').localeCompare(a.product_name || '');
+                }
+                if (stockSortBy === 'qty_desc') {
+                    return (parseFloat(b.quantity) || 0) - (parseFloat(a.quantity) || 0);
+                }
+                if (stockSortBy === 'qty_asc') {
+                    return (parseFloat(a.quantity) || 0) - (parseFloat(b.quantity) || 0);
+                }
+                return 0;
+            });
+    }, [stocks, stockSearch, stockStatusFilter, stockSortBy]);
+
+    const hasActiveStockFilters = stockSearch.trim() !== '' || stockStatusFilter !== 'all' || stockSortBy !== 'name_asc';
+
+    const resetStockFilters = () => {
+        setStockSearch('');
+        setStockStatusFilter('all');
+        setStockSortBy('name_asc');
+    };
+
+    // ─── FILTRAGE DES MOUVEMENTS ───
+    const filteredMovements = useMemo(() => {
+        if (!movements) return [];
+        return movements
+            .filter((mov) => {
+                // Recherche texte
+                if (movementSearch.trim()) {
+                    const q = movementSearch.toLowerCase().trim();
+                    const nameMatch = mov.product_name?.toLowerCase().includes(q);
+                    const notesMatch = mov.notes?.toLowerCase().includes(q);
+                    const destMatch = mov.destination_company_name?.toLowerCase().includes(q);
+                    if (!nameMatch && !notesMatch && !destMatch) return false;
+                }
+                // Type de mouvement
+                if (movementTypeFilter !== 'all' && mov.movement_type !== movementTypeFilter) {
+                    return false;
+                }
+                // Statut (Annulé ou actif)
+                if (movementStatusFilter === 'active' && mov.is_cancelled === 1) return false;
+                if (movementStatusFilter === 'cancelled' && mov.is_cancelled !== 1) return false;
+
+                // Dates
+                if (movementStartDate) {
+                    const movDate = new Date(mov.created_at);
+                    const start = new Date(movementStartDate);
+                    start.setHours(0, 0, 0, 0);
+                    if (movDate < start) return false;
+                }
+                if (movementEndDate) {
+                    const movDate = new Date(mov.created_at);
+                    const end = new Date(movementEndDate);
+                    end.setHours(23, 59, 59, 999);
+                    if (movDate > end) return false;
+                }
+
+                return true;
+            })
+            .sort((a, b) => {
+                if (movementSortBy === 'date_desc') {
+                    return new Date(b.created_at) - new Date(a.created_at);
+                }
+                if (movementSortBy === 'date_asc') {
+                    return new Date(a.created_at) - new Date(b.created_at);
+                }
+                if (movementSortBy === 'qty_desc') {
+                    return (parseFloat(b.quantity) || 0) - (parseFloat(a.quantity) || 0);
+                }
+                if (movementSortBy === 'qty_asc') {
+                    return (parseFloat(a.quantity) || 0) - (parseFloat(b.quantity) || 0);
+                }
+                return 0;
+            });
+    }, [movements, movementSearch, movementTypeFilter, movementStatusFilter, movementStartDate, movementEndDate, movementSortBy]);
+
+    const hasActiveMovementFilters =
+        movementSearch.trim() !== '' ||
+        movementTypeFilter !== 'all' ||
+        movementStatusFilter !== 'all' ||
+        movementStartDate !== '' ||
+        movementEndDate !== '' ||
+        movementSortBy !== 'date_desc';
+
+    const resetMovementFilters = () => {
+        setMovementSearch('');
+        setMovementTypeFilter('all');
+        setMovementStatusFilter('all');
+        setMovementStartDate('');
+        setMovementEndDate('');
+        setMovementSortBy('date_desc');
+    };
+
+    // ─── FILTRAGE DES AJUSTEMENTS ───
+    const filteredAdjustments = useMemo(() => {
+        if (!adjustments) return [];
+        return adjustments.filter((adj) => {
+            if (!adjustmentSearch.trim()) return true;
+            const q = adjustmentSearch.toLowerCase().trim();
+            const prodMatch = adj.product_name?.toLowerCase().includes(q);
+            const userMatch = `${adj.first_name || ''} ${adj.last_name || ''}`.toLowerCase().includes(q);
+            const notesMatch = adj.notes?.toLowerCase().includes(q);
+            return prodMatch || userMatch || notesMatch;
+        });
+    }, [adjustments, adjustmentSearch]);
 
     const handleTransfer = (stock) => {
         setSelectedProduct(stock);
@@ -96,6 +273,7 @@ export default function WarehouseDetailPage() {
 
     const resetAdjustmentFilter = () => {
         setAdjustmentFilter({ start_date: '', end_date: '', reason: '' });
+        setAdjustmentSearch('');
         fetchWarehouseAdjustments(id, { page: 1, limit: 50 });
         setAdjustmentPage(1);
     };
@@ -134,8 +312,11 @@ export default function WarehouseDetailPage() {
 
     if (isLoading && !currentWarehouse) {
         return (
-            <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+            <div className="flex justify-center items-center min-h-[400px]">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600"></div>
+                    <p className="text-sm text-gray-500 font-medium">Chargement des données de l'entrepôt...</p>
+                </div>
             </div>
         );
     }
@@ -160,7 +341,7 @@ export default function WarehouseDetailPage() {
                         )}
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                     {activeTab === 'stocks' && (
                         <ExportWarehouseStockPDFButton warehouseId={id} warehouseName={currentWarehouse.name} />
                     )}
@@ -169,7 +350,6 @@ export default function WarehouseDetailPage() {
                     )}
                 </div>
             </div>
-
             {/* KPIs */}
             {activeTab === 'stocks' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -214,6 +394,9 @@ export default function WarehouseDetailPage() {
                 >
                     <Package size={18} />
                     Stock actuel
+                    <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                        {filteredStocks.length}
+                    </span>
                 </button>
                 <button
                     onClick={() => setActiveTab('movements')}
@@ -223,7 +406,10 @@ export default function WarehouseDetailPage() {
                         }`}
                 >
                     <History size={18} />
-                    Historique
+                    Historique des mouvements
+                    <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                        {filteredMovements.length}
+                    </span>
                 </button>
                 <button
                     onClick={() => setActiveTab('adjustments')}
@@ -234,10 +420,17 @@ export default function WarehouseDetailPage() {
                 >
                     <Filter size={18} />
                     Ajustements
+                    {pagination && (
+                        <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                            {pagination.total || adjustments.length}
+                        </span>
+                    )}
                 </button>
             </div>
 
-            {/* Contenu - Stocks */}
+            {/* ═════════════════════════════════════════════════════════════ */}
+            {/* CONTENU : STOCKS                                             */}
+            {/* ═════════════════════════════════════════════════════════════ */}
             {activeTab === 'stocks' && (
                 <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                     {/* Filtres & Recherche */}
@@ -322,15 +515,74 @@ export default function WarehouseDetailPage() {
                                                 </Button>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        filteredStocks.map((stock) => {
+                                            const qty = parseFloat(stock.quantity) || 0;
+                                            return (
+                                                <tr key={stock.id} className="hover:bg-gray-50/80 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-semibold text-gray-900">{stock.product_name}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {stock.sku ? (
+                                                            <span className="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
+                                                                {stock.sku}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400 text-xs">-</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span
+                                                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                                                qty > 0
+                                                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                                                    : 'bg-red-50 text-red-700 border border-red-200'
+                                                            }`}
+                                                        >
+                                                            {qty > 0 ? (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                                            ) : (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                                                            )}
+                                                            {Number(stock.quantity)} unité{qty > 1 ? 's' : ''}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right space-x-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleAdjust(stock)}
+                                                            className="text-xs hover:border-brand-500 hover:text-brand-600"
+                                                        >
+                                                            <Plus size={14} className="mr-1 text-brand-600" />
+                                                            Ajuster
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            disabled={qty <= 0}
+                                                            onClick={() => handleTransfer(stock)}
+                                                            className="text-xs hover:border-blue-500 hover:text-blue-600"
+                                                        >
+                                                            <ArrowRightLeft size={14} className="mr-1 text-blue-600" />
+                                                            Transférer
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Contenu - Historique des mouvements */}
+            {/* ═════════════════════════════════════════════════════════════ */}
+            {/* CONTENU : HISTORIQUE DES MOUVEMENTS                          */}
+            {/* ═════════════════════════════════════════════════════════════ */}
             {activeTab === 'movements' && (
                 <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                     <div className="overflow-x-auto">
@@ -409,15 +661,88 @@ export default function WarehouseDetailPage() {
                                                 )}
                                             </td>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    ) : (
+                                        filteredMovements.map((mov) => {
+                                            const qty = parseFloat(mov.quantity) || 0;
+                                            return (
+                                                <tr key={mov.id} className="hover:bg-gray-50/80 transition-colors">
+                                                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap text-xs">
+                                                        {new Date(mov.created_at).toLocaleString('fr-FR')}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-semibold text-gray-900">
+                                                        {mov.product_name}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {mov.movement_type === 'in_from_supplier' && (
+                                                            <span className="text-green-700 bg-green-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-green-200 inline-flex items-center gap-1">
+                                                                Entrée (Fournisseur)
+                                                            </span>
+                                                        )}
+                                                        {mov.movement_type === 'transfer_to_shop' && (
+                                                            <span className="text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-blue-200 inline-flex items-center gap-1">
+                                                                Transfert (Boutique)
+                                                            </span>
+                                                        )}
+                                                        {mov.movement_type === 'adjustment' && (
+                                                            <span className="text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full text-xs font-semibold border border-purple-200 inline-flex items-center gap-1">
+                                                                Ajustement
+                                                            </span>
+                                                        )}
+                                                        {!['in_from_supplier', 'transfer_to_shop', 'adjustment'].includes(mov.movement_type) && (
+                                                            <span className="text-gray-700 bg-gray-50 px-2.5 py-1 rounded-full text-xs font-medium border border-gray-200">
+                                                                {mov.movement_type}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-semibold">
+                                                        <span className={qty > 0 ? 'text-green-600' : 'text-red-600'}>
+                                                            {qty > 0 ? '+' : ''}{Number(mov.quantity)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-500 text-xs font-mono">
+                                                        {Number(mov.stock_before)} → <span className="font-semibold text-gray-800">{Number(mov.stock_after)}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-gray-500 text-xs max-w-xs">
+                                                        <div className="truncate">{mov.notes || '-'}</div>
+                                                        {mov.destination_company_name && (
+                                                            <div className="text-brand-600 font-medium mt-0.5 flex items-center gap-1">
+                                                                <span>→ Boutique :</span> {mov.destination_company_name}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        {mov.movement_type === 'transfer_to_shop' ? (
+                                                            mov.is_cancelled === 1 ? (
+                                                                <span className="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded border border-red-200 font-medium">
+                                                                    Annulé
+                                                                </span>
+                                                            ) : (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                                                                    onClick={() => setCancelModalMovement(mov)}
+                                                                >
+                                                                    <XCircle size={14} className="mr-1" />
+                                                                    Annuler
+                                                                </Button>
+                                                            )
+                                                        ) : null}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Contenu - Ajustements */}
+            {/* ═════════════════════════════════════════════════════════════ */}
+            {/* CONTENU : AJUSTEMENTS                                        */}
+            {/* ═════════════════════════════════════════════════════════════ */}
             {activeTab === 'adjustments' && (
                 <div className="space-y-4">
                     {/* Liste des ajustements */}
@@ -436,40 +761,39 @@ export default function WarehouseDetailPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y text-sm">
-                                    {adjustments.length === 0 ? (
+                                    {filteredAdjustments.length === 0 ? (
                                         <tr>
-                                            <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                                                Aucun ajustement enregistré.
+                                            <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <Filter className="w-10 h-10 text-gray-300" strokeWidth={1.5} />
+                                                    <p className="text-sm font-medium text-gray-700">
+                                                        Aucun ajustement trouvé.
+                                                    </p>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : (
-                                        adjustments.map((adj) => {
-                                            const reasonMatch = adj.notes?.match(/\[([^\]]+)\]/);
-                                            const reason = reasonMatch ? reasonMatch[1] : 'Autre';
-                                            const cleanNotes = adj.notes?.replace(/\[([^\]]+)\]\s*/, '') || '';
-
-                                            return (
-                                                <tr key={adj.id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap">
+                                                <tr key={adj.id} className="hover:bg-gray-50/80 transition-colors">
+                                                    <td className="px-6 py-4 text-gray-500 whitespace-nowrap text-xs">
                                                         {new Date(adj.created_at).toLocaleString('fr-FR')}
                                                     </td>
-                                                    <td className="px-6 py-4 font-bold text-gray-900">
+                                                    <td className="px-6 py-4 font-semibold text-gray-900">
                                                         {adj.product_name}
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className="text-xs font-bold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
+                                                        <span className="text-xs bg-gray-100 text-gray-800 font-medium px-2.5 py-1 rounded-full border border-gray-200">
                                                             {reason}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 font-bold">
-                                                        <span className={parseFloat(adj.quantity) > 0 ? 'text-green-600' : 'text-red-600'}>
-                                                            {parseFloat(adj.quantity) > 0 ? '+' : ''}{Number(adj.quantity)}
+                                                    <td className="px-6 py-4 font-semibold">
+                                                        <span className={qty > 0 ? 'text-green-600' : 'text-red-600'}>
+                                                            {qty > 0 ? '+' : ''}{Number(adj.quantity)}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-500 font-medium">
-                                                        {Number(adj.stock_before)} → {Number(adj.stock_after)}
+                                                    <td className="px-6 py-4 text-gray-500 text-xs font-mono">
+                                                        {Number(adj.stock_before)} → <span className="font-semibold text-gray-800">{Number(adj.stock_after)}</span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-gray-700 font-medium">
+                                                    <td className="px-6 py-4 text-gray-700 text-xs font-medium">
                                                         {adj.first_name} {adj.last_name}
                                                     </td>
                                                     <td className="px-6 py-4 text-gray-500 text-xs max-w-xs truncate font-medium">
@@ -496,6 +820,7 @@ export default function WarehouseDetailPage() {
                                         className="font-bold"
                                         disabled={pagination.page <= 1}
                                         onClick={() => setAdjustmentPage(pagination.page - 1)}
+                                        className="text-xs h-8"
                                     >
                                         Précédent
                                     </Button>
@@ -505,6 +830,7 @@ export default function WarehouseDetailPage() {
                                         className="font-bold"
                                         disabled={pagination.page >= pagination.pages}
                                         onClick={() => setAdjustmentPage(pagination.page + 1)}
+                                        className="text-xs h-8"
                                     >
                                         Suivant
                                     </Button>
@@ -533,7 +859,7 @@ export default function WarehouseDetailPage() {
                     fetchWarehouseAdjustments(id, { page: adjustmentPage, limit: 50 });
                 }}
             />
-            
+
             <CancelTransferModal
                 isOpen={!!cancelModalMovement}
                 onClose={() => setCancelModalMovement(null)}

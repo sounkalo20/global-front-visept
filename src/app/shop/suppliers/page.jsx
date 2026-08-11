@@ -8,6 +8,8 @@ import SupplierFilters from '@/components/suppliers/SupplierFilters';
 import SuppliersTable from '@/components/suppliers/SuppliersTable';
 import SupplierFormModal from '@/components/suppliers/SupplierFormModal';
 import useSupplierStore from '@/store/supplierStore';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function SuppliersPage() {
     const { stats, filters, setFilters, fetchSuppliers } = useSupplierStore();
@@ -18,8 +20,9 @@ export default function SuppliersPage() {
     }, []);
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Titre + bouton */}
+        <PermissionGuard requiredPermission="suppliers.view">
+            <div className="p-6 space-y-6">
+                {/* Titre + bouton */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -30,10 +33,12 @@ export default function SuppliersPage() {
                         Gérez vos fournisseurs et suivez vos dettes
                     </p>
                 </div>
-                <Button onClick={() => setFormOpen(true)}>
-                    <Plus size={16} className="mr-2" />
-                    Nouveau fournisseur
-                </Button>
+                <HasPermission required="suppliers.create">
+                    <Button onClick={() => setFormOpen(true)}>
+                        <Plus size={16} className="mr-2" />
+                        Nouveau fournisseur
+                    </Button>
+                </HasPermission>
             </div>
 
             {/* Stats */}
@@ -51,5 +56,6 @@ export default function SuppliersPage() {
                 onClose={() => setFormOpen(false)}
             />
         </div>
+        </PermissionGuard>
     );
 }

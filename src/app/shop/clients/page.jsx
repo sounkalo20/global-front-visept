@@ -10,9 +10,15 @@ import DeleteClientDialog from '@/components/clients/DeleteClientDialog';
 import EmptyClientState from '@/components/clients/EmptyClientState';
 import useClientStore from '@/store/clientStore';
 import useCompanyStore from '@/store/companyStore';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
+import HasPermission from '@/components/auth/HasPermission';
+import {
+  Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious,
+} from '@/components/ui/pagination';
+import PageSizeSelector, { getStoredPageSize } from '@/components/ui/PageSizeSelector';
 
 export default function ClientsPage() {
-  const { clients, stats, isLoading, fetchClients, fetchStats } = useClientStore();
+  const { clients, stats, isLoading, fetchClients, fetchStats, totalPages } = useClientStore();
   const { activeCompany } = useCompanyStore();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -22,13 +28,15 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
   const [debtFilter, setDebtFilter] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
   useEffect(() => {
     if (activeCompany) {
-      fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy });
+      fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize });
       fetchStats(activeCompany.id);
     }
-  }, [activeCompany, search, debtFilter, sortBy]);
+  }, [activeCompany, search, debtFilter, sortBy, page, pageSize]);
 
   if (!activeCompany) {
     return (
@@ -39,16 +47,19 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <PermissionGuard requiredPermission="clients.view">
+      <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Clients</h1>
           <p className="text-gray-500 text-sm">Gérez votre base de clients</p>
         </div>
         {clients.length > 0 && (
-          <Button onClick={() => { setEditingClient(null); setModalOpen(true); }}>
-            <Plus size={18} className="mr-2" /> Nouveau client
-          </Button>
+          <HasPermission required="clients.create">
+            <Button onClick={() => { setEditingClient(null); setModalOpen(true); }}>
+              <Plus size={18} className="mr-2" /> Nouveau client
+            </Button>
+          </HasPermission>
         )}
       </div>
 
@@ -67,27 +78,56 @@ export default function ClientsPage() {
       ) : clients.length === 0 && !search ? (
         <EmptyClientState onCreate={() => setModalOpen(true)} />
       ) : (
-        <ClientTable
-          clients={clients}
-          onEdit={(c) => { setEditingClient(c); setModalOpen(true); }}
-          onDelete={setDeletingClient}
-          viewLink="/shop/clients"
-        />
+        <>
+          <ClientTable
+            clients={clients}
+            onEdit={(c) => { setEditingClient(c); setModalOpen(true); }}
+            onDelete={setDeletingClient}
+            viewLink="/shop/clients"
+          />
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
+              <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="text-sm text-gray-500 mx-4">Page {page} sur {totalPages}</span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
 
       <ClientModal
         open={modalOpen}
         onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingClient(null); }}
         client={editingClient}
-        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy })}
+        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize })}
       />
 
       <DeleteClientDialog
         client={deletingClient}
         open={!!deletingClient}
         onOpenChange={(open) => { if (!open) setDeletingClient(null); }}
-        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy })}
+        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize })}
       />
     </div>
+    </PermissionGuard>
   );
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '@/lib/axios';
 import useCompanyStore from './companyStore';
+import usePermissionsStore from './permissionsStore';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -35,6 +36,10 @@ const useAuthStore = create((set) => ({
     // Charger les entreprises après login
     if (!user.is_super_admin) {
       await useCompanyStore.getState().fetchCompanies();
+      const currentActive = useCompanyStore.getState().activeCompany;
+      if (currentActive) {
+        await usePermissionsStore.getState().fetchPermissions(currentActive.id);
+      }
     }
     return response.data;
   },
@@ -59,9 +64,10 @@ const useAuthStore = create((set) => ({
       localStorage.removeItem('visept_companies');
       localStorage.removeItem('visept_activeCompany');
     }
-    set({ user: null, token: null, isAuthenticated: false, isSessionExpired: expired });
+    set({ user: null, token: null, isAuthenticated: false, isSessionExpired: expired, isSuperAdmin: false });
     useCompanyStore.getState().setCompanies([]);
     useCompanyStore.getState().setActiveCompany(null);
+    usePermissionsStore.getState().clearPermissions();
   },
 
   checkAuth: async () => {
@@ -86,6 +92,10 @@ const useAuthStore = create((set) => ({
 
       if (!user.is_super_admin) {
         await useCompanyStore.getState().fetchCompanies();
+        const currentActive = useCompanyStore.getState().activeCompany;
+        if (currentActive) {
+          await usePermissionsStore.getState().fetchPermissions(currentActive.id);
+        }
       }
     } catch {
       if (typeof window !== 'undefined') {
@@ -99,6 +109,7 @@ const useAuthStore = create((set) => ({
         isLoading: false,
         isSuperAdmin: false
       });
+      usePermissionsStore.getState().clearPermissions();
     }
   },
 

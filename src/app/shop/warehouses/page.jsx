@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import WarehouseFormModal from '@/components/warehouses/WarehouseFormModal';
 import GlobalProductSearch from '@/components/warehouses/GlobalProductSearch';
 import GlobalProductDetails from '@/components/warehouses/GlobalProductDetails';
+import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
+import { useSubscription } from '@/hooks/useSubscription';
 
 export default function WarehousesPage() {
     const { warehouses, fetchWarehouses, isLoading } = useWarehouseStore();
@@ -15,9 +17,13 @@ export default function WarehousesPage() {
     const [searchedProduct, setSearchedProduct] = useState(null);
     const router = useRouter();
 
+    const { hasFeature } = useSubscription();
+
     useEffect(() => {
-        fetchWarehouses();
-    }, []);
+        if (hasFeature('module_warehouses')) {
+            fetchWarehouses();
+        }
+    }, [hasFeature]);
 
     const handleEdit = (warehouse) => {
         setSelectedWarehouse(warehouse);
@@ -30,6 +36,11 @@ export default function WarehousesPage() {
     };
 
     return (
+        <FeatureLockedOverlay 
+            featureName="module_warehouses"
+            title="Module Entrepôts bloqué"
+            description="La gestion multi-entrepôts n'est pas incluse dans votre forfait actuel."
+        >
         <div className="p-6 space-y-6">
             {/* Titre + bouton */}
             <div className="flex items-center justify-between">
@@ -116,11 +127,12 @@ export default function WarehousesPage() {
                 </div>
             )}
 
-            <WarehouseFormModal
+    <WarehouseFormModal
                 isOpen={formOpen}
                 onClose={() => setFormOpen(false)}
                 warehouse={selectedWarehouse}
             />
         </div>
+        </FeatureLockedOverlay>
     );
 }

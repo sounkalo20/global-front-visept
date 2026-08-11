@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { companiesApi } from '@/lib/api/companies';
 import useCompanyStore from '@/store/companyStore';
+import useAuthStore from '@/store/authStore';
 import { getBasePath } from '@/lib/config/navigation';
 import { cn } from '@/lib/utils';
 

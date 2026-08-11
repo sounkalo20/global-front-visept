@@ -23,6 +23,7 @@ import SupplierFormModal from './SupplierFormModal';
 import useSupplierStore from '@/store/supplierStore';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import HasPermission from '@/components/auth/HasPermission';
 
 export default function SuppliersTable() {
     const { suppliers, pagination, isLoading, setPage, deleteSupplier, toggleStatus } =
@@ -144,21 +145,25 @@ export default function SuppliersTable() {
                                         <Button variant="ghost" size="icon" onClick={() => openDetail(supplier.id)} title="Voir détails">
                                             <Eye size={16} />
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openEdit(supplier)} title="Modifier">
-                                            <Pencil size={16} />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => openToggleConfirm(supplier)}
-                                            title={supplier.is_active ? 'Désactiver' : 'Activer'}
-                                            className={supplier.is_active ? 'text-amber-600' : 'text-green-600'}
-                                        >
-                                            {supplier.is_active ? <PowerOff size={16} /> : <Power size={16} />}
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(supplier)} title="Supprimer" className="text-red-600">
-                                            <Trash2 size={16} />
-                                        </Button>
+                                        <HasPermission required="suppliers.edit">
+                                          <Button variant="ghost" size="icon" onClick={() => openEdit(supplier)} title="Modifier">
+                                              <Pencil size={16} />
+                                          </Button>
+                                          <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              onClick={() => openToggleConfirm(supplier)}
+                                              title={supplier.is_active ? 'Désactiver' : 'Activer'}
+                                              className={supplier.is_active ? 'text-amber-600' : 'text-green-600'}
+                                          >
+                                              {supplier.is_active ? <PowerOff size={16} /> : <Power size={16} />}
+                                          </Button>
+                                        </HasPermission>
+                                        <HasPermission required="suppliers.delete">
+                                          <Button variant="ghost" size="icon" onClick={() => openDeleteConfirm(supplier)} title="Supprimer" className="text-red-600">
+                                              <Trash2 size={16} />
+                                          </Button>
+                                        </HasPermission>
                                     </div>
                                 </TableCell>
                             </TableRow>

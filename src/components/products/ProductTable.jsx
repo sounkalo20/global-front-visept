@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Edit, Trash2, Package, MoreHorizontal, TrendingUp, TrendingDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import HasPermission from '@/components/auth/HasPermission';
 import StockManager from './StockManager';
 import ProductDetailModal from './ProductDetailModal';
 import useCompanyStore from '@/store/companyStore';

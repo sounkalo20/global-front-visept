@@ -7,7 +7,7 @@ import DashboardHeader from '@/components/layout/DashboardHeader';
 
 export default function ShopLayout({ children }) {
   const pathname = usePathname();
-  const isPosRoute = pathname.includes('/sales/new') || pathname.match(/\/sales\/.*\/edit/);
+  const isPosRoute = pathname.includes('/sales/new') || pathname.match(/\/sales\/.*\/edit/) || pathname.includes('/pos/');
 
   if (isPosRoute) {
     return (

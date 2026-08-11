@@ -28,6 +28,12 @@ api.interceptors.response.use(
       if (!isLoginRequest) {
         useAuthStore.getState().logout(true);
       }
+    } else if (error.response?.status === 403 && typeof window !== 'undefined') {
+      // Si la requête vient du hook de permissions lui-même, on ignore la redirection
+      const isRbacRequest = error.config?.url?.includes('/my-permissions');
+      if (!isRbacRequest && window.location.pathname !== '/shop/forbidden') {
+        window.location.href = '/shop/forbidden';
+      }
     }
     return Promise.reject(error);
   }

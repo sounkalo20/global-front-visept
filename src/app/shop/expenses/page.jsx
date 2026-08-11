@@ -12,9 +12,13 @@ import EmptyExpenseState from '@/components/expenses/EmptyExpenseState';
 import ExportExpensesPDFDialog from '@/components/expenses/ExportExpensesPDFDialog';
 import useExpenseStore from '@/store/expenseStore';
 import useCompanyStore from '@/store/companyStore';
+import {
+  Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious,
+} from '@/components/ui/pagination';
+import PageSizeSelector, { getStoredPageSize } from '@/components/ui/PageSizeSelector';
 
 export default function ExpensesPage() {
-  const { expenses, stats, categories, isLoading, fetchExpenses, fetchStats, fetchCategories } = useExpenseStore();
+  const { expenses, stats, categories, isLoading, fetchExpenses, fetchStats, fetchCategories, totalPages } = useExpenseStore();
   const { activeCompany } = useCompanyStore();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,10 +32,12 @@ export default function ExpensesPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('expense_date');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
   const loadData = useCallback(() => {
     if (activeCompany) {
-      const params = { sort_by: sortBy };
+      const params = { sort_by: sortBy, page, limit: pageSize };
       if (search) params.search = search;
       if (category) params.category = category;
       if (paymentMethod) params.payment_method = paymentMethod;
@@ -42,7 +48,7 @@ export default function ExpensesPage() {
       fetchStats(activeCompany.id);
       fetchCategories(activeCompany.id);
     }
-  }, [activeCompany, search, category, paymentMethod, startDate, endDate, sortBy]);
+  }, [activeCompany, search, category, paymentMethod, startDate, endDate, sortBy, page, pageSize]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -88,12 +94,40 @@ export default function ExpensesPage() {
       ) : expenses.length === 0 && !search && !category ? (
         <EmptyExpenseState onCreate={() => setModalOpen(true)} />
       ) : (
-        <ExpenseTable
-          expenses={expenses}
-          onView={setViewingExpense}
-          onEdit={(e) => { setEditingExpense(e); setModalOpen(true); }}
-          onDelete={setDeletingExpense}
-        />
+        <>
+          <ExpenseTable
+            expenses={expenses}
+            onView={setViewingExpense}
+            onEdit={(e) => { setEditingExpense(e); setModalOpen(true); }}
+            onDelete={setDeletingExpense}
+          />
+          {totalPages > 1 && (
+            <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
+              <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="text-sm text-gray-500 mx-4">Page {page} sur {totalPages}</span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
 
       <ExpenseModal
