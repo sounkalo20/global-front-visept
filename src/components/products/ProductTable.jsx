@@ -32,7 +32,7 @@ const getStockStatus = (product) => {
     return { label: 'OK', color: 'bg-green-100 text-green-700' };
 };
 
-export default function ProductTable({ products, onEdit, onDelete }) {
+export default function ProductTable({ products, onEdit, onDelete, onReactivate }) {
     const [stockModalProduct, setStockModalProduct] = useState(null);
     const [detailModalProduct, setDetailModalProduct] = useState(null);
     const { activeCompany } = useCompanyStore();
@@ -87,8 +87,15 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                                 </div>
                                             )}
                                             <div>
-                                                <p className="font-medium text-gray-900">{product.name}</p>
+                                                <p className={cn("font-medium", product.is_active === 0 ? "text-gray-400 line-through" : "text-gray-900")}>
+                                                    {product.name}
+                                                </p>
                                                 {product.sku && <p className="text-xs text-gray-400">SKU: {product.sku}</p>}
+                                                {product.is_active === 0 && (
+                                                    <span className="inline-block mt-1 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded border border-red-200">
+                                                        Désactivé
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
@@ -142,21 +149,23 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                                 <DropdownMenuItem onClick={() => setDetailModalProduct(product)}>
                                                     <Eye size={14} className="mr-2" /> Voir détails
                                                 </DropdownMenuItem>
-                                                <HasPermission required="products.edit">
-                                                  <DropdownMenuItem onClick={() => onEdit(product)}>
-                                                      <Edit size={14} className="mr-2" /> Modifier
-                                                  </DropdownMenuItem>
-                                                </HasPermission>
-                                                <HasPermission required="inventory.adjust">
-                                                  <DropdownMenuItem onClick={() => setStockModalProduct(product)}>
-                                                      <TrendingUp size={14} className="mr-2" /> Gérer le stock
-                                                  </DropdownMenuItem>
-                                                </HasPermission>
-                                                <HasPermission required="products.delete">
-                                                  <DropdownMenuItem onClick={() => onDelete(product)} className="text-red-600">
-                                                      <Trash2 size={14} className="mr-2" /> Supprimer
-                                                  </DropdownMenuItem>
-                                                </HasPermission>
+                                                {product.is_active !== 0 ? (
+                                                    <>
+                                                        <DropdownMenuItem onClick={() => onEdit(product)}>
+                                                            <Edit size={14} className="mr-2" /> Modifier
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setStockModalProduct(product)}>
+                                                            <TrendingUp size={14} className="mr-2" /> Gérer le stock
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => onDelete(product)} className="text-red-600">
+                                                            <Trash2 size={14} className="mr-2" /> Supprimer
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                ) : (
+                                                    <DropdownMenuItem onClick={() => onReactivate?.(product)} className="text-green-600">
+                                                        <TrendingUp size={14} className="mr-2" /> Réactiver
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </td>
@@ -225,21 +234,23 @@ export default function ProductTable({ products, onEdit, onDelete }) {
                                 <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setDetailModalProduct(product)}>
                                     <Eye size={14} className="mr-1" /> Détails
                                 </Button>
-                                <HasPermission required="products.edit">
-                                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onEdit(product)}>
-                                      <Edit size={14} className="mr-1" /> Modifier
-                                  </Button>
-                                </HasPermission>
-                                <HasPermission required="inventory.adjust">
-                                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setStockModalProduct(product)}>
-                                      <TrendingUp size={14} className="mr-1" /> Stock
-                                  </Button>
-                                </HasPermission>
-                                <HasPermission required="products.delete">
-                                  <Button variant="outline" size="sm" onClick={() => onDelete(product)} className="text-red-500">
-                                      <Trash2 size={14} />
-                                  </Button>
-                                </HasPermission>
+                                {product.is_active !== 0 ? (
+                                    <>
+                                        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onEdit(product)}>
+                                            <Edit size={14} className="mr-1" /> Modifier
+                                        </Button>
+                                        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => setStockModalProduct(product)}>
+                                            <TrendingUp size={14} className="mr-1" /> Stock
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={() => onDelete(product)} className="text-red-500">
+                                            <Trash2 size={14} />
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button variant="outline" size="sm" className="flex-1 text-xs text-green-600" onClick={() => onReactivate?.(product)}>
+                                        <TrendingUp size={14} className="mr-1" /> Réactiver
+                                    </Button>
+                                )}
                             </div>
                         </motion.div>
                     );

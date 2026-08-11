@@ -17,8 +17,8 @@ export const productsApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
 
-  delete: (id, companyId) =>
-    api.delete(`/products/${id}?company_id=${companyId}`),
+  delete: (id, companyId, data = {}) =>
+    api.delete(`/products/${id}?company_id=${companyId}`, { data }),
 
   updateStock: (id, data) => api.patch(`/products/${id}/stock`, data),
 
@@ -30,4 +30,7 @@ export const productsApi = {
 
   updateCompositions: (productId, data) =>
     api.put(`/products/${productId}/compositions`, data),
+
+  reactivate: (id, companyId) =>
+    api.post(`/products/${id}/reactivate?company_id=${companyId}`),
 };

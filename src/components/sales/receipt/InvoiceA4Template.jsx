@@ -123,14 +123,14 @@ export default function InvoiceA4Template({ sale, company, user, isProforma }) {
       </div>
 
       {/* SIGNATURES */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px', padding: '0 20px' }}>
-        <div style={{ textAlign: 'left', width: '200px' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Pour acquis</div>
-          <div style={{ borderTop: '1px solid #000' }}></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '50px', marginBottom: '50px', padding: '0 20px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Pour acquit</div>
+          <div style={{ borderTop: '1px dashed #333', width: '150px', margin: '0 auto' }}></div>
         </div>
-        <div style={{ textAlign: 'right', width: '200px' }}>
+        <div style={{ textAlign: 'center' }}>
           <div style={{ fontWeight: 'bold', marginBottom: '60px' }}>Le fournisseur</div>
-          <div style={{ borderTop: '1px solid #000' }}></div>
+          <div style={{ borderTop: '1px dashed #333', width: '150px', margin: '0 auto' }}></div>
         </div>
       </div>
 

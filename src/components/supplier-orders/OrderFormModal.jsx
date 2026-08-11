@@ -41,7 +41,7 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
             suppliersApi.getAll(activeCompany.id, { limit: 200, status: 'active' }).then(r => setSuppliers(r.data.data.suppliers)).catch(() => { });
             // Récupérer les produits
             import('@/lib/api/products').then(m => {
-                m.productsApi.getAll(activeCompany.id).then(r => setProducts(r.data.data.products || [])).catch(() => { });
+                m.productsApi.getAll(activeCompany.id, { limit: 1000, is_active: 'true' }).then(r => setProducts(r.data.data.products || [])).catch(() => { });
             });
             if (order) {
                 reset({

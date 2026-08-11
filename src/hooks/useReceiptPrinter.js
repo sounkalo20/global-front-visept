@@ -72,17 +72,38 @@ export default function useReceiptPrinter() {
         : <ReceiptTemplate sale={sale} company={company} user={user} isProforma={isProforma} />
     );
 
-    // Attendre le rendu puis imprimer
+    // Attendre le rendu initial
     setTimeout(() => {
-      contentWindow.focus();
-      contentWindow.print();
-      
-      // Cleanup après impression
-      setTimeout(() => {
-        root.unmount();
-        document.body.removeChild(iframe);
-        setIsPrinting(false);
-      }, 500);
+      const images = Array.from(iframe.contentDocument.images);
+      const unresolvedImages = images.filter(img => !img.complete);
+
+      const doPrint = () => {
+        contentWindow.focus();
+        contentWindow.print();
+        
+        // Cleanup après impression
+        setTimeout(() => {
+          root.unmount();
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+          setIsPrinting(false);
+        }, 500);
+      };
+
+      if (unresolvedImages.length > 0) {
+        let loadedCount = 0;
+        unresolvedImages.forEach(img => {
+          img.onload = img.onerror = () => {
+            loadedCount++;
+            if (loadedCount === unresolvedImages.length) {
+              doPrint();
+            }
+          };
+        });
+      } else {
+        doPrint();
+      }
     }, 250);
   }, []);
 
