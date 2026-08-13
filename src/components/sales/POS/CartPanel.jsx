@@ -51,6 +51,17 @@ export default function CartPanel({ items, onUpdateQuantity, onUpdatePrice, onRe
         ))}
       </div>
 
+      {/* Alerte si Total <= 0 */}
+      {items.length > 0 && total <= 0 && (
+        <div className="mx-4 my-2 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5">
+          <span className="text-red-500 font-bold text-base shrink-0 mt-0.5">⚠️</span>
+          <div className="text-xs text-red-700 leading-relaxed">
+            <p className="font-semibold text-red-800">Total nul (0 FCFA)</p>
+            <p>Une vente ne peut pas être enregistrée avec un total nul ou négatif. Modifiez le prix des articles ci-dessus pour continuer.</p>
+          </div>
+        </div>
+      )}
+
       {/* Résumé */}
       <div className="border-t bg-gray-50/80 p-4 space-y-2">
         <div className="flex justify-between text-sm">
@@ -65,7 +76,9 @@ export default function CartPanel({ items, onUpdateQuantity, onUpdatePrice, onRe
         )}
         <div className="flex justify-between items-center pt-2 border-t border-gray-200">
           <span className="text-base font-semibold">Total</span>
-          <span className="text-xl font-bold text-brand-700">{total.toLocaleString()} FCFA</span>
+          <span className={total <= 0 ? "text-xl font-bold text-red-600" : "text-xl font-bold text-brand-700"}>
+            {total.toLocaleString()} FCFA
+          </span>
         </div>
       </div>
     </div>

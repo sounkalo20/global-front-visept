@@ -63,7 +63,24 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
         }
     }, [isOpen, order, reset, activeCompany]);
 
+    const watchedItems = watch('items') || [];
+    const watchedShipping = parseFloat(watch('shipping_cost') || 0);
+    const watchedTax = parseFloat(watch('tax_amount') || 0);
+
+    const calculatedSubtotal = watchedItems.reduce((sum, item) => {
+        const q = parseFloat(item.quantity_ordered) || 0;
+        const c = parseFloat(item.unit_cost) || 0;
+        return sum + (q * c);
+    }, 0);
+
+    const calculatedTotal = calculatedSubtotal + (isNaN(watchedShipping) ? 0 : watchedShipping) + (isNaN(watchedTax) ? 0 : watchedTax);
+
     const onSubmit = async (data) => {
+        if (calculatedTotal <= 0) {
+            toast.error("Impossible d'enregistrer cette commande fournisseur. Le montant total doit être supérieur à 0 FCFA. Vérifiez les coûts des articles.");
+            return;
+        }
+
         setIsSubmitting(true);
         const payload = {
             ...data,
@@ -150,6 +167,19 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
                         </div>
                     </div>
 
+                    {/* Récapitulatif Total */}
+                    <div className="p-3 bg-gray-100 rounded-lg flex justify-between items-center text-sm font-medium">
+                        <span>Total de la commande :</span>
+                        <span className={calculatedTotal <= 0 ? "text-red-600 font-bold text-base" : "text-brand-700 font-bold text-base"}>
+                            {calculatedTotal.toLocaleString()} FCFA
+                        </span>
+                    </div>
+                    {calculatedTotal <= 0 && (
+                        <p className="text-xs text-red-500 font-medium">
+                            ⚠️ Le montant total de la commande doit être supérieur à 0 FCFA pour pouvoir être enregistrée.
+                        </p>
+                    )}
+
                     {/* Paiement initial */}
                     <div className="border rounded-lg p-3">
                         <label className="flex items-center gap-2 text-sm font-medium cursor-pointer" onClick={() => setIncludePayment(!includePayment)}>
@@ -179,7 +209,9 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
 
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Enregistrement...' : isEditing ? 'Mettre à jour' : 'Créer la commande'}</Button>
+                        <Button type="submit" disabled={isSubmitting || calculatedTotal <= 0}>
+                            {isSubmitting ? 'Enregistrement...' : isEditing ? 'Mettre à jour' : 'Créer la commande'}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

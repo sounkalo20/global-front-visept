@@ -39,13 +39,21 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
         </select>
 
         {/* Prix unitaire */}
-        <input
-          type="number"
-          value={item.unit_price}
-          onChange={(e) => onUpdatePrice(item.product_id, parseFloat(e.target.value) || 0)}
-          className="w-20 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 focus:outline-none focus:border-brand-300"
-          min="0"
-        />
+        <div className="flex flex-col">
+          <input
+            type="number"
+            value={item.unit_price}
+            onChange={(e) => onUpdatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+            className={cn(
+              "w-24 text-xs text-center border rounded-lg px-1 py-1.5 focus:outline-none",
+              item.unit_price <= 0
+                ? "border-red-400 bg-red-50 text-red-700 font-bold focus:border-red-500"
+                : "border-gray-200 focus:border-brand-300"
+            )}
+            min="0"
+            placeholder="Prix"
+          />
+        </div>
 
         {/* Quantité */}
         <div className="flex items-center gap-0.5 ml-auto">
@@ -92,10 +100,22 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
         </div>
       </div>
 
-      {/* Total ligne */}
-      <p className="text-right text-sm font-semibold text-brand-700 mt-1">
-        {(item.unit_price * item.quantity).toLocaleString()} FCFA
-      </p>
+      {/* Total ligne + Alerte si prix nul */}
+      <div className="flex items-center justify-between mt-1.5">
+        {item.unit_price <= 0 ? (
+          <span className="text-[11px] font-semibold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+            ⚠️ Prix non défini (0 FCFA)
+          </span>
+        ) : (
+          <span />
+        )}
+        <p className={cn(
+          "text-right text-sm font-semibold",
+          item.unit_price <= 0 ? "text-red-500" : "text-brand-700"
+        )}>
+          {(item.unit_price * item.quantity).toLocaleString()} FCFA
+        </p>
+      </div>
     </div>
   );
 }

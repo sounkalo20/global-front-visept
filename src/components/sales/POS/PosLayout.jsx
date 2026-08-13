@@ -76,6 +76,12 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       return;
     }
 
+    const currentTotal = cart.getTotal();
+    if (currentTotal <= 0) {
+      toast.error("Impossible d'enregistrer cette vente. Le montant total doit être supérieur à 0 FCFA. Vérifiez les prix et remises des produits.");
+      return;
+    }
+
     setIsSubmitting(true);
     const payload = isEditMode ? cart.getUpdatePayload(activeCompany.id) : cart.getPayload(activeCompany.id);
     const result = isEditMode ? await updateSale(saleId, payload) : await createSale(payload);
@@ -95,6 +101,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       toast.error('Le panier est vide.');
       return;
     }
+    const currentTotal = cart.getTotal();
+    if (currentTotal <= 0) {
+      toast.error("Impossible de générer une facture proforma pour un montant total nul (0 FCFA).");
+      return;
+    }
     // Créer un objet de vente "factice" basé sur le panier actuel pour l'impression
     const proformaSale = {
       sale_number: `PRF-${Date.now()}`,
@@ -102,7 +113,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       client_name: cart.clientName,
       subtotal: cart.getSubtotal(),
       discount_amount: cart.getDiscountAmount(),
-      total_amount: cart.getTotal(),
+      total_amount: currentTotal,
       amount_paid: cart.amountPaid || 0,
       payment_method: cart.paymentMethod,
       items: cart.items.map(item => ({
@@ -291,12 +302,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           <Button
             onClick={handleSubmit}
             className="flex-1 h-12 text-sm font-semibold rounded-xl"
-            disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+            disabled={isSubmitting || cart.items.length === 0 || cartTotal <= 0 || cart.amountPaid < cartTotal}
           >
             {isSubmitting ? (
               <Loader2 size={20} className="animate-spin" />
             ) : cart.items.length === 0 ? (
               'Panier vide'
+            ) : cartTotal <= 0 ? (
+              'Total nul (0 FCFA)'
             ) : cart.amountPaid < cartTotal ? (
               `Manque ${(cartTotal - cart.amountPaid).toLocaleString()}`
             ) : (
@@ -314,12 +327,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         <Button
           onClick={handleSubmit}
           className="w-full h-12 text-base font-semibold rounded-xl"
-          disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+          disabled={isSubmitting || cart.items.length === 0 || cartTotal <= 0 || cart.amountPaid < cartTotal}
         >
           {isSubmitting ? (
             <Loader2 size={20} className="animate-spin mr-2" />
           ) : cart.items.length === 0 ? (
             'Panier vide'
+          ) : cartTotal <= 0 ? (
+            'Total invalide • 0 FCFA'
           ) : cart.amountPaid < cartTotal ? (
             `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
           ) : (

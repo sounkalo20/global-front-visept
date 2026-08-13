@@ -15,7 +15,7 @@ const expenseSchema = z.object({
   title: z.string().min(2, 'Min. 2 caractères').max(200),
   description: z.string().max(2000).optional().or(z.literal('')),
   category: z.enum(['rent','salary','utility','transport','maintenance','inventory','tax','marketing','equipment','internet','mobile_money_fee','bank_fee','restaurant_supply','salon_supply','other']),
-  amount: z.coerce.number().positive('Montant > 0'),
+  amount: z.coerce.number().positive('Le montant doit être supérieur à 0 FCFA'),
   payment_method: z.enum(['cash','mobile_money','bank_transfer','check','other']),
   payment_reference: z.string().max(100).optional().or(z.literal('')),
   expense_date: z.string().min(1, 'Date requise'),
@@ -26,10 +26,12 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
   const { activeCompany } = useCompanyStore();
   const isEditing = !!expense;
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(expenseSchema),
     defaultValues: { category: 'other', payment_method: 'cash', expense_date: new Date().toISOString().split('T')[0] },
   });
+
+  const watchedAmount = parseFloat(watch('amount') || 0);
 
   useEffect(() => {
     if (open) {
@@ -47,6 +49,10 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
 
   const onSubmit = async (data) => {
     if (!activeCompany) return;
+    if (data.amount <= 0) {
+      toast.error('Le montant doit être supérieur à 0 FCFA.');
+      return;
+    }
     const payload = { company_id: activeCompany.id, ...data };
     const result = isEditing ? await updateExpense(expense.id, payload) : await createExpense(payload);
     if (result.success) {
@@ -78,8 +84,13 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Montant *</label>
-              <Input type="number" step="0.01" placeholder="0" error={errors.amount?.message} {...register('amount')} />
+              <label className="text-sm font-medium">Montant (FCFA) *</label>
+              <Input type="number" step="1" min="1" placeholder="0" error={errors.amount?.message} {...register('amount')} />
+              {watchedAmount <= 0 && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  ⚠️ Le montant doit être supérieur à 0 FCFA.
+                </p>
+              )}
             </div>
           </div>
           <div>
@@ -109,7 +120,7 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
           
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || isNaN(watchedAmount) || watchedAmount <= 0}>
               {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
               {isEditing ? 'Enregistrer' : 'Créer'}
             </Button>

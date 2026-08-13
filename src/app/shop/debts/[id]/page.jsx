@@ -62,12 +62,13 @@ export default function DebtDetailPage() {
 
   // Ajouter un paiement
   const handleAddPayment = async () => {
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-      toast.error('Montant invalide.');
+    const parsedAmount = parseFloat(paymentAmount);
+    if (!paymentAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error('Le montant du paiement doit être supérieur à 0 FCFA.');
       return;
     }
     const remaining = parseFloat(currentDebt?.remaining_amount || 0);
-    if (parseFloat(paymentAmount) > remaining) {
+    if (parsedAmount > remaining) {
       toast.error('Le montant dépasse le reste à payer.');
       return;
     }
@@ -76,7 +77,7 @@ export default function DebtDetailPage() {
     const result = await createPayment({
       company_id: activeCompany.id,
       client_debt_id: currentDebt.id,
-      amount: parseFloat(paymentAmount),
+      amount: parsedAmount,
       payment_method: paymentMethod,
       payment_reference: paymentReference || null,
       note: paymentNote || null,
@@ -278,8 +279,13 @@ export default function DebtDetailPage() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label className="text-sm font-medium">Montant *</label>
-              <Input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="text-lg font-semibold" autoFocus />
+              <label className="text-sm font-medium">Montant (FCFA) *</label>
+              <Input type="number" min="1" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className="text-lg font-semibold" autoFocus />
+              {paymentAmount !== '' && (isNaN(parseFloat(paymentAmount)) || parseFloat(paymentAmount) <= 0) && (
+                <p className="text-xs text-red-500 mt-1 font-medium">
+                  ⚠️ Le montant du paiement doit être supérieur à 0 FCFA.
+                </p>
+              )}
               <div className="flex gap-2 mt-2">
                 {[currentDebt?.remaining_amount, Math.ceil((currentDebt?.remaining_amount || 0) / 2)].filter(v => v > 0).map((v) => (
                   <Button key={v} variant="outline" size="sm" onClick={() => setPaymentAmount(v.toString())} className="text-xs">{parseInt(v).toLocaleString()} F</Button>
@@ -298,7 +304,7 @@ export default function DebtDetailPage() {
             </div>
             {paymentMethod !== 'cash' && <Input placeholder="Référence" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />}
             <Input placeholder="Note (optionnelle)" value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)} />
-            <Button onClick={handleAddPayment} disabled={isSubmittingPayment} className="w-full">
+            <Button onClick={handleAddPayment} disabled={isSubmittingPayment || !paymentAmount || isNaN(parseFloat(paymentAmount)) || parseFloat(paymentAmount) <= 0} className="w-full">
               {isSubmittingPayment ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
               Enregistrer le paiement
             </Button>

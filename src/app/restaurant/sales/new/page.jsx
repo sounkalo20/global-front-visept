@@ -47,8 +47,13 @@ export default function RestaurantPosPage() {
       return;
     }
 
-    setIsSubmitting(true);
     const total = cart.getTotal();
+    if (total <= 0) {
+      toast.error("Impossible d'enregistrer cette commande. Le montant total doit être supérieur à 0 FCFA. Vérifiez les prix des plats.");
+      return;
+    }
+
+    setIsSubmitting(true);
     const payload = {
       company_id: activeCompany.id,
       client_id: cart.clientId || null,
@@ -99,7 +104,9 @@ export default function RestaurantPosPage() {
             <ShoppingCart size={16} />
             <span>{itemsCount} plat{itemsCount > 1 ? 's' : ''}</span>
             {itemsCount > 0 && (
-              <Badge variant="outline" className="font-bold">{cartTotal.toLocaleString()} FCFA</Badge>
+              <Badge variant="outline" className={cartTotal <= 0 ? "font-bold text-red-600 border-red-300" : "font-bold"}>
+                {cartTotal.toLocaleString()} FCFA
+              </Badge>
             )}
           </div>
         </header>
@@ -110,6 +117,11 @@ export default function RestaurantPosPage() {
 
         {itemsCount > 0 && (
           <div className="border-t bg-white shadow-lg shrink-0">
+            {cartTotal <= 0 && (
+              <div className="p-2.5 bg-red-50 border-b border-red-200 text-xs text-red-700 font-medium text-center">
+                ⚠️ Le montant total est de 0 FCFA. Définissez un prix valide pour les plats avant d'enregistrer la commande.
+              </div>
+            )}
             <button
               onClick={() => setCartExpanded(!cartExpanded)}
               className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100"
@@ -118,7 +130,9 @@ export default function RestaurantPosPage() {
                 <ShoppingCart size={16} /> Panier ({itemsCount})
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-brand-700">{cartTotal.toLocaleString()} FCFA</span>
+                <span className={cartTotal <= 0 ? "text-sm font-bold text-red-600" : "text-sm font-bold text-brand-700"}>
+                  {cartTotal.toLocaleString()} FCFA
+                </span>
                 {cartExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
               </div>
             </button>
@@ -169,12 +183,14 @@ export default function RestaurantPosPage() {
           <Button
             onClick={handleSubmit}
             className="w-full h-12 text-base font-semibold rounded-xl"
-            disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+            disabled={isSubmitting || cart.items.length === 0 || cartTotal <= 0 || cart.amountPaid < cartTotal}
           >
             {isSubmitting ? (
               <Loader2 size={20} className="animate-spin mr-2" />
             ) : cart.items.length === 0 ? (
               'Panier vide'
+            ) : cartTotal <= 0 ? (
+              'Total nul (0 FCFA)'
             ) : cart.amountPaid < cartTotal ? (
               `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
             ) : (
@@ -192,9 +208,17 @@ export default function RestaurantPosPage() {
         <Button
           onClick={handleSubmit}
           className="w-full h-12 text-base font-semibold rounded-xl"
-          disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+          disabled={isSubmitting || cart.items.length === 0 || cartTotal <= 0 || cart.amountPaid < cartTotal}
         >
-          {isSubmitting ? <Loader2 size={18} className="animate-spin mr-2" /> : `Valider • ${cartTotal.toLocaleString()} FCFA`}
+          {isSubmitting ? (
+            <Loader2 size={18} className="animate-spin mr-2" />
+          ) : cart.items.length === 0 ? (
+            'Panier vide'
+          ) : cartTotal <= 0 ? (
+            'Total nul (0 FCFA)'
+          ) : (
+            `Valider • ${cartTotal.toLocaleString()} FCFA`
+          )}
         </Button>
       </div>
     </div>

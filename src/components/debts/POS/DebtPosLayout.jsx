@@ -59,8 +59,13 @@ export default function DebtPosLayout() {
       return;
     }
 
-    setIsSubmitting(true);
     const total = cart.getTotal();
+    if (total <= 0) {
+      toast.error("Impossible d'enregistrer cette dette. Le montant total doit être supérieur à 0 FCFA. Vérifiez les prix et remises des produits.");
+      return;
+    }
+
+    setIsSubmitting(true);
     const payload = {
       company_id: activeCompany.id,
       client_id: selectedClient.id,
@@ -353,7 +358,7 @@ export default function DebtPosLayout() {
           <Button
             onClick={handleSubmit}
             className="w-full h-12 text-base font-semibold rounded-xl"
-            disabled={isSubmitting || cart.items.length === 0 || !selectedClient}
+            disabled={isSubmitting || cart.items.length === 0 || !selectedClient || cartTotal <= 0}
           >
             {isSubmitting ? (
               <>
@@ -364,6 +369,8 @@ export default function DebtPosLayout() {
               'Sélectionnez un client'
             ) : cart.items.length === 0 ? (
               'Panier vide'
+            ) : cartTotal <= 0 ? (
+              'Total nul (0 FCFA)'
             ) : (
               <>
                 <Save size={18} className="mr-2" />
@@ -371,11 +378,15 @@ export default function DebtPosLayout() {
               </>
             )}
           </Button>
-          {!selectedClient && (
+          {!selectedClient ? (
             <p className="text-xs text-red-500 text-center mt-2">
               ⚠️ Un client est obligatoire pour une vente à crédit
             </p>
-          )}
+          ) : cart.items.length > 0 && cartTotal <= 0 ? (
+            <p className="text-xs text-red-500 text-center mt-2">
+              ⚠️ Le total doit être supérieur à 0 FCFA pour créer une dette
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -384,12 +395,16 @@ export default function DebtPosLayout() {
         <Button
           onClick={handleSubmit}
           className="w-full h-12 text-base font-semibold rounded-xl"
-          disabled={isSubmitting || cart.items.length === 0 || !selectedClient}
+          disabled={isSubmitting || cart.items.length === 0 || !selectedClient || cartTotal <= 0}
         >
           {isSubmitting ? (
             <Loader2 size={18} className="animate-spin mr-2" />
           ) : !selectedClient ? (
             'Sélectionnez un client'
+          ) : cart.items.length === 0 ? (
+            'Panier vide'
+          ) : cartTotal <= 0 ? (
+            'Total nul (0 FCFA)'
           ) : (
             <>Créer la dette • {cartTotal.toLocaleString()} FCFA</>
           )}

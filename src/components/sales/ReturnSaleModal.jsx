@@ -43,13 +43,13 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
   const hasItemsToReturn = itemsToReturn.some(i => i.returningQty > 0);
 
   const totalAmountToReturn = itemsToReturn.reduce((sum, item) => {
-    return sum + (item.returningQty * parseInt(item.unit_price));
+    return sum + (item.returningQty * parseFloat(item.unit_price || 0));
   }, 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!hasItemsToReturn) {
-      toast.error('Veuillez sélectionner au moins un article à retourner.');
+    if (!hasItemsToReturn || totalAmountToReturn <= 0) {
+      toast.error('Veuillez sélectionner au moins un article avec un montant supérieur à 0 FCFA.');
       return;
     }
 
@@ -206,7 +206,7 @@ export default function ReturnSaleModal({ sale, open, onOpenChange, onSuccess })
           <Button
             type="submit"
             form="return-form"
-            disabled={!hasItemsToReturn || isLoading}
+            disabled={!hasItemsToReturn || totalAmountToReturn <= 0 || isLoading}
           >
             {isLoading ? 'Enregistrement...' : `Confirmer le retour (${totalAmountToReturn.toLocaleString()} F)`}
           </Button>

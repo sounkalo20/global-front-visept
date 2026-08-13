@@ -149,26 +149,40 @@ const useCartStore = create((set, get) => ({
 
   // Calculs
   getSubtotal: () => {
-    return get().items.reduce(
-      (sum, item) => sum + item.unit_price * item.quantity,
+    return Math.max(
       0,
+      get().items.reduce(
+        (sum, item) => sum + (parseFloat(item.unit_price) || 0) * (parseFloat(item.quantity) || 0),
+        0,
+      ),
     );
   },
 
   getDiscountAmount: () => {
     const { discountType, discountValue } = get();
     const subtotal = get().getSubtotal();
-    if (discountType === "percentage") return subtotal * (discountValue / 100);
-    if (discountType === "fixed") return discountValue;
+    if (discountType === "percentage") {
+      const val = Math.min(100, Math.max(0, parseFloat(discountValue) || 0));
+      return subtotal * (val / 100);
+    }
+    if (discountType === "fixed") {
+      return Math.min(subtotal, Math.max(0, parseFloat(discountValue) || 0));
+    }
     return 0;
   },
 
   getTotal: () => {
-    return get().getSubtotal() - get().getDiscountAmount();
+    return Math.max(0, get().getSubtotal() - get().getDiscountAmount());
   },
 
   getItemsCount: () => {
-    return get().items.reduce((sum, item) => sum + item.quantity, 0);
+    return get().items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
+  },
+
+  hasZeroPriceItems: () => {
+    return get().items.some(
+      (item) => !item.unit_price || parseFloat(item.unit_price) <= 0
+    );
   },
 
   // Préparer le payload pour l'API

@@ -20,12 +20,14 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
 
     const remaining = debt?.remaining_amount || 0;
 
+    const parsedAmount = parseFloat(amount);
+
     const handleSubmit = async () => {
-        if (!amount || parseFloat(amount) <= 0) {
-            toast.error('Veuillez entrer un montant valide.');
+        if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+            toast.error('Le montant du paiement doit être supérieur à 0 FCFA.');
             return;
         }
-        if (parseFloat(amount) > remaining) {
+        if (parsedAmount > remaining) {
             toast.error('Le montant dépasse le reste à payer.');
             return;
         }
@@ -34,14 +36,14 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
         const result = await createPayment({
             company_id: activeCompany.id,
             client_debt_id: debt.id,
-            amount: parseFloat(amount),
+            amount: parsedAmount,
             payment_method: paymentMethod,
             payment_reference: paymentReference || null,
             note: note || null,
         });
         setIsSubmitting(false);
 
-        if (result.success) {
+        if (result?.success) {
             toast.success('Paiement enregistré.');
             onOpenChange(false);
             setAmount('');
@@ -49,7 +51,7 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
             setNote('');
             onSuccess?.();
         } else {
-            toast.error(result.message);
+            toast.error(result?.message || "Erreur lors de l'enregistrement");
         }
     };
 
@@ -65,8 +67,13 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
 
                 <div className="space-y-4 mt-2">
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Montant *</label>
-                        <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-semibold" autoFocus />
+                        <label className="text-sm font-medium text-gray-700">Montant (FCFA) *</label>
+                        <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-semibold" autoFocus min="1" />
+                        {amount !== '' && (isNaN(parsedAmount) || parsedAmount <= 0) && (
+                            <p className="text-xs text-red-500 mt-1 font-medium">
+                                ⚠️ Le montant du paiement doit être supérieur à 0 FCFA.
+                            </p>
+                        )}
                         <div className="flex gap-2 mt-2">
                             {[remaining, Math.ceil(remaining / 2), Math.ceil(remaining / 4)].filter(v => v > 0).map((v) => (
                                 <Button key={v} variant="outline" size="sm" onClick={() => setAmount(v.toString())} className="text-xs">{parseInt(v).toLocaleString()} F</Button>
@@ -102,7 +109,7 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
                         <Input placeholder="Note optionnelle" value={note} onChange={(e) => setNote(e.target.value)} />
                     </div>
 
-                    <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full">
+                    <Button onClick={handleSubmit} disabled={isSubmitting || !amount || isNaN(parsedAmount) || parsedAmount <= 0} className="w-full">
                         {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                         Enregistrer le paiement
                     </Button>

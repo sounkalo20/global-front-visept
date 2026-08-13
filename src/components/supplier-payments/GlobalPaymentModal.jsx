@@ -45,16 +45,24 @@ export default function GlobalPaymentModal({ isOpen, onClose }) {
         setSelectedSupplier(supplier);
     };
 
+    const watchedAmount = parseFloat(watch('amount') || 0);
+
     const onSubmit = async (data) => {
+        const paymentAmount = parseFloat(data.amount);
+        if (isNaN(paymentAmount) || paymentAmount <= 0) {
+            toast.error("Le montant du paiement doit être supérieur à 0 FCFA.");
+            return;
+        }
+
         setIsSubmitting(true);
         const result = await addPaymentGlobal({
             ...data,
             supplier_id: parseInt(data.supplier_id),
-            amount: parseFloat(data.amount),
+            amount: paymentAmount,
         });
         setIsSubmitting(false);
-        if (result.success) { toast.success('Paiement global enregistré.'); onClose(); }
-        else toast.error(result.message);
+        if (result?.success) { toast.success('Paiement global enregistré.'); onClose(); }
+        else toast.error(result?.message || "Erreur lors de l'enregistrement");
     };
 
     return (
@@ -84,8 +92,13 @@ export default function GlobalPaymentModal({ isOpen, onClose }) {
                         </div>
                     )}
                     <div>
-                        <label className="block text-sm font-medium mb-1">Montant *</label>
-                        <Input type="number" step="0.01" min="0.01" {...register('amount', { required: 'Requis', min: 0.01 })} />
+                        <label className="block text-sm font-medium mb-1">Montant (FCFA) *</label>
+                        <Input type="number" step="1" min="1" {...register('amount', { required: 'Requis', min: 1 })} />
+                        {watchedAmount <= 0 && (
+                            <p className="text-xs text-red-500 mt-1 font-medium">
+                                ⚠️ Le montant du paiement doit être supérieur à 0 FCFA.
+                            </p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Méthode *</label>
@@ -114,7 +127,9 @@ export default function GlobalPaymentModal({ isOpen, onClose }) {
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Enregistrement...' : 'Enregistrer'}</Button>
+                        <Button type="submit" disabled={isSubmitting || !watch('supplier_id') || isNaN(watchedAmount) || watchedAmount <= 0}>
+                            {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

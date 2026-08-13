@@ -35,14 +35,22 @@ export default function PaymentFormModal({ isOpen, onClose, orderId, orderNumber
         }
     }, [isOpen, remainingBalance, reset]);
 
+    const watchedAmount = parseFloat(watch('amount') || 0);
+
     const onSubmit = async (data) => {
+        const paymentAmount = parseFloat(data.amount);
+        if (isNaN(paymentAmount) || paymentAmount <= 0) {
+            toast.error("Le montant du paiement doit être supérieur à 0 FCFA.");
+            return;
+        }
+
         setIsSubmitting(true);
 
         let result;
         if (isOrderPayment && orderId) {
             // Paiement lié à une commande via la route /supplier-orders/:id/payments
             result = await addPaymentToOrder(orderId, {
-                amount: parseFloat(data.amount),
+                amount: paymentAmount,
                 payment_method: data.payment_method,
                 payment_reference: data.payment_reference,
                 payment_date: data.payment_date,
@@ -52,11 +60,11 @@ export default function PaymentFormModal({ isOpen, onClose, orderId, orderNumber
 
         setIsSubmitting(false);
 
-        if (result.success) {
+        if (result?.success) {
             toast.success('Paiement enregistré.');
             onClose();
         } else {
-            toast.error(result.message);
+            toast.error(result?.message || "Erreur lors de l'enregistrement");
         }
     };
 
@@ -73,14 +81,19 @@ export default function PaymentFormModal({ isOpen, onClose, orderId, orderNumber
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Montant *</label>
+                        <label className="block text-sm font-medium mb-1">Montant (FCFA) *</label>
                         <Input
                             type="number"
-                            step="0.01"
-                            min="0.01"
-                            {...register('amount', { required: 'Montant requis', min: 0.01 })}
+                            step="1"
+                            min="1"
+                            {...register('amount', { required: 'Montant requis', min: 1 })}
                             error={errors.amount?.message}
                         />
+                        {watchedAmount <= 0 && (
+                            <p className="text-xs text-red-500 mt-1 font-medium">
+                                ⚠️ Le montant du paiement doit être supérieur à 0 FCFA.
+                            </p>
+                        )}
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Méthode *</label>
@@ -109,7 +122,7 @@ export default function PaymentFormModal({ isOpen, onClose, orderId, orderNumber
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" onClick={onClose}>Annuler</Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || isNaN(watchedAmount) || watchedAmount <= 0}>
                             {isSubmitting ? 'Enregistrement...' : 'Enregistrer le paiement'}
                         </Button>
                     </DialogFooter>
