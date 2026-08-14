@@ -1,13 +1,17 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, Download, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SalesStats from '@/components/sales/SalesStats';
 import SalesFilters from '@/components/sales/SalesFilters';
 import SalesTable from '@/components/sales/SalesTable';
 import ExportSalesPDFDialog from '@/components/sales/ExportSalesPDFDialog';
+import BulkActionBar from '@/components/common/BulkActionBar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 import useSaleStore from '@/store/saleStore';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
   Pagination,
   PaginationContent,
@@ -19,6 +23,7 @@ import PageSizeSelector, { getStoredPageSize } from "@/components/ui/PageSizeSel
 import useCompanyStore from '@/store/companyStore';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import HasPermission from '@/components/auth/HasPermission';
+import { toast } from 'sonner';
 
 export default function SalesPage() {
   const { sales, stats, totalPages, isLoading, fetchSales, fetchStats } = useSaleStore();
@@ -43,20 +48,97 @@ export default function SalesPage() {
       fetchSales(activeCompany.id, params);
       fetchStats(activeCompany.id);
     }
-  }, [activeCompany, search, paymentStatus, status, dateFilter, page, pageSize]);
+  }, [activeCompany, search, paymentStatus, status, dateFilter, page, pageSize, fetchSales, fetchStats]);
+
+  // Hook de sélection en masse
+  const bulkSelection = useBulkSelection(sales);
+
+  // Exporter en CSV les ventes sélectionnées
+  const handleExportSelectedCSV = () => {
+    const selectedSales = sales.filter((s) => bulkSelection.isSelected(s.id));
+    if (selectedSales.length === 0) return;
+
+    const headers = ['N° Vente', 'Date', 'Client', 'Articles', 'Total (FCFA)', 'Statut Paiement', 'Statut Vente', 'Vendeur'];
+    const rows = selectedSales.map((s) => [
+      s.sale_number,
+      new Date(s.sale_date).toLocaleDateString('fr-FR'),
+      s.client_first_name ? `${s.client_first_name} ${s.client_last_name}` : s.client_name || 'Client passager',
+      s.items_count || 0,
+      s.total_amount,
+      s.payment_status,
+      s.status,
+      s.seller_name || '',
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map((r) => r.map((cell) => `"${cell}"`).join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `ventes_selection_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`${selectedSales.length} vente(s) exportée(s) en CSV.`);
+  };
+
+  // Exporter en PDF les ventes sélectionnées
+  const handleExportSelectedPDF = () => {
+    const selectedSales = sales.filter((s) => bulkSelection.isSelected(s.id));
+    if (selectedSales.length === 0) return;
+
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Rapport des ventes sélectionnées - ${activeCompany?.name || 'VISEPT'}`, 14, 18);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Généré le ${new Date().toLocaleDateString('fr-FR')} - Total : ${selectedSales.length} ventes`, 14, 25);
+
+    const tableData = selectedSales.map((s) => [
+      s.sale_number,
+      new Date(s.sale_date).toLocaleDateString('fr-FR'),
+      s.client_first_name ? `${s.client_first_name} ${s.client_last_name}` : s.client_name || 'Client passager',
+      s.items_count || 0,
+      `${parseInt(s.total_amount).toLocaleString()} FCFA`,
+      s.payment_status === 'paid' ? 'Payé' : s.payment_status === 'partial' ? 'Partiel' : 'Impayé',
+    ]);
+
+    autoTable(doc, {
+      head: [['N° Vente', 'Date', 'Client', 'Articles', 'Total', 'Paiement']],
+      body: tableData,
+      startY: 30,
+      theme: 'striped',
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+
+    doc.save(`rapport_ventes_selection_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast.success(`Rapport PDF généré pour ${selectedSales.length} vente(s).`);
+  };
+
+  const bulkPrimaryActions = [
+    {
+      label: 'Exporter en CSV',
+      icon: Download,
+      onClick: handleExportSelectedCSV,
+    },
+    {
+      label: 'Rapport PDF',
+      icon: FileText,
+      onClick: handleExportSelectedPDF,
+    },
+  ];
 
   return (
     <PermissionGuard requiredPermission="sales.view">
       <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Ventes</h1>
-          <p className="text-gray-500 text-sm">Historique et gestion des ventes</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F9FAFB]">Ventes</h1>
+          <p className="text-gray-500 dark:text-[#D1D5DB] text-sm">Historique et gestion des ventes ({sales.length})</p>
         </div>
         <div className="flex items-center gap-3">
           <ExportSalesPDFDialog />
           <HasPermission required="sales.create">
-            <Button onClick={() => router.push('/shop/sales/new')} size="lg">
+            <Button onClick={() => router.push('/shop/sales/new')} size="lg" className="bg-brand-600 hover:bg-brand-700 text-white">
               <Plus size={20} className="mr-2" /> Nouvelle vente
             </Button>
           </HasPermission>
@@ -78,7 +160,15 @@ export default function SalesPage() {
         </div>
       ) : (
         <>
-          <SalesTable sales={sales} />
+          <SalesTable
+            sales={sales}
+            selectedIds={bulkSelection.selectedIds}
+            onToggleSelect={bulkSelection.toggleSelect}
+            onToggleSelectAll={bulkSelection.toggleSelectPage}
+            isAllPageSelected={bulkSelection.isAllPageSelected}
+            isSomePageSelected={bulkSelection.isSomePageSelected}
+            isSelected={bulkSelection.isSelected}
+          />
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
               <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
@@ -92,7 +182,7 @@ export default function SalesPage() {
                     />
                   </PaginationItem>
                   <PaginationItem>
-                    <span className="text-sm text-gray-500 mx-4">
+                    <span className="text-sm text-gray-500 dark:text-[#D1D5DB] mx-4">
                       Page {page} sur {totalPages}
                     </span>
                   </PaginationItem>
@@ -109,7 +199,18 @@ export default function SalesPage() {
           )}
         </>
       )}
+
+      {/* Barre d'actions en masse flottante */}
+      <BulkActionBar
+        selectedCount={bulkSelection.selectedCount}
+        totalCount={sales.length}
+        isAllPageSelected={bulkSelection.isAllPageSelected}
+        onClearSelection={bulkSelection.clearSelection}
+        primaryActions={bulkPrimaryActions}
+        itemName="vente"
+        itemPlural="ventes"
+      />
     </div>
     </PermissionGuard>
   );
-}
+}

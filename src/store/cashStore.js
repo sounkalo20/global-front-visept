@@ -31,6 +31,50 @@ const useCashStore = create((set, get) => ({
     }
   },
 
+  updateRegister: async (registerId, payload) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await axios.put(`/cash/registers/${registerId}`, payload);
+      set(state => ({
+        registers: state.registers.map(reg => reg.id === registerId ? { ...reg, ...data.data } : reg),
+        isLoading: false
+      }));
+      return data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || 'Erreur modification caisse', isLoading: false });
+      throw error;
+    }
+  },
+
+  toggleRegisterStatus: async (registerId, companyId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await axios.patch(`/cash/registers/${registerId}/toggle-status`);
+      if (companyId) {
+        await get().fetchRegisters(companyId);
+      }
+      return data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || 'Erreur changement de statut', isLoading: false });
+      throw error;
+    }
+  },
+
+  deleteRegister: async (registerId, companyId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await axios.delete(`/cash/registers/${registerId}`);
+      set(state => ({
+        registers: state.registers.filter(reg => reg.id !== registerId),
+        isLoading: false
+      }));
+      return data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || 'Erreur suppression caisse', isLoading: false });
+      throw error;
+    }
+  },
+
   fetchActiveSession: async (companyId) => {
     set({ isLoading: true, error: null });
     try {

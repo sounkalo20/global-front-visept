@@ -25,7 +25,14 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import HasPermission from '@/components/auth/HasPermission';
 
-export default function SuppliersTable() {
+export default function SuppliersTable({
+    selectedIds,
+    onToggleSelect,
+    onToggleSelectAll,
+    isAllPageSelected,
+    isSomePageSelected,
+    isSelected,
+} = {}) {
     const { suppliers, pagination, isLoading, setPage, deleteSupplier, toggleStatus } =
         useSupplierStore();
     const router = useRouter();
@@ -92,36 +99,72 @@ export default function SuppliersTable() {
 
     if (suppliers.length === 0) {
         return (
-            <div className="text-center py-12 text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-xs">
-                <Truck size={48} className="mx-auto text-gray-300 dark:text-slate-700 mb-3" />
-                <p className="font-semibold text-gray-500 dark:text-slate-400">Aucun fournisseur trouvé</p>
+            <div className="text-center py-12 text-gray-500 dark:text-[#D1D5DB] bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] shadow-xs">
+                <Truck size={48} className="mx-auto text-gray-300 dark:text-[#4B5563] mb-3" />
+                <p className="font-semibold text-gray-500 dark:text-[#D1D5DB]">Aucun fournisseur trouvé</p>
             </div>
         );
     }
 
     return (
         <>
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden shadow-xs">
+            <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] overflow-hidden shadow-xs">
                 <Table>
-                    <TableHeader className="bg-gray-50/80 dark:bg-slate-800/80">
-                        <TableRow className="border-b border-gray-200 dark:border-slate-800">
-                            <TableHead className="text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Fournisseur</TableHead>
-                            <TableHead className="text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Contact</TableHead>
-                            <TableHead className="text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Téléphone</TableHead>
-                            <TableHead className="text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Ville</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Total achats</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Solde dû</TableHead>
-                            <TableHead className="text-center text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Statut</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase">Actions</TableHead>
+                    <TableHeader className="bg-gray-50/80 dark:bg-[#1F2937]/80">
+                        <TableRow className="border-b border-gray-200 dark:border-[#374151]">
+                            {onToggleSelect && (
+                                <TableHead className="w-10 text-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllPageSelected || false}
+                                        ref={(input) => {
+                                            if (input) input.indeterminate = isSomePageSelected || false;
+                                        }}
+                                        onChange={onToggleSelectAll}
+                                        aria-label="Sélectionner tous les fournisseurs"
+                                        className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                    />
+                                </TableHead>
+                            )}
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Fournisseur</TableHead>
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Contact</TableHead>
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Téléphone</TableHead>
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Ville</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Total achats</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Solde dû</TableHead>
+                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-gray-100 dark:divide-slate-800/60">
-                        {suppliers.map((supplier) => (
-                            <TableRow key={supplier.id} className={!supplier.is_active ? 'opacity-60 bg-gray-50 dark:bg-slate-800/30' : 'hover:bg-gray-50/80 dark:hover:bg-slate-800/50'}>
-                                <TableCell>
-                                    <p className="font-semibold text-sm text-gray-900 dark:text-slate-100">{supplier.company_name}</p>
-                                    {supplier.email && <p className="text-xs text-gray-400 dark:text-slate-500">{supplier.email}</p>}
-                                </TableCell>
+                    <TableBody className="divide-y divide-gray-100 dark:divide-[#374151]/60">
+                        {suppliers.map((supplier) => {
+                            const selected = isSelected?.(supplier.id) || false;
+                            return (
+                                <TableRow
+                                    key={supplier.id}
+                                    className={
+                                        selected
+                                            ? 'bg-brand-50/70 dark:bg-brand-950/40'
+                                            : !supplier.is_active
+                                            ? 'opacity-60 bg-gray-50 dark:bg-[#1F2937]/30'
+                                            : 'hover:bg-gray-50/80 dark:hover:bg-[#1F2937]/50'
+                                    }
+                                >
+                                    {onToggleSelect && (
+                                        <TableCell className="text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selected}
+                                                onChange={() => onToggleSelect(supplier.id)}
+                                                aria-label={`Sélectionner ${supplier.company_name}`}
+                                                className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                            />
+                                        </TableCell>
+                                    )}
+                                    <TableCell>
+                                        <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{supplier.company_name}</p>
+                                        {supplier.email && <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{supplier.email}</p>}
+                                    </TableCell>
                                 <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.contact_name || '-'}</TableCell>
                                 <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.phone}</TableCell>
                                 <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.city || '-'}</TableCell>
@@ -167,10 +210,11 @@ export default function SuppliersTable() {
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </div>
 
             {pagination && pagination.total_pages > 1 && (
                 <div className="mt-4">

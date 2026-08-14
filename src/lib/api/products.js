@@ -33,4 +33,7 @@ export const productsApi = {
 
   reactivate: (id, companyId) =>
     api.post(`/products/${id}/reactivate?company_id=${companyId}`),
+
+  bulkAction: (companyId, { ids, action, params = {} }) =>
+    api.post(`/products/bulk?company_id=${companyId}`, { ids, action, params }),
 };

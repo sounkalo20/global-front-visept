@@ -139,6 +139,16 @@ const useProductStore = create((set, get) => ({
     }
   },
 
+  executeBulkAction: async (companyId, { ids, action, params = {} }) => {
+    try {
+      const response = await productsApi.bulkAction(companyId, { ids, action, params });
+      return { success: true, data: response.data.data, message: response.data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Erreur lors de l'action en masse.";
+      return { success: false, message };
+    }
+  },
+
   clearProducts: () => set({ products: [], posProducts: [], isLoading: false, error: null }),
 }));
 

@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Upload, CheckCircle2, EyeOff, Folder, Trash2, Layers, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductTable from '@/components/products/ProductTable';
 import ProductModal from '@/components/products/ProductModal';
@@ -12,6 +12,10 @@ import EmptyProductState from '@/components/products/EmptyProductState';
 import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButton';
 import DataImportModal from '@/components/common/DataImportModal';
 import DataExportButton from '@/components/common/DataExportButton';
+import BulkActionBar from '@/components/common/BulkActionBar';
+import BulkConfirmModal from '@/components/common/BulkConfirmModal';
+import BulkResultModal from '@/components/common/BulkResultModal';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
@@ -29,9 +33,9 @@ import {
 import PageSizeSelector, { getStoredPageSize } from "@/components/ui/PageSizeSelector";
 
 export default function ProductsPage() {
-  const { products, totalProducts, totalPages, isLoading, fetchProducts, reactivateProduct } = useProductStore();
+  const { products, totalProducts, totalPages, isLoading, fetchProducts, reactivateProduct, executeBulkAction } = useProductStore();
   const { activeCompany } = useCompanyStore();
-  const { fetchCategories } = useCategoryStore();
+  const { categories, fetchCategories } = useCategoryStore();
   const { canAddMore, limits } = useSubscription();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,6 +50,21 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
+  // Modals pour les Bulk Actions
+  const [bulkConfirm, setBulkConfirm] = useState({
+    open: false,
+    action: null,
+    title: '',
+    description: '',
+    isDestructive: false,
+    actionType: 'default',
+    warningMessage: null,
+    options: [],
+    optionsLabel: '',
+  });
+  const [isBulkExecuting, setIsBulkExecuting] = useState(false);
+  const [bulkResult, setBulkResult] = useState({ open: false, result: null });
+
   const loadData = useCallback(() => {
     if (activeCompany) {
       const params = { sort_by: sortBy, page, limit: pageSize };
@@ -54,21 +73,165 @@ export default function ProductsPage() {
       fetchProducts(activeCompany.id, params);
       fetchCategories(activeCompany.id);
     }
-  }, [activeCompany, search, stockFilter, sortBy, page, pageSize]);
+  }, [activeCompany, search, stockFilter, sortBy, page, pageSize, fetchProducts, fetchCategories]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   // Filtrage frontend complémentaire
-  const filteredProducts = products.filter((product) => {
-    // Statut
-    if (statusFilter === 'active' && product.is_active === 0) return false;
-    if (statusFilter === 'inactive' && product.is_active === 1) return false;
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (statusFilter === 'active' && product.is_active === 0) return false;
+      if (statusFilter === 'inactive' && product.is_active === 1) return false;
+      if (stockFilter === 'out' && product.current_stock > 0) return false;
+      return true;
+    });
+  }, [products, statusFilter, stockFilter]);
 
-    // Stock
-    if (stockFilter === 'out' && product.current_stock > 0) return false;
-    
-    return true;
-  });
+  // Hook de sélection en masse
+  const bulkSelection = useBulkSelection(filteredProducts);
+
+  // Exécution de l'action en masse
+  const handleExecuteBulkAction = async ({ value, reason } = {}) => {
+    if (!activeCompany || bulkSelection.selectedCount === 0) return;
+
+    setIsBulkExecuting(true);
+    const action = bulkConfirm.action;
+    const params = {};
+
+    if (action === 'change_category') {
+      params.category_id = (value && value !== 'none') ? parseInt(value) : null;
+    } else if (action === 'toggle_stock_management') {
+      params.manage_stock = bulkConfirm.manageStockValue;
+    } else if (action === 'delete') {
+      params.reason = reason;
+    }
+
+    const response = await executeBulkAction(activeCompany.id, {
+      ids: bulkSelection.selectedIdsArray,
+      action,
+      params,
+    });
+
+    setIsBulkExecuting(false);
+    setBulkConfirm((prev) => ({ ...prev, open: false }));
+
+    if (response.success) {
+      bulkSelection.clearSelection();
+      loadData();
+      // Si des éléments ont été ignorés ou en échec, afficher la modale détaillée
+      if (response.data?.skipped_count > 0 || response.data?.failed_count > 0) {
+        setBulkResult({ open: true, result: response.data });
+      } else {
+        toast.success(response.message || `${bulkSelection.selectedCount} produit(s) traité(s).`);
+      }
+    } else {
+      toast.error(response.message);
+    }
+  };
+
+  // Configuration des actions de la Bulk Action Bar
+  const categoryOptions = useMemo(() => {
+    return [
+      { value: 'none', label: 'Aucune catégorie (Non catégorisé)' },
+      ...categories.map((c) => ({ value: c.id.toString(), label: c.name })),
+    ];
+  }, [categories]);
+
+  const bulkPrimaryActions = [
+    {
+      label: 'Activer',
+      icon: CheckCircle2,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'activate',
+          actionType: 'activate',
+          title: 'Activer les produits sélectionnés',
+          description: 'Ces produits redeviendront visibles à la caisse et dans le catalogue actif.',
+          isDestructive: false,
+        });
+      },
+    },
+    {
+      label: 'Désactiver',
+      icon: EyeOff,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'deactivate',
+          actionType: 'deactivate',
+          title: 'Désactiver les produits sélectionnés',
+          description: 'Ces produits ne seront plus proposés à la vente directe mais conserveront leur historique.',
+          isDestructive: false,
+          warningMessage: 'Les produits inactifs peuvent être réactivés à tout moment.',
+        });
+      },
+    },
+    {
+      label: 'Changer catégorie',
+      icon: Folder,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'change_category',
+          actionType: 'change_category',
+          title: 'Définir une catégorie commune',
+          description: 'Attribuez une même catégorie à tous les produits sélectionnés.',
+          options: categoryOptions,
+          optionsLabel: 'Nouvelle catégorie',
+          isDestructive: false,
+        });
+      },
+    },
+  ];
+
+  const bulkSecondaryActions = [
+    {
+      label: 'Activer gestion de stock',
+      icon: Layers,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'toggle_stock_management',
+          manageStockValue: true,
+          title: 'Activer le suivi de stock',
+          description: 'Le stock sera décompté automatiquement lors des ventes pour ces produits.',
+          isDestructive: false,
+        });
+      },
+    },
+    {
+      label: 'Désactiver gestion de stock',
+      icon: Layers,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'toggle_stock_management',
+          manageStockValue: false,
+          title: 'Désactiver le suivi de stock',
+          description: 'Les ventes de ces produits ne vérifieront plus le niveau de stock disponible.',
+          isDestructive: false,
+        });
+      },
+    },
+    {
+      label: 'Supprimer les produits éligibles',
+      icon: Trash2,
+      danger: true,
+      onClick: () => {
+        setBulkConfirm({
+          open: true,
+          action: 'delete',
+          actionType: 'delete',
+          title: 'Supprimer les produits sélectionnés',
+          description: 'Les produits sans historique de vente ou achat seront supprimés.',
+          isDestructive: true,
+          confirmLabel: 'Supprimer',
+          warningMessage: 'Règle de sécurité : Tout produit déjà rattaché à une vente, commande fournisseur ou recette sera automatiquement ignoré et conservé.',
+        });
+      },
+    },
+  ];
 
   if (!activeCompany) {
     return (
@@ -85,8 +248,8 @@ export default function ProductsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Produits</h1>
-            <p className="text-gray-500 mt-1">{totalProducts} produit{totalProducts > 1 ? 's' : ''}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F9FAFB]">Produits</h1>
+            <p className="text-gray-500 dark:text-[#D1D5DB] mt-1">{totalProducts} produit{totalProducts > 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
             <DataExportButton moduleName="products" />
@@ -96,9 +259,9 @@ export default function ProductsPage() {
               <Button
                 variant="outline"
                 onClick={() => setImportModalOpen(true)}
-                className="border-brand-200 text-brand-700 hover:bg-brand-50 h-9 font-medium"
+                className="border-brand-200 dark:border-[#374151] text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-[#1F2937] h-9 font-medium"
               >
-                <Upload size={16} className="mr-1.5 text-brand-600" /> Importer
+                <Upload size={16} className="mr-1.5 text-brand-600 dark:text-brand-400" /> Importer
               </Button>
 
               <Button 
@@ -110,7 +273,7 @@ export default function ProductsPage() {
                   setEditingProduct(null); 
                   setModalOpen(true); 
                 }}
-                className="h-9 font-medium"
+                className="h-9 font-medium bg-brand-600 hover:bg-brand-700 text-white"
               >
                 <Plus size={18} className="mr-1.5" /> Nouveau produit
               </Button>
@@ -156,11 +319,17 @@ export default function ProductsPage() {
                   loadData();
                 }
               }}
+              selectedIds={bulkSelection.selectedIds}
+              onToggleSelect={bulkSelection.toggleSelect}
+              onToggleSelectAll={bulkSelection.toggleSelectPage}
+              isAllPageSelected={bulkSelection.isAllPageSelected}
+              isSomePageSelected={bulkSelection.isSomePageSelected}
+              isSelected={bulkSelection.isSelected}
             />
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between flex-wrap gap-3">
                 <PageSizeSelector value={pageSize} onChange={(size) => { setPageSize(size); setPage(1); }} />
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 dark:text-[#D1D5DB]">
                   {totalProducts} produit{totalProducts > 1 ? 's' : ''} au total
                 </div>
                 <Pagination>
@@ -173,7 +342,7 @@ export default function ProductsPage() {
                       />
                     </PaginationItem>
                     <PaginationItem>
-                      <span className="text-sm text-gray-500 mx-4">
+                      <span className="text-sm text-gray-500 dark:text-[#D1D5DB] mx-4">
                         Page {page} sur {totalPages}
                       </span>
                     </PaginationItem>
@@ -191,6 +360,43 @@ export default function ProductsPage() {
           </>
         )}
       </motion.div>
+
+      {/* Barre d'actions en masse flottante */}
+      <BulkActionBar
+        selectedCount={bulkSelection.selectedCount}
+        totalCount={totalProducts}
+        isAllPageSelected={bulkSelection.isAllPageSelected}
+        onClearSelection={bulkSelection.clearSelection}
+        primaryActions={bulkPrimaryActions}
+        secondaryActions={bulkSecondaryActions}
+        itemName="produit"
+        itemPlural="produits"
+      />
+
+      {/* Modale de confirmation Bulk */}
+      <BulkConfirmModal
+        isOpen={bulkConfirm.open}
+        onClose={() => setBulkConfirm((prev) => ({ ...prev, open: false }))}
+        onConfirm={handleExecuteBulkAction}
+        title={bulkConfirm.title}
+        description={bulkConfirm.description}
+        count={bulkSelection.selectedCount}
+        actionType={bulkConfirm.actionType}
+        isDestructive={bulkConfirm.isDestructive}
+        confirmLabel={bulkConfirm.confirmLabel || 'Confirmer'}
+        warningMessage={bulkConfirm.warningMessage}
+        options={bulkConfirm.options}
+        optionsLabel={bulkConfirm.optionsLabel}
+        isLoading={isBulkExecuting}
+      />
+
+      {/* Modale de rapport post-exécution */}
+      <BulkResultModal
+        isOpen={bulkResult.open}
+        onClose={() => setBulkResult({ open: false, result: null })}
+        result={bulkResult.result}
+        title="Résultat de l'action sur les produits"
+      />
 
       <ProductModal
         open={modalOpen}
@@ -215,4 +421,4 @@ export default function ProductsPage() {
     </div>
     </PermissionGuard>
   );
-}
+}

@@ -32,7 +32,18 @@ const getStockStatus = (product) => {
     return { label: 'OK', color: 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400' };
 };
 
-export default function ProductTable({ products, onEdit, onDelete, onReactivate }) {
+export default function ProductTable({
+    products,
+    onEdit,
+    onDelete,
+    onReactivate,
+    selectedIds,
+    onToggleSelect,
+    onToggleSelectAll,
+    isAllPageSelected,
+    isSomePageSelected,
+    isSelected,
+}) {
     const [stockModalProduct, setStockModalProduct] = useState(null);
     const [detailModalProduct, setDetailModalProduct] = useState(null);
     const { activeCompany } = useCompanyStore();
@@ -53,10 +64,24 @@ export default function ProductTable({ products, onEdit, onDelete, onReactivate 
     return (
         <>
             {/* Desktop */}
-            <div className="hidden md:block rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
+            <div className="hidden md:block rounded-2xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] overflow-hidden shadow-xs">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-gray-200 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/80 text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                        <tr className="border-b border-gray-200 dark:border-[#374151] bg-gray-50/80 dark:bg-[#1F2937]/80 text-xs font-semibold text-gray-500 dark:text-[#D1D5DB] uppercase tracking-wider">
+                            {onToggleSelect && (
+                                <th className="px-4 py-3 text-center w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllPageSelected || false}
+                                        ref={(input) => {
+                                            if (input) input.indeterminate = isSomePageSelected || false;
+                                        }}
+                                        onChange={onToggleSelectAll}
+                                        aria-label="Sélectionner tous les produits de la page"
+                                        className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                    />
+                                </th>
+                            )}
                             <th className="px-4 py-3 text-left">Produit</th>
                             <th className="px-4 py-3 text-left">Catégorie</th>
                             <th className="px-4 py-3 text-right">Prix détail</th>
@@ -66,17 +91,34 @@ export default function ProductTable({ products, onEdit, onDelete, onReactivate 
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60">
+                    <tbody className="divide-y divide-gray-100 dark:divide-[#374151]/60">
                         {products.map((product, index) => {
                             const stockStatus = getStockStatus(product);
+                            const selected = isSelected?.(product.id) || false;
                             return (
                                 <motion.tr
                                     key={product.id}
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.02 }}
-                                    className="hover:bg-gray-50/80 dark:hover:bg-slate-800/50 transition-colors"
+                                    className={cn(
+                                        "transition-colors",
+                                        selected
+                                            ? "bg-brand-50/70 dark:bg-brand-950/40"
+                                            : "hover:bg-gray-50/80 dark:hover:bg-[#1F2937]/40"
+                                    )}
                                 >
+                                    {onToggleSelect && (
+                                        <td className="px-4 py-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selected}
+                                                onChange={() => onToggleSelect(product.id)}
+                                                aria-label={`Sélectionner ${product.name}`}
+                                                className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                            />
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
                                             {product.image_url ? (
@@ -87,10 +129,10 @@ export default function ProductTable({ products, onEdit, onDelete, onReactivate 
                                                 </div>
                                             )}
                                             <div>
-                                                <p className={cn("font-semibold text-sm", product.is_active === 0 ? "text-gray-400 dark:text-slate-600 line-through" : "text-gray-900 dark:text-slate-100")}>
+                                                <p className={cn("font-semibold text-sm", product.is_active === 0 ? "text-gray-400 dark:text-slate-600 line-through" : "text-gray-900 dark:text-[#F9FAFB]")}>
                                                     {product.name}
                                                 </p>
-                                                {product.sku && <p className="text-xs text-gray-400 dark:text-slate-500">SKU: {product.sku}</p>}
+                                                {product.sku && <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">SKU: {product.sku}</p>}
                                                 {product.is_active === 0 && (
                                                     <span className="inline-block mt-1 text-[10px] bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-900">
                                                         Désactivé
@@ -180,20 +222,35 @@ export default function ProductTable({ products, onEdit, onDelete, onReactivate 
             <div className="md:hidden space-y-3">
                 {products.map((product, index) => {
                     const stockStatus = getStockStatus(product);
+                    const selected = isSelected?.(product.id) || false;
                     return (
                         <motion.div
                             key={product.id}
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.02 }}
-                            className="rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs"
+                            className={cn(
+                                "rounded-2xl border bg-white dark:bg-[#111827] p-4 shadow-xs transition-colors",
+                                selected
+                                    ? "border-brand-500 bg-brand-50/40 dark:bg-brand-950/20 dark:border-brand-500"
+                                    : "border-gray-200 dark:border-[#374151]"
+                            )}
                         >
                             <div className="flex items-start justify-between">
                                 <div className="flex items-center gap-3">
+                                    {onToggleSelect && (
+                                        <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={() => onToggleSelect(product.id)}
+                                            aria-label={`Sélectionner ${product.name}`}
+                                            className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer shrink-0"
+                                        />
+                                    )}
                                     {product.image_url ? (
                                         <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover" />
                                     ) : (
-                                        <div className="h-12 w-12 rounded-lg bg-brand-100 dark:bg-brand-950/60 flex items-center justify-center">
+                                        <div className="h-12 w-12 rounded-lg bg-brand-100 dark:bg-brand-950/60 flex items-center justify-center shrink-0">
                                             <Package size={20} className="text-brand-600 dark:text-brand-400" />
                                         </div>
                                     )}
