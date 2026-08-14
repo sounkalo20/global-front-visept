@@ -95,7 +95,7 @@ export default function CategoryModal({ open, onOpenChange, category, onSuccess 
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB]">
               Nom de la catégorie *
             </label>
             <Input
@@ -106,7 +106,7 @@ export default function CategoryModal({ open, onOpenChange, category, onSuccess 
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB]">
               Description
             </label>
             <Input
@@ -116,16 +116,17 @@ export default function CategoryModal({ open, onOpenChange, category, onSuccess 
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#374151]">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]"
             >
               Annuler
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
               {isSubmitting ? (
                 <>
                   <Loader2 size={16} className="animate-spin mr-2" />

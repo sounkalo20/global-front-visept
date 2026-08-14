@@ -91,36 +91,34 @@ export default function ClientQuickSelector({ onSelect, selectedClient }) {
 
       {/* Résultats de recherche */}
       {showResults && searchResults.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#1F2937] shadow-xl max-h-60 overflow-y-auto">
           {searchResults.map((client) => (
             <button
               key={client.id}
               onClick={() => handleSelect(client)}
-              className="w-full text-left px-3 py-2.5 hover:bg-brand-50 flex items-center justify-between border-b last:border-0 transition-colors"
+              className="w-full text-left px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-[#374151] flex items-center justify-between border-b border-gray-100 dark:border-[#374151] last:border-0 transition-colors"
             >
               <div>
-                <p className="text-sm font-medium">{client.full_name}</p>
-                <p className="text-xs text-gray-500 flex items-center gap-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">{client.full_name}</p>
+                <p className="text-xs text-gray-500 dark:text-[#D1D5DB] flex items-center gap-1">
                   <Phone size={10} /> {client.phone}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 {client.current_debt > 0 && (
-                  <span className="text-xs text-red-600 font-medium">
+                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                     {parseInt(client.current_debt).toLocaleString()} F
                   </span>
                 )}
-                <Check size={14} className="text-gray-300" />
+                <Check size={14} className="text-gray-400 dark:text-[#9CA3AF]" />
               </div>
             </button>
           ))}
 
-          {/* Pas de création rapide si déjà des résultats */}
-
           {searchResults.length === 0 && query.length >= 2 && !showCreate && (
             <button
               onClick={() => { setShowCreate(true); setNewName(query); setNewPhone(''); }}
-              className="w-full text-left px-3 py-3 hover:bg-brand-50 flex items-center gap-2 text-brand-600"
+              className="w-full text-left px-3 py-3 hover:bg-gray-100 dark:hover:bg-[#374151] flex items-center gap-2 text-brand-600 dark:text-brand-400"
             >
               <Plus size={16} />
               <span className="text-sm font-medium">Créer "{query}"</span>
@@ -131,13 +129,13 @@ export default function ClientQuickSelector({ onSelect, selectedClient }) {
 
       {/* Aucun résultat + proposition création */}
       {showResults && searchResults.length === 0 && query.length >= 2 && !showCreate && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg p-3">
-          <p className="text-sm text-gray-500 mb-2">Aucun client trouvé.</p>
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#1F2937] shadow-xl p-3">
+          <p className="text-sm text-gray-500 dark:text-[#D1D5DB] mb-2">Aucun client trouvé.</p>
           <Button
             size="sm"
             variant="outline"
             onClick={() => { setShowCreate(true); setNewName(query); setNewPhone(''); }}
-            className="w-full text-xs"
+            className="w-full text-xs border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#374151]"
           >
             <Plus size={14} className="mr-2" /> Créer un nouveau client
           </Button>
@@ -146,8 +144,8 @@ export default function ClientQuickSelector({ onSelect, selectedClient }) {
 
       {/* Formulaire création rapide */}
       {showCreate && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border bg-white shadow-lg p-3 space-y-2">
-          <p className="text-sm font-medium">Création rapide</p>
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#1F2937] shadow-xl p-3 space-y-2">
+          <p className="text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">Création rapide</p>
           <Input
             placeholder="Nom complet *"
             value={newName}
@@ -176,7 +174,7 @@ export default function ClientQuickSelector({ onSelect, selectedClient }) {
               size="sm"
               variant="ghost"
               onClick={() => { setShowCreate(false); setNewPhone(''); setNewName(''); }}
-              className="text-xs h-8"
+              className="text-xs h-8 dark:hover:bg-[#374151] dark:text-[#D1D5DB]"
             >
               Annuler
             </Button>

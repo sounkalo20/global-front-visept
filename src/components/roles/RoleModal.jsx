@@ -127,19 +127,19 @@ export default function RoleModal({ isOpen, onClose, roleToEdit, companyId, onRo
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nom du rôle *</Label>
+                <Label htmlFor="name" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Nom du rôle *</Label>
                 <Input id="name" {...register('name')} disabled={isLoading || (roleToEdit?.is_system)} />
                 {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
-                {roleToEdit?.is_system && <p className="text-xs text-gray-500">Le nom d'un rôle système ne peut être modifié.</p>}
+                {roleToEdit?.is_system && <p className="text-xs text-gray-500 dark:text-[#9CA3AF]">Le nom d'un rôle système ne peut être modifié.</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Description</Label>
                 <Input id="description" {...register('description')} disabled={isLoading} />
               </div>
             </div>
 
             <div className="space-y-4">
-              <Label>Permissions</Label>
+              <Label className="text-gray-800 dark:text-[#F9FAFB] font-semibold">Permissions</Label>
               {isLoadingPerms ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="animate-spin text-brand-600" size={24} />
@@ -149,17 +149,16 @@ export default function RoleModal({ isOpen, onClose, roleToEdit, companyId, onRo
                   {Object.entries(permissionsGrouped).map(([moduleName, perms]) => {
                     const moduleCodes = perms.map(p => p.code);
                     const allSelected = moduleCodes.every(c => selectedPerms.includes(c));
-                    const someSelected = moduleCodes.some(c => selectedPerms.includes(c));
                     
                     return (
-                      <div key={moduleName} className="border rounded-lg overflow-hidden bg-white">
-                        <div className="bg-gray-50 px-4 py-3 border-b flex items-center justify-between">
-                          <h4 className="font-semibold text-gray-800">{moduleName}</h4>
+                      <div key={moduleName} className="border border-gray-200 dark:border-[#374151] rounded-xl overflow-hidden bg-white dark:bg-[#111827]">
+                        <div className="bg-gray-50 dark:bg-[#1F2937]/70 px-4 py-3 border-b border-gray-200 dark:border-[#374151] flex items-center justify-between">
+                          <h4 className="font-semibold text-gray-800 dark:text-[#F9FAFB] text-sm">{moduleName}</h4>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-xs h-7 text-brand-600 hover:text-brand-700 hover:bg-brand-50"
+                            className="text-xs h-7 text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40"
                             onClick={() => handleToggleModule(moduleName, perms)}
                           >
                             {allSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
@@ -171,15 +170,15 @@ export default function RoleModal({ isOpen, onClose, roleToEdit, companyId, onRo
                               <div className="flex items-center h-5">
                                 <input
                                   type="checkbox"
-                                  className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+                                  className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] bg-white dark:bg-[#111827] text-brand-600 focus:ring-brand-600 dark:checked:bg-brand-600"
                                   checked={selectedPerms.includes(p.code)}
                                   onChange={() => handleTogglePermission(p.code)}
                                   disabled={isLoading || (roleToEdit?.is_system && roleToEdit?.name === 'Propriétaire')}
                                 />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{p.name}</span>
-                                <span className="text-xs text-gray-500">{p.description}</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-[#D1D5DB] group-hover:text-gray-900 dark:group-hover:text-[#F9FAFB]">{p.name}</span>
+                                <span className="text-xs text-gray-500 dark:text-[#9CA3AF]">{p.description}</span>
                               </div>
                             </label>
                           ))}
@@ -193,11 +192,11 @@ export default function RoleModal({ isOpen, onClose, roleToEdit, companyId, onRo
 
           </div>
 
-          <div className="pt-4 border-t flex justify-end gap-2 mt-auto">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+          <div className="pt-4 border-t border-gray-200 dark:border-[#374151] flex justify-end gap-2 mt-auto">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {roleToEdit ? 'Enregistrer' : 'Créer le rôle'}
             </Button>

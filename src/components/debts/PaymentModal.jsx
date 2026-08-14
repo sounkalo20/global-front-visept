@@ -65,24 +65,25 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
 
                 <div className="space-y-4 mt-2">
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Montant *</label>
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Montant *</label>
                         <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-semibold" autoFocus />
                         <div className="flex gap-2 mt-2">
                             {[remaining, Math.ceil(remaining / 2), Math.ceil(remaining / 4)].filter(v => v > 0).map((v) => (
-                                <Button key={v} variant="outline" size="sm" onClick={() => setAmount(v.toString())} className="text-xs">{parseInt(v).toLocaleString()} F</Button>
+                                <Button key={v} variant="outline" size="sm" onClick={() => setAmount(v.toString())} className="text-xs border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">{parseInt(v).toLocaleString()} F</Button>
                             ))}
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Méthode de paiement</label>
-                        <div className="flex gap-1 mt-1">
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Méthode de paiement</label>
+                        <div className="flex gap-1.5 mt-1">
                             {['cash', 'mobile_money', 'bank_transfer'].map((m) => (
                                 <button
                                     key={m}
+                                    type="button"
                                     onClick={() => setPaymentMethod(m)}
-                                    className={cn('flex-1 py-2 text-xs font-medium rounded-lg border transition-colors',
-                                        paymentMethod === m ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-300')}
+                                    className={cn('flex-1 py-2 text-xs font-semibold rounded-xl border transition-colors',
+                                        paymentMethod === m ? 'bg-brand-600 text-white border-brand-600' : 'bg-white dark:bg-[#111827] text-gray-700 dark:text-[#D1D5DB] border-gray-300 dark:border-[#374151] hover:bg-gray-50 dark:hover:bg-[#1F2937]')}
                                 >
                                     {m === 'cash' ? '💵 Cash' : m === 'mobile_money' ? '📱 Mobile' : '🏦 Virement'}
                                 </button>
@@ -92,17 +93,17 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
 
                     {paymentMethod !== 'cash' && (
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Référence</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Référence</label>
                             <Input placeholder="N° transaction" value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} />
                         </div>
                     )}
 
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Note</label>
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Note</label>
                         <Input placeholder="Note optionnelle" value={note} onChange={(e) => setNote(e.target.value)} />
                     </div>
 
-                    <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full">
+                    <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold">
                         {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                         Enregistrer le paiement
                     </Button>

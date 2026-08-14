@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const PAGE_SIZES = [20, 50, 100, 200];
@@ -19,10 +19,10 @@ export default function PageSizeSelector({ value, onChange }) {
   };
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-500">
+    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-[#D1D5DB]">
       <span>Afficher</span>
       <Select value={String(value)} onValueChange={handleChange}>
-        <SelectTrigger className="w-[80px] h-8 text-sm">
+        <SelectTrigger className="w-[85px] h-8 text-xs font-medium">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -10,19 +10,19 @@ export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
     const router = useRouter();
 
     const getBadge = (client) => {
-        if (parseFloat(client.current_debt) > 0) return { label: 'Débiteur', color: 'bg-red-100 text-red-700' };
-        if (client.total_purchase_count > 10) return { label: 'Fidèle', color: 'bg-purple-100 text-purple-700' };
-        if (client.total_purchase_count > 0) return { label: 'Actif', color: 'bg-green-100 text-green-700' };
-        return { label: 'Nouveau', color: 'bg-blue-100 text-blue-700' };
+        if (parseFloat(client.current_debt) > 0) return { label: 'Débiteur', color: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400' };
+        if (client.total_purchase_count > 10) return { label: 'Fidèle', color: 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400' };
+        if (client.total_purchase_count > 0) return { label: 'Actif', color: 'bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400' };
+        return { label: 'Nouveau', color: 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400' };
     };
 
     return (
         <>
             {/* Desktop */}
-            <div className="hidden md:block rounded-xl border bg-white overflow-hidden">
+            <div className="hidden md:block rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-xs">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b bg-gray-50 text-xs font-medium text-gray-500 uppercase">
+                        <tr className="border-b border-gray-200 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/80 text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                             <th className="px-4 py-3 text-left">Client</th>
                             <th className="px-4 py-3 text-left">Contact</th>
                             <th className="px-4 py-3 text-right">Achats</th>
@@ -32,7 +32,7 @@ export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-slate-800/60">
                         {clients.map((client, i) => {
                             const badge = getBadge(client);
                             return (
@@ -41,43 +41,43 @@ export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
                                     initial={{ opacity: 0, y: 5 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.02 }}
-                                    className="hover:bg-gray-50 cursor-pointer"
+                                    className="hover:bg-gray-50/80 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
                                     onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                                 >
                                     <td className="px-4 py-3">
-                                        <p className="font-medium text-sm">{client.full_name}</p>
-                                        {client.city && <p className="text-xs text-gray-400">{client.city}</p>}
+                                        <p className="font-semibold text-sm text-gray-900 dark:text-slate-100">{client.full_name}</p>
+                                        {client.city && <p className="text-xs text-gray-400 dark:text-slate-500">{client.city}</p>}
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="space-y-0.5">
-                                            <p className="text-xs flex items-center gap-1"><Phone size={11} /> {client.phone}</p>
-                                            {client.email && <p className="text-xs flex items-center gap-1 text-gray-500"><Mail size={11} /> {client.email}</p>}
+                                            <p className="text-xs text-gray-700 dark:text-slate-300 flex items-center gap-1"><Phone size={11} className="text-gray-400 dark:text-slate-500" /> {client.phone}</p>
+                                            {client.email && <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-slate-400"><Mail size={11} className="text-gray-400 dark:text-slate-500" /> {client.email}</p>}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm">{client.total_purchase_count || 0}</td>
-                                    <td className="px-4 py-3 text-right font-medium text-sm">
+                                    <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-slate-300">{client.total_purchase_count || 0}</td>
+                                    <td className="px-4 py-3 text-right font-semibold text-sm text-gray-900 dark:text-slate-100">
                                         {parseInt(client.total_purchases || 0).toLocaleString()} F
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <span className={cn('text-sm font-medium', parseFloat(client.current_debt) > 0 ? 'text-red-600' : 'text-gray-400')}>
+                                        <span className={cn('text-sm font-semibold', parseFloat(client.current_debt) > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-slate-600')}>
                                             {parseInt(client.current_debt || 0).toLocaleString()} F
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-center">
-                                        <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', badge.color)}>{badge.label}</span>
+                                        <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
                                     </td>
                                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`${viewLink}/${client.id}`)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300" onClick={() => router.push(`${viewLink}/${client.id}`)}>
                                                 <Eye size={15} />
                                             </Button>
                                             <HasPermission required="clients.edit">
-                                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(client)}>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300" onClick={() => onEdit(client)}>
                                                   <Edit size={15} />
                                               </Button>
                                             </HasPermission>
                                             <HasPermission required="clients.delete">
-                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => onDelete(client)}>
+                                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => onDelete(client)}>
                                                   <Trash2 size={15} />
                                               </Button>
                                             </HasPermission>
@@ -100,19 +100,19 @@ export default function ClientTable({ clients, onEdit, onDelete, viewLink }) {
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.02 }}
-                            className="rounded-xl border bg-white p-4 cursor-pointer"
+                            className="rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 cursor-pointer shadow-xs"
                             onClick={() => router.push(`${viewLink}/${client.id}`)}
                         >
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <p className="font-medium">{client.full_name}</p>
-                                    <p className="text-sm text-gray-500">{client.phone}</p>
+                                    <p className="font-semibold text-gray-900 dark:text-slate-100">{client.full_name}</p>
+                                    <p className="text-sm text-gray-500 dark:text-slate-400">{client.phone}</p>
                                 </div>
-                                <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-medium', badge.color)}>{badge.label}</span>
+                                <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
                             </div>
                             <div className="flex justify-between mt-2 text-sm">
-                                <span className="text-gray-500">{client.total_purchase_count || 0} achats</span>
-                                <span className={parseFloat(client.current_debt) > 0 ? 'text-red-600 font-medium' : ''}>
+                                <span className="text-gray-500 dark:text-slate-400">{client.total_purchase_count || 0} achats</span>
+                                <span className={parseFloat(client.current_debt) > 0 ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-400 dark:text-slate-600'}>
                                     {parseInt(client.current_debt || 0).toLocaleString()} F dette
                                 </span>
                             </div>

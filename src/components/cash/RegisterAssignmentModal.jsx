@@ -86,18 +86,18 @@ export default function RegisterAssignmentModal({ open, onOpenChange, registerIt
         ) : (
           <div className="space-y-6 mt-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3 border-b pb-2">Utilisateurs assignés</h3>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F9FAFB] mb-3 border-b border-gray-100 dark:border-[#374151] pb-2">Utilisateurs assignés</h3>
               {assignedUsers.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">Aucun utilisateur assigné à cette caisse.</p>
+                <p className="text-sm text-gray-500 dark:text-[#9CA3AF] italic">Aucun utilisateur assigné à cette caisse.</p>
               ) : (
                 <ul className="space-y-2">
                   {assignedUsers.map(user => (
-                    <li key={user.id} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
+                    <li key={user.id} className="flex justify-between items-center bg-gray-50 dark:bg-[#1F2937]/50 p-2.5 rounded-xl border border-gray-200 dark:border-[#374151]">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">{user.first_name} {user.last_name}</span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">{user.first_name} {user.last_name}</span>
+                        <span className="text-xs text-gray-500 dark:text-[#D1D5DB]">{user.email}</span>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleUnassign(user.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                      <Button variant="ghost" size="sm" onClick={() => handleUnassign(user.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40">
                         <UserMinus size={16} />
                       </Button>
                     </li>
@@ -107,18 +107,18 @@ export default function RegisterAssignmentModal({ open, onOpenChange, registerIt
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3 border-b pb-2">Ajouter un utilisateur</h3>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-[#F9FAFB] mb-3 border-b border-gray-100 dark:border-[#374151] pb-2">Ajouter un utilisateur</h3>
               {availableUsers.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">Tous les employés sont déjà assignés.</p>
+                <p className="text-sm text-gray-500 dark:text-[#9CA3AF] italic">Tous les employés sont déjà assignés.</p>
               ) : (
                 <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
                   {availableUsers.map(emp => (
-                    <li key={emp.id} className="flex justify-between items-center bg-white p-2 rounded-lg border">
+                    <li key={emp.id} className="flex justify-between items-center bg-white dark:bg-[#111827] p-2.5 rounded-xl border border-gray-200 dark:border-[#374151]">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">{emp.first_name} {emp.last_name}</span>
-                        <span className="text-xs text-gray-500">{emp.email}</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">{emp.first_name} {emp.last_name}</span>
+                        <span className="text-xs text-gray-500 dark:text-[#D1D5DB]">{emp.email}</span>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => handleAssign(emp.id)} className="text-brand-600 hover:bg-brand-50 hover:text-brand-700">
+                      <Button variant="outline" size="sm" onClick={() => handleAssign(emp.id)} className="text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 border-gray-200 dark:border-[#374151]">
                         <UserPlus size={16} className="mr-1" />
                         Assigner
                       </Button>

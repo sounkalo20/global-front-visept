@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import useWarehouseStore from '@/store/warehouseStore';
 import useCompanyStore from '@/store/companyStore';
 
-export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
+export default function TransferModal({ isOpen, onClose, stock, warehouseId, onSuccess }) {
     const { transferToShop } = useWarehouseStore();
     const { companies } = useCompanyStore(); // Liste des entreprises de l'utilisateur
     
@@ -54,9 +54,10 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
             });
             
             setSuccess("Transfert réussi !");
+            onSuccess?.();
             setTimeout(() => {
                 onClose();
-            }, 1500);
+            }, 1200);
         } catch (err) {
             setError(err.response?.data?.message || "Erreur lors du transfert");
         } finally {
@@ -65,15 +66,15 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="flex items-center justify-between p-6 border-b">
-                    <h2 className="text-lg font-bold text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="bg-white dark:bg-[#111827] border border-gray-200 dark:border-[#374151] rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-[#374151]">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-[#F9FAFB]">
                         Transférer du stock
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-500 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-2 text-gray-400 dark:text-[#9CA3AF] hover:text-gray-600 dark:hover:text-[#F9FAFB] rounded-lg hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -81,30 +82,30 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {error && (
-                        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
+                        <div className="p-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 rounded-xl border border-red-200 dark:border-red-900">
                             {error}
                         </div>
                     )}
                     {success && (
-                        <div className="p-3 text-sm text-green-600 bg-green-50 rounded-lg border border-green-100">
+                        <div className="p-3 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/40 rounded-xl border border-green-200 dark:border-green-900">
                             {success}
                         </div>
                     )}
 
-                    <div>
-                        <p className="text-sm text-gray-600 mb-2">Produit : <span className="font-semibold text-gray-900">{stock.product_name}</span></p>
-                        <p className="text-sm text-gray-600">Stock disponible : <span className="font-semibold text-brand-600">{Number(stock.quantity)}</span></p>
+                    <div className="bg-gray-50 dark:bg-[#1F2937]/50 p-3 rounded-xl border border-gray-200 dark:border-[#374151]">
+                        <p className="text-sm text-gray-600 dark:text-[#D1D5DB] mb-1">Produit : <span className="font-semibold text-gray-900 dark:text-[#F9FAFB]">{stock.product_name}</span></p>
+                        <p className="text-sm text-gray-600 dark:text-[#D1D5DB]">Stock disponible : <span className="font-bold text-brand-600 dark:text-brand-400">{Number(stock.quantity)}</span></p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                             Boutique de destination <span className="text-red-500">*</span>
                         </label>
                         <select
                             required
                             value={formData.destination_company_id}
                             onChange={(e) => setFormData({ ...formData, destination_company_id: e.target.value })}
-                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111827] border border-gray-300 dark:border-[#374151] rounded-xl text-gray-900 dark:text-[#F9FAFB] focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm"
                         >
                             <option value="">Sélectionner une boutique</option>
                             {companies.map(c => (
@@ -114,7 +115,7 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                             Quantité à transférer <span className="text-red-500">*</span>
                         </label>
                         <input
@@ -125,28 +126,28 @@ export default function TransferModal({ isOpen, onClose, stock, warehouseId }) {
                             max={maxQty}
                             value={formData.quantity}
                             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111827] border border-gray-300 dark:border-[#374151] rounded-xl text-gray-900 dark:text-[#F9FAFB] focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm"
                         />
                     </div>
                     
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                             Notes / Motif
                         </label>
                         <textarea
                             value={formData.notes}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-none"
+                            className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111827] border border-gray-300 dark:border-[#374151] rounded-xl text-gray-900 dark:text-[#F9FAFB] placeholder-gray-400 dark:placeholder-[#9CA3AF] focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all text-sm resize-none"
                             placeholder="Optionnel"
                             rows={2}
                         />
                     </div>
 
-                    <div className="pt-4 flex gap-3">
-                        <Button type="button" variant="outline" className="flex-1" onClick={onClose} disabled={loading || success}>
+                    <div className="pt-4 flex gap-3 border-t border-gray-100 dark:border-[#374151]">
+                        <Button type="button" variant="outline" className="flex-1 border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]" onClick={onClose} disabled={loading || success}>
                             Annuler
                         </Button>
-                        <Button type="submit" className="flex-1" disabled={loading || success || !formData.destination_company_id || formData.quantity <= 0}>
+                        <Button type="submit" className="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold" disabled={loading || success || !formData.destination_company_id || formData.quantity <= 0}>
                             {loading ? "Transfert..." : "Transférer"}
                         </Button>
                     </div>

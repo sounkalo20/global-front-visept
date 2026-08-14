@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductTable from '@/components/products/ProductTable';
 import ProductModal from '@/components/products/ProductModal';
@@ -10,6 +10,8 @@ import ProductFilters from '@/components/products/ProductFilters';
 import ProductStats from '@/components/products/ProductStats';
 import EmptyProductState from '@/components/products/EmptyProductState';
 import ExportProductsPDFButton from '@/components/products/ExportProductsPDFButton';
+import DataImportModal from '@/components/common/DataImportModal';
+import DataExportButton from '@/components/common/DataExportButton';
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
@@ -33,6 +35,7 @@ export default function ProductsPage() {
   const { canAddMore, limits } = useSubscription();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProduct, setDeletingProduct] = useState(null);
 
@@ -80,30 +83,39 @@ export default function ProductsPage() {
       <div className="mx-auto max-w-6xl px-4 py-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Produits</h1>
             <p className="text-gray-500 mt-1">{totalProducts} produit{totalProducts > 1 ? 's' : ''}</p>
           </div>
-          {products.length > 0 && (
-            <div className="flex items-center gap-3">
-              <ExportProductsPDFButton />
-              <HasPermission required="products.create">
-                <Button 
-                  onClick={() => { 
-                    if (!canAddMore('max_products', totalProducts)) {
-                      toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
-                      return;
-                    }
-                    setEditingProduct(null); 
-                    setModalOpen(true); 
-                  }}
-                >
-                  <Plus size={18} className="mr-2" /> Nouveau produit
-                </Button>
-              </HasPermission>
-            </div>
-          )}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <DataExportButton moduleName="products" />
+            <ExportProductsPDFButton />
+            
+            <HasPermission required="products.create">
+              <Button
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+                className="border-brand-200 text-brand-700 hover:bg-brand-50 h-9 font-medium"
+              >
+                <Upload size={16} className="mr-1.5 text-brand-600" /> Importer
+              </Button>
+
+              <Button 
+                onClick={() => { 
+                  if (!canAddMore('max_products', totalProducts)) {
+                    toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+                    return;
+                  }
+                  setEditingProduct(null); 
+                  setModalOpen(true); 
+                }}
+                className="h-9 font-medium"
+              >
+                <Plus size={18} className="mr-1.5" /> Nouveau produit
+              </Button>
+            </HasPermission>
+          </div>
         </div>
 
         {isLoading ? (
@@ -111,13 +123,16 @@ export default function ProductsPage() {
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
           </div>
         ) : products.length === 0 && !search && !stockFilter ? (
-          <EmptyProductState onCreate={() => {
-            if (!canAddMore('max_products', totalProducts)) {
-              toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
-              return;
-            }
-            setModalOpen(true);
-          }} />
+          <EmptyProductState
+            onCreate={() => {
+              if (!canAddMore('max_products', totalProducts)) {
+                toast.error(`Limite atteinte : Vous avez atteint la limite de produits de votre forfait (${limits.max_products}). Veuillez mettre à niveau votre abonnement.`);
+                return;
+              }
+              setModalOpen(true);
+            }}
+            onImport={() => setImportModalOpen(true)}
+          />
         ) : (
           <>
             {products.length > 0 && <ProductStats products={filteredProducts} totalProductsCount={totalProducts} />}
@@ -188,6 +203,13 @@ export default function ProductsPage() {
         product={deletingProduct}
         open={!!deletingProduct}
         onOpenChange={(open) => { if (!open) setDeletingProduct(null); }}
+        onSuccess={loadData}
+      />
+
+      <DataImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        moduleName="products"
         onSuccess={loadData}
       />
     </div>

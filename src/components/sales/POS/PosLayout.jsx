@@ -33,6 +33,7 @@ import PaymentSection from './PaymentSection';
 import PosClock from './PosClock';
 import QuickHistoryModal from './QuickHistoryModal';
 import PosReturnModal from './PosReturnModal';
+import ThemeToggle from '@/components/layout/ThemeToggle';
 import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
@@ -189,41 +190,43 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const cartTotal = cart.getTotal();
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-gray-50 dark:bg-[#0B0F14] text-gray-900 dark:text-[#F9FAFB]">
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
+        <header className="bg-white dark:bg-[#111827] border-b border-gray-200 dark:border-[#374151] px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center gap-3">
             {!isCashier && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => router.push(isEditMode ? `${backLink}/${saleId}` : `${backLink}`)}
+                className="hover:bg-gray-100 dark:hover:bg-[#1F2937] text-gray-700 dark:text-[#D1D5DB]"
               >
                 <ArrowLeft size={20} />
               </Button>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-semibold text-lg">
+                <h1 className="font-bold text-lg text-gray-900 dark:text-[#F9FAFB]">
                   {isEditMode ? 'Modifier la vente' : 'Nouvelle vente'}
                 </h1>
                 {!isEditMode && (
                   <span className={cn(
                     "px-2 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-1",
-                    activeSession ? "bg-green-100 text-green-700 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200"
+                    activeSession ? "bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800" : "bg-gray-100 dark:bg-[#1F2937] text-gray-600 dark:text-[#D1D5DB] border border-gray-200 dark:border-[#374151]"
                   )}>
-                    <div className={cn("w-1.5 h-1.5 rounded-full", activeSession ? "bg-green-500" : "bg-gray-400")} />
+                    <span className={cn("w-1.5 h-1.5 rounded-full inline-block", activeSession ? "bg-green-500" : "bg-gray-400 dark:bg-[#9CA3AF]")} />
                     {activeSession ? `Caisse Ouverte : ${activeSession.register_name} - ${parseFloat(activeSession.expected_closing_amount || 0).toLocaleString()} FCFA` : 'Vente Libre'}
                   </span>
                 )}
               </div>
               {isEditMode && currentSale && (
-                <span className="text-xs text-gray-400">{currentSale.sale_number}</span>
+                <span className="text-xs text-gray-400 dark:text-[#9CA3AF]">{currentSale.sale_number}</span>
               )}
             </div>
             <PosClock />
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
+          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-[#D1D5DB]">
+            <ThemeToggle />
             {activeSession && (
               <Button 
                 variant="destructive" 
@@ -244,13 +247,13 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                 variant="outline"
                 size="sm"
                 onClick={() => setShowReturn(true)}
-                className="hidden md:flex gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                className="hidden md:flex gap-2 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-800/60 hover:bg-orange-50 dark:hover:bg-orange-950/30"
               >
                 <RotateCcw size={16} />
                 Retour
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="hidden md:flex gap-2 text-gray-600">
+            <Button variant="outline" size="sm" onClick={() => setShowHistory(true)} className="hidden md:flex gap-2 text-gray-600 dark:text-[#D1D5DB] border-gray-200 dark:border-[#374151] hover:bg-gray-100 dark:hover:bg-[#1F2937]">
               <History size={16} />
               Historique
             </Button>
@@ -258,7 +261,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
               <TooltipTrigger asChild>
                 <button
                   onClick={toggleFullscreen}
-                  className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors text-gray-400 hover:text-gray-700"
+                  className="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-[#1F2937] flex items-center justify-center transition-colors text-gray-400 dark:text-[#9CA3AF] hover:text-gray-700 dark:hover:text-[#F9FAFB]"
                   aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
                 >
                   {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -271,31 +274,31 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
             <ShoppingCart size={16} />
             <span>{itemsCount} article{itemsCount > 1 ? 's' : ''}</span>
             {itemsCount > 0 && (
-              <Badge variant="outline" className="font-bold">
+              <Badge variant="outline" className="font-bold border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300">
                 {cartTotal.toLocaleString()} FCFA
               </Badge>
             )}
-            <div className="w-px h-6 bg-gray-200 mx-1"></div>
+            <div className="w-px h-6 bg-gray-200 dark:bg-[#374151] mx-1"></div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200">
-                  <User size={16} className="text-gray-700" />
+                <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#1F2937] hover:bg-gray-200 dark:hover:bg-[#374151]">
+                  <User size={16} className="text-gray-700 dark:text-[#D1D5DB]" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-[#1F2937] border-gray-200 dark:border-[#374151] shadow-2xl">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</p>
-                  <p className="text-xs text-brand-600 mt-0.5 capitalize">{isCashier ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-[#F9FAFB]">{user?.first_name} {user?.last_name}</p>
+                  <p className="text-xs text-brand-600 dark:text-brand-400 mt-0.5 capitalize">{isCashier ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
                 </div>
                 
-                {/* Actions sur mobile uniquement (elles sont cachées dans l'en-tête sur mobile) */}
+                {/* Actions sur mobile uniquement */}
                 <div className="md:hidden">
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowHistory(true)}>
-                    <History size={16} className="mr-2 text-gray-500" /> Historique
+                  <DropdownMenuSeparator className="bg-gray-100 dark:bg-[#374151]" />
+                  <DropdownMenuItem onClick={() => setShowHistory(true)} className="dark:hover:bg-[#374151]">
+                    <History size={16} className="mr-2 text-gray-500 dark:text-[#9CA3AF]" /> Historique
                   </DropdownMenuItem>
                   {activeSession && !isEditMode && (
-                    <DropdownMenuItem onClick={() => setShowReturn(true)} className="text-orange-600">
+                    <DropdownMenuItem onClick={() => setShowReturn(true)} className="text-orange-600 dark:text-orange-400 dark:hover:bg-orange-950/30">
                       <RotateCcw size={16} className="mr-2" /> Retour produit
                     </DropdownMenuItem>
                   )}
@@ -306,19 +309,19 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                         setClosingNotes('');
                         setShowCloseShiftModal(true);
                       }}
-                      className="text-red-600"
+                      className="text-red-600 dark:text-red-400 dark:hover:bg-red-950/30"
                     >
                       <LogOut size={16} className="mr-2" /> Fermer la caisse
                     </DropdownMenuItem>
                   )}
                 </div>
 
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => router.push('/profile')}>
-                  <User size={16} className="mr-2 text-gray-500" /> Mon profil
+                <DropdownMenuSeparator className="bg-gray-100 dark:bg-[#374151]" />
+                <DropdownMenuItem onClick={() => router.push('/profile')} className="dark:hover:bg-[#374151]">
+                  <User size={16} className="mr-2 text-gray-500 dark:text-[#9CA3AF]" /> Mon profil
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <DropdownMenuSeparator className="bg-gray-100 dark:bg-[#374151]" />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 dark:text-red-400 dark:hover:bg-red-950/30">
                   <LogOut size={16} className="mr-2" /> Déconnexion
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -331,17 +334,17 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         </div>
 
         {itemsCount > 0 && (
-          <div className="border-t bg-white shadow-lg shrink-0">
+          <div className="border-t border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] shadow-lg shrink-0">
             <button
               onClick={() => setCartExpanded(!cartExpanded)}
-              className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-[#1F2937] hover:bg-gray-100 dark:hover:bg-[#374151] transition-colors"
             >
-              <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-[#D1D5DB] flex items-center gap-2">
                 <ShoppingCart size={16} />
                 Panier ({itemsCount})
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-brand-700">{cartTotal.toLocaleString()} FCFA</span>
+                <span className="text-sm font-bold text-brand-700 dark:text-brand-400">{cartTotal.toLocaleString()} FCFA</span>
                 {cartExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
               </div>
             </button>
@@ -366,7 +369,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         )}
       </div>
 
-      <div className="w-[380px] xl:w-[420px] border-l bg-white flex flex-col shrink-0 hidden lg:flex">
+      <div className="w-[380px] xl:w-[420px] border-l border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] flex flex-col shrink-0 hidden lg:flex">
         <ClientSelector
           clientName={cart.clientName}
           onSetClient={cart.setClient}
@@ -384,11 +387,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           />
         </div>
 
-        <div className="p-4 border-t bg-white flex gap-2">
+        <div className="p-4 border-t border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] flex gap-2">
           <Button
             onClick={handleProforma}
             variant="outline"
-            className="flex-1 h-12 text-sm font-semibold rounded-xl"
+            className="flex-1 h-12 text-sm font-semibold rounded-xl border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]"
             disabled={cart.items.length === 0}
           >
             Proforma
@@ -414,7 +417,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-[#374151] z-50">
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -430,14 +433,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[95vh] p-0 flex flex-col bg-gray-50 z-[100]" showCloseButton={true}>
+          <SheetContent side="bottom" className="h-[95vh] p-0 flex flex-col bg-gray-50 dark:bg-[#0B0F14] border-t border-gray-200 dark:border-[#374151] z-[100]" showCloseButton={true}>
             <div className="flex-1 overflow-y-auto">
-              <div className="p-4 border-b bg-white mb-4">
+              <div className="p-4 border-b border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] mb-4">
                 <div className="flex justify-between items-center font-medium mb-2">
-                  <span className="text-gray-900">Résumé du panier ({itemsCount} articles)</span>
-                  <span className="text-brand-700 font-bold">{cartTotal.toLocaleString()} FCFA</span>
+                  <span className="text-gray-900 dark:text-[#F9FAFB] font-semibold">Résumé du panier ({itemsCount} articles)</span>
+                  <span className="text-brand-700 dark:text-brand-400 font-bold">{cartTotal.toLocaleString()} FCFA</span>
                 </div>
-                <div className="text-sm text-gray-600 max-h-24 overflow-y-auto space-y-1">
+                <div className="text-sm text-gray-600 dark:text-[#D1D5DB] max-h-24 overflow-y-auto space-y-1">
                   {cart.items.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-start">
                       <span className="flex-1 truncate pr-2">{item.quantity}x {item.product_name}</span>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState } from 'react';
 import { Search, Loader2, Package, RotateCcw, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -172,20 +172,20 @@ export default function PosReturnModal({ open, onOpenChange }) {
             {sale && (
               <>
                 {/* Infos vente */}
-                <div className="bg-gray-50 rounded-xl p-4 border">
+                <div className="bg-gray-50 dark:bg-[#1F2937]/60 rounded-xl p-4 border border-gray-200 dark:border-[#374151]">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold text-gray-900">{sale.sale_number}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-gray-900 dark:text-[#F9FAFB]">{sale.sale_number}</p>
+                      <p className="text-sm text-gray-500 dark:text-[#D1D5DB]">
                         {sale.client_name || 'Client anonyme'} · {new Date(sale.sale_date).toLocaleDateString('fr-FR')}
                       </p>
                     </div>
-                    <Badge variant="outline" className="font-bold">
+                    <Badge variant="outline" className="font-bold border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300">
                       {Number(sale.total_amount).toLocaleString()} FCFA
                     </Badge>
                   </div>
                   {Number(sale.returned_amount) > 0 && (
-                    <div className="mt-2 flex items-center gap-1 text-xs text-orange-600">
+                    <div className="mt-2 flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400">
                       <AlertCircle size={12} />
                       Retours précédents : {Number(sale.returned_amount).toLocaleString()} FCFA
                     </div>
@@ -194,30 +194,30 @@ export default function PosReturnModal({ open, onOpenChange }) {
 
                 {/* Articles */}
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-700">Sélectionner les articles à retourner :</p>
+                  <p className="text-sm font-semibold text-gray-800 dark:text-[#F9FAFB]">Sélectionner les articles à retourner :</p>
                   {(sale.items || []).map(item => {
                     const sel = selectedItems[item.id] || { qty: 0, return_type: 'reintegrable', reason: 'defective', maxQty: item.quantity };
                     const maxQty = sel.maxQty;
                     return (
-                      <div key={item.id} className={`border rounded-xl p-3 transition-colors ${sel.qty > 0 ? 'border-orange-300 bg-orange-50' : 'border-gray-200'}`}>
+                      <div key={item.id} className={`border rounded-xl p-3 transition-colors ${sel.qty > 0 ? 'border-orange-300 dark:border-orange-700/80 bg-orange-50 dark:bg-orange-950/30' : 'border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827]'}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <Package size={16} className="text-gray-400 shrink-0" />
+                            <Package size={16} className="text-gray-400 dark:text-[#9CA3AF] shrink-0" />
                             <div className="min-w-0">
-                              <p className="font-medium text-sm truncate">{item.product_name}</p>
-                              <p className="text-xs text-gray-500">{Number(item.unit_price).toLocaleString()} FCFA × {item.quantity} · Max retournable: {maxQty}</p>
+                              <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB] truncate">{item.product_name}</p>
+                              <p className="text-xs text-gray-500 dark:text-[#D1D5DB]">{Number(item.unit_price).toLocaleString()} FCFA × {item.quantity} · Max retournable: {maxQty}</p>
                             </div>
                           </div>
                           {/* Quantité */}
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               onClick={() => updateItem(item.id, 'qty', Math.max(0, sel.qty - 1))}
-                              className="w-7 h-7 rounded-lg border flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors font-bold"
+                              className="w-7 h-7 rounded-lg border border-gray-200 dark:border-[#374151] flex items-center justify-center text-gray-600 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors font-bold"
                             >−</button>
-                            <span className="w-8 text-center font-bold text-sm">{sel.qty}</span>
+                            <span className="w-8 text-center font-bold text-sm text-gray-900 dark:text-[#F9FAFB]">{sel.qty}</span>
                             <button
                               onClick={() => updateItem(item.id, 'qty', Math.min(maxQty, sel.qty + 1))}
-                              className="w-7 h-7 rounded-lg border flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors font-bold"
+                              className="w-7 h-7 rounded-lg border border-gray-200 dark:border-[#374151] flex items-center justify-center text-gray-600 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors font-bold"
                             >+</button>
                           </div>
                         </div>
@@ -258,15 +258,15 @@ export default function PosReturnModal({ open, onOpenChange }) {
 
                 {/* Total + Valider */}
                 {itemsToReturn.length > 0 && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 flex items-center justify-between">
+                  <div className="bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900 rounded-xl p-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-orange-700">Remboursement total</p>
-                      <p className="text-xl font-bold text-orange-600">{totalRefund.toLocaleString()} FCFA</p>
+                      <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Remboursement total</p>
+                      <p className="text-xl font-bold text-orange-600 dark:text-orange-400">{totalRefund.toLocaleString()} FCFA</p>
                     </div>
                     <Button
                       onClick={handleSubmit}
                       disabled={isSubmitting}
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
                     >
                       {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : <RotateCcw size={16} className="mr-2" />}
                       Confirmer le retour

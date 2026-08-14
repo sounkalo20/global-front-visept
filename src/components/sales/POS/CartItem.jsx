@@ -12,15 +12,15 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
   };
 
   return (
-    <div className="px-4 py-3 hover:bg-gray-50/50 transition-colors">
+    <div className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-[#1F2937]/50 transition-colors">
       {/* Nom + supprimer */}
       <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="font-medium text-sm text-gray-900 line-clamp-2 flex-1">
+        <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB] line-clamp-2 flex-1">
           {item.product_name}
         </p>
         <button
           onClick={() => onRemove(item.product_id)}
-          className="shrink-0 text-gray-300 hover:text-red-500 transition-colors mt-0.5"
+          className="shrink-0 text-gray-400 dark:text-[#9CA3AF] hover:text-red-500 dark:hover:text-red-400 transition-colors mt-0.5"
         >
           <Trash2 size={16} />
         </button>
@@ -32,7 +32,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
         <select
           value={item.price_type || 'retail'}
           onChange={(e) => handlePriceTypeChange(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:outline-none focus:border-brand-300"
+          className="text-xs border border-gray-200 dark:border-[#374151] rounded-lg px-2 py-1.5 bg-gray-50 dark:bg-[#1F2937] text-gray-900 dark:text-[#F9FAFB] focus:outline-none focus:border-brand-500"
         >
           <option value="retail">Détail</option>
           {item.wholesale_price > 0 && <option value="wholesale">Gros</option>}
@@ -43,7 +43,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
           type="number"
           value={item.unit_price}
           onChange={(e) => onUpdatePrice(item.product_id, parseFloat(e.target.value) || 0)}
-          className="w-20 text-xs text-center border border-gray-200 rounded-lg px-1 py-1.5 focus:outline-none focus:border-brand-300"
+          className="w-20 text-xs text-center border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] text-gray-900 dark:text-[#F9FAFB] rounded-lg px-1 py-1.5 focus:outline-none focus:border-brand-500"
           min="0"
         />
 
@@ -51,7 +51,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
         <div className="flex items-center gap-0.5 ml-auto">
           <button
             onClick={() => onUpdateQuantity(item.product_id, item.quantity - 1)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#374151] text-gray-700 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors"
           >
             <Minus size={13} />
           </button>
@@ -79,13 +79,13 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
                  onUpdateQuantity(item.product_id, 1);
               }
             }}
-            className="w-12 text-center text-sm font-semibold tabular-nums border border-gray-200 rounded px-1 py-1 focus:outline-none focus:border-brand-400 bg-white"
+            className="w-12 text-center text-sm font-semibold tabular-nums border border-gray-200 dark:border-[#374151] rounded px-1 py-1 focus:outline-none focus:border-brand-500 bg-white dark:bg-[#111827] text-gray-900 dark:text-[#F9FAFB]"
             min="1"
           />
           <button
             onClick={() => onUpdateQuantity(item.product_id, item.quantity + 1)}
             disabled={item.manage_stock && item.quantity >= item.current_stock}
-            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-30"
+            className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#374151] text-gray-700 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors disabled:opacity-30"
           >
             <Plus size={13} />
           </button>
@@ -93,7 +93,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
       </div>
 
       {/* Total ligne */}
-      <p className="text-right text-sm font-semibold text-brand-700 mt-1">
+      <p className="text-right text-sm font-bold text-brand-700 dark:text-brand-400 mt-1">
         {(item.unit_price * item.quantity).toLocaleString()} FCFA
       </p>
     </div>

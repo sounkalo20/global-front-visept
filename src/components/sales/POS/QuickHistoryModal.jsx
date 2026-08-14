@@ -76,39 +76,39 @@ export default function QuickHistoryModal({ open, onOpenChange }) {
                 Aucune vente trouvée.
               </div>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-100">
+              <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-[#374151]">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
+                  <thead className="bg-gray-50 dark:bg-[#1F2937] text-gray-500 dark:text-[#D1D5DB] border-b border-gray-200 dark:border-[#374151]">
                     <tr>
-                      <th className="px-4 py-3 font-medium">N° Vente</th>
-                      <th className="px-4 py-3 font-medium">Heure</th>
-                      <th className="px-4 py-3 font-medium">Client</th>
-                      <th className="px-4 py-3 font-medium">Paiement</th>
-                      <th className="px-4 py-3 font-medium text-right">Montant</th>
-                      <th className="px-4 py-3 font-medium text-center">Actions</th>
+                      <th className="px-4 py-3 font-semibold">N° Vente</th>
+                      <th className="px-4 py-3 font-semibold">Heure</th>
+                      <th className="px-4 py-3 font-semibold">Client</th>
+                      <th className="px-4 py-3 font-semibold">Paiement</th>
+                      <th className="px-4 py-3 font-semibold text-right">Montant</th>
+                      <th className="px-4 py-3 font-semibold text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-[#374151]">
                     {sales.map((sale) => (
-                      <tr key={sale.id} className="hover:bg-gray-50/50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{sale.sale_number}</td>
-                        <td className="px-4 py-3 text-gray-500">
+                      <tr key={sale.id} className="hover:bg-gray-50/50 dark:hover:bg-[#1F2937]/50 transition-colors">
+                        <td className="px-4 py-3 font-semibold text-gray-900 dark:text-[#F9FAFB]">{sale.sale_number}</td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-[#9CA3AF]">
                           {new Date(sale.sale_date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         </td>
-                        <td className="px-4 py-3 text-gray-700">
+                        <td className="px-4 py-3 text-gray-700 dark:text-[#D1D5DB]">
                           {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name || ''}` : sale.client_name || 'Passager'}
                         </td>
-                        <td className="px-4 py-3 text-gray-500 capitalize">
+                        <td className="px-4 py-3 text-gray-500 dark:text-[#9CA3AF] capitalize">
                           {sale.payment_method?.replace('_', ' ') || '-'}
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                        <td className="px-4 py-3 text-right font-bold text-gray-900 dark:text-[#F9FAFB]">
                           {parseInt(sale.total_amount).toLocaleString()} FCFA
                         </td>
                         <td className="px-4 py-3 text-center">
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="text-brand-600 hover:text-brand-700 hover:bg-brand-50"
+                            className="text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40"
                             onClick={() => handleViewDetail(sale)}
                           >
                             <Eye size={16} className="mr-1.5" />
@@ -124,14 +124,14 @@ export default function QuickHistoryModal({ open, onOpenChange }) {
           </div>
 
           {!isCashier && (
-            <div className="bg-gray-50 p-4 rounded-xl flex items-center justify-between border">
-              <p className="text-sm text-gray-600">
+            <div className="bg-gray-50 dark:bg-[#1F2937]/60 p-4 rounded-xl flex items-center justify-between border border-gray-200 dark:border-[#374151]">
+              <p className="text-sm text-gray-600 dark:text-[#D1D5DB]">
                 Pour consulter l'historique complet et effectuer des recherches avancées, rendez-vous dans le module "Liste des ventes".
               </p>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="shrink-0 ml-4"
+                className="shrink-0 ml-4 border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#374151]"
                 onClick={() => {
                   onOpenChange(false);
                   router.push('/shop/sales');

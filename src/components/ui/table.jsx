@@ -25,7 +25,7 @@ function TableHeader({
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("bg-gray-50/80 dark:bg-[#1F2937] [&_tr]:border-b [&_tr]:border-gray-200 dark:[&_tr]:border-[#374151]", className)}
       {...props} />
   );
 }
@@ -37,7 +37,7 @@ function TableBody({
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn("[&_tr:last-child]:border-0 divide-y divide-gray-100 dark:divide-[#374151]/60", className)}
       {...props} />
   );
 }
@@ -49,7 +49,7 @@ function TableFooter({
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
+      className={cn("border-t border-gray-200 dark:border-[#374151] bg-gray-50/50 dark:bg-[#1F2937]/50 font-medium [&>tr]:last:border-b-0", className)}
       {...props} />
   );
 }
@@ -62,7 +62,7 @@ function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b border-gray-100 dark:border-[#374151]/60 transition-colors hover:bg-gray-50/80 dark:hover:bg-[#1F2937]/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-brand-50/50 dark:data-[state=selected]:bg-brand-950/30",
         className
       )}
       {...props} />
@@ -77,7 +77,7 @@ function TableHead({
     <th
       data-slot="table-head"
       className={cn(
-        "h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0",
+        "h-10 px-3 text-left align-middle text-xs font-semibold text-gray-500 dark:text-[#D1D5DB] uppercase tracking-wider whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />
@@ -92,7 +92,7 @@ function TableCell({
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "p-3 align-middle text-sm text-gray-800 dark:text-[#F9FAFB] whitespace-nowrap [&:has([role=checkbox])]:pr-0",
         className
       )}
       {...props} />

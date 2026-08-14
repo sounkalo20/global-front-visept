@@ -57,9 +57,9 @@ export default function LoadingScreen({
   show = true,
 }) {
   const wrapperClasses = {
-    fullscreen: 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-50',
+    fullscreen: 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0B0F14]',
     inline: 'flex flex-col items-center justify-center py-20',
-    overlay: 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 backdrop-blur-xl',
+    overlay: 'fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/80 dark:bg-[#0B0F14]/80 backdrop-blur-xl',
   };
 
   return (
@@ -78,26 +78,26 @@ export default function LoadingScreen({
             animate="animate"
             className="mb-6"
           >
-            <span className="text-3xl font-bold tracking-tight text-stone-900 select-none">
+            <span className="text-3xl font-bold tracking-tight text-gray-900 dark:text-[#F9FAFB] select-none">
               VISEPT
             </span>
           </motion.div>
 
           {/* Barre de progression animée */}
-          <div className="relative w-48 h-1 bg-stone-200 rounded-full overflow-hidden mb-5">
+          <div className="relative w-48 h-1 bg-gray-200 dark:bg-[#374151] rounded-full overflow-hidden mb-5">
             <motion.div
               variants={barVariants}
               animate="animate"
               className="absolute inset-y-0 w-1/2 rounded-full"
               style={{
-                background: 'linear-gradient(90deg, transparent, #292524, #1c1917, transparent)',
+                background: 'linear-gradient(90deg, transparent, #6366F1, #4F46E5, transparent)',
               }}
             />
           </div>
 
           {/* Message + dots animés */}
           <div className="flex items-center gap-0.5">
-            <span className="text-sm text-stone-500 font-medium">{message}</span>
+            <span className="text-sm text-gray-500 dark:text-[#D1D5DB] font-medium">{message}</span>
             <span className="flex ml-0.5 gap-px">
               {[0, 1, 2].map((i) => (
                 <motion.span
@@ -105,7 +105,7 @@ export default function LoadingScreen({
                   custom={i}
                   variants={dotVariants}
                   animate="animate"
-                  className="w-1 h-1 rounded-full bg-stone-400 inline-block"
+                  className="w-1 h-1 rounded-full bg-brand-500 dark:bg-brand-400 inline-block"
                 />
               ))}
             </span>

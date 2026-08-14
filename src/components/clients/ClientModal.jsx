@@ -69,39 +69,39 @@ export default function ClientModal({ open, onOpenChange, client, onSuccess }) {
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Prénom</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Prénom</label>
                             <Input placeholder="Amadou" error={errors.first_name?.message} {...register('first_name')} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Nom</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Nom</label>
                             <Input placeholder="Diallo" error={errors.last_name?.message} {...register('last_name')} />
                         </div>
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Téléphone *</label>
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Téléphone *</label>
                         <Input placeholder="+223 70 00 00 00" error={errors.phone?.message} {...register('phone')} />
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Email</label>
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Email</label>
                         <Input placeholder="client@email.com" error={errors.email?.message} {...register('email')} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Ville</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Ville</label>
                             <Input placeholder="Bamako" error={errors.city?.message} {...register('city')} />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-gray-700">Adresse</label>
+                            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Adresse</label>
                             <Input placeholder="Rue..." error={errors.address?.message} {...register('address')} />
                         </div>
                     </div>
                     <div>
-                        <label className="text-sm font-medium text-gray-700">Notes</label>
+                        <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Notes</label>
                         <Input placeholder="Notes internes..." {...register('notes')} />
                     </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#374151]">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">Annuler</Button>
+                        <Button type="submit" disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
                             {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
                             {isEditing ? 'Enregistrer' : 'Créer'}
                         </Button>

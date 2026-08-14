@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ClientStats from '@/components/clients/ClientStats';
 import ClientFilters from '@/components/clients/ClientFilters';
@@ -8,6 +8,8 @@ import ClientTable from '@/components/clients/ClientTable';
 import ClientModal from '@/components/clients/ClientModal';
 import DeleteClientDialog from '@/components/clients/DeleteClientDialog';
 import EmptyClientState from '@/components/clients/EmptyClientState';
+import DataImportModal from '@/components/common/DataImportModal';
+import DataExportButton from '@/components/common/DataExportButton';
 import useClientStore from '@/store/clientStore';
 import useCompanyStore from '@/store/companyStore';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
@@ -22,6 +24,7 @@ export default function ClientsPage() {
   const { activeCompany } = useCompanyStore();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [deletingClient, setDeletingClient] = useState(null);
 
@@ -31,11 +34,15 @@ export default function ClientsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
 
-  useEffect(() => {
+  const loadData = () => {
     if (activeCompany) {
       fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize });
       fetchStats(activeCompany.id);
     }
+  };
+
+  useEffect(() => {
+    loadData();
   }, [activeCompany, search, debtFilter, sortBy, page, pageSize]);
 
   if (!activeCompany) {
@@ -49,18 +56,26 @@ export default function ClientsPage() {
   return (
     <PermissionGuard requiredPermission="clients.view">
       <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Clients</h1>
           <p className="text-gray-500 text-sm">Gérez votre base de clients</p>
         </div>
-        {clients.length > 0 && (
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <DataExportButton moduleName="clients" />
           <HasPermission required="clients.create">
-            <Button onClick={() => { setEditingClient(null); setModalOpen(true); }}>
-              <Plus size={18} className="mr-2" /> Nouveau client
+            <Button
+              variant="outline"
+              onClick={() => setImportModalOpen(true)}
+              className="border-brand-200 text-brand-700 hover:bg-brand-50 h-9 font-medium"
+            >
+              <Upload size={16} className="mr-1.5 text-brand-600" /> Importer
+            </Button>
+            <Button onClick={() => { setEditingClient(null); setModalOpen(true); }} className="h-9 font-medium">
+              <Plus size={18} className="mr-1.5" /> Nouveau client
             </Button>
           </HasPermission>
-        )}
+        </div>
       </div>
 
       <ClientStats stats={stats} />
@@ -76,7 +91,7 @@ export default function ClientsPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" />
         </div>
       ) : clients.length === 0 && !search ? (
-        <EmptyClientState onCreate={() => setModalOpen(true)} />
+        <EmptyClientState onCreate={() => setModalOpen(true)} onImport={() => setImportModalOpen(true)} />
       ) : (
         <>
           <ClientTable
@@ -118,14 +133,21 @@ export default function ClientsPage() {
         open={modalOpen}
         onOpenChange={(open) => { setModalOpen(open); if (!open) setEditingClient(null); }}
         client={editingClient}
-        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize })}
+        onSuccess={loadData}
       />
 
       <DeleteClientDialog
         client={deletingClient}
         open={!!deletingClient}
         onOpenChange={(open) => { if (!open) setDeletingClient(null); }}
-        onSuccess={() => fetchClients(activeCompany.id, { search, has_debt: debtFilter, sort_by: sortBy, page, limit: pageSize })}
+        onSuccess={loadData}
+      />
+
+      <DataImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        moduleName="clients"
+        onSuccess={loadData}
       />
     </div>
     </PermissionGuard>

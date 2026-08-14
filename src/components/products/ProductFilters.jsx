@@ -82,28 +82,28 @@ export default function ProductFilters({
         <select
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value)}
-          className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="h-9 rounded-xl border border-gray-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
         >
-          <option value="created_at">Plus récent</option>
-          <option value="name">Nom A→Z</option>
-          <option value="retail_price">Prix ↑</option>
-          <option value="current_stock">Stock ↑</option>
+          <option value="created_at" className="dark:bg-slate-900">Plus récent</option>
+          <option value="name" className="dark:bg-slate-900">Nom A→Z</option>
+          <option value="retail_price" className="dark:bg-slate-900">Prix ↑</option>
+          <option value="current_stock" className="dark:bg-slate-900">Stock ↑</option>
         </select>
 
         {onStatusFilterChange && (
           <select
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
-            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="h-9 rounded-xl border border-gray-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-200 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-xs"
           >
-            <option value="all">Tous (Actifs & Désactivés)</option>
-            <option value="active">Actifs</option>
-            <option value="inactive">Supprimer</option>
+            <option value="all" className="dark:bg-slate-900">Tous (Actifs & Désactivés)</option>
+            <option value="active" className="dark:bg-slate-900">Actifs</option>
+            <option value="inactive" className="dark:bg-slate-900">Supprimer</option>
           </select>
         )}
 
         {hasFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-gray-500">
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
             <X size={14} className="mr-1" />
             Effacer
           </Button>

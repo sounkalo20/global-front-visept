@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useEffect, useState, useMemo } from 'react';
 import {
     ShoppingCart, DollarSign, TrendingUp, CreditCard, AlertTriangle,
@@ -139,15 +139,15 @@ export default function ShopDashboard() {
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-white/90 backdrop-blur-md border border-gray-100 rounded-xl shadow-xl p-3">
-                    <p className="text-sm font-bold text-gray-800 mb-1">{label}</p>
+                <div className="bg-white/95 dark:bg-[#1F2937]/95 backdrop-blur-md border border-gray-200 dark:border-[#374151] rounded-xl shadow-xl p-3">
+                    <p className="text-sm font-bold text-gray-800 dark:text-[#F9FAFB] mb-1">{label}</p>
                     {payload.map((p, i) => (
                         <div key={i} className="flex items-center justify-between gap-4 text-sm mb-1">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
-                                <span className="text-gray-600">{p.name}</span>
+                                <span className="text-gray-600 dark:text-[#D1D5DB]">{p.name}</span>
                             </div>
-                            <span className="font-semibold text-gray-900">
+                            <span className="font-semibold text-gray-900 dark:text-[#F9FAFB]">
                                 {p.name.toLowerCase().includes('count') || p.name.toLowerCase().includes('ventes') ? p.value : formatFCFA(p.value)}
                             </span>
                         </div>
@@ -159,17 +159,17 @@ export default function ShopDashboard() {
     };
 
     return (
-        <div className="p-4 md:p-6 space-y-6 bg-gray-50 min-h-screen">
+        <div className="p-4 md:p-6 space-y-6 bg-gray-50 dark:bg-[#0B0F14] min-h-screen">
             {/* Header & Date Picker */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#111827] p-4 rounded-2xl border border-gray-200 dark:border-[#374151] shadow-xs">
                 <div>
-                    <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Tableau de bord</h1>
-                    <p className="text-gray-500 text-sm mt-1">{activeCompany?.name} • Aperçu des performances</p>
+                    <h1 className="text-2xl font-extrabold text-gray-900 dark:text-[#F9FAFB] tracking-tight">Tableau de bord</h1>
+                    <p className="text-gray-500 dark:text-[#D1D5DB] text-sm mt-1">{activeCompany?.name} • Aperçu des performances</p>
                 </div>
-                <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border">
-                    <Calendar size={18} className="text-gray-500 ml-2" />
+                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#1F2937] p-1.5 rounded-xl border border-gray-200 dark:border-[#374151]">
+                    <Calendar size={18} className="text-gray-500 dark:text-[#9CA3AF] ml-2" />
                     <Select value={periodStr} onValueChange={handlePeriodChange}>
-                        <SelectTrigger className="w-[180px] border-0 bg-transparent shadow-none focus:ring-0 font-medium">
+                        <SelectTrigger className="w-[180px] border-0 bg-transparent shadow-none focus:ring-0 font-medium text-gray-900 dark:text-[#F9FAFB]">
                             <SelectValue placeholder="Sélectionner" />
                         </SelectTrigger>
                         <SelectContent>
@@ -188,16 +188,16 @@ export default function ShopDashboard() {
             {/* KPIs Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 {kpis.map((kpi) => (
-                    <div key={kpi.label} className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-md transition-all duration-200 group">
+                    <div key={kpi.label} className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-4 hover:shadow-md transition-all duration-200 group">
                         <div className="flex items-start justify-between mb-3">
                             <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${kpi.color}`}>
                                 <kpi.icon size={20} />
                             </div>
                             {kpi.trend !== undefined && kpi.trend !== null && <TrendBadge value={kpi.trend} />}
                         </div>
-                        <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{kpi.label}</p>
-                        <p className="text-xl font-extrabold mt-1 text-gray-900 truncate">{kpi.value}</p>
-                        {kpi.sub && <p className="text-[11px] text-gray-400 mt-1 font-medium">{kpi.sub}</p>}
+                        <p className="text-[11px] text-gray-500 dark:text-[#9CA3AF] font-bold uppercase tracking-wider">{kpi.label}</p>
+                        <p className="text-xl font-extrabold mt-1 text-gray-900 dark:text-[#F9FAFB] truncate">{kpi.value}</p>
+                        {kpi.sub && <p className="text-[11px] text-gray-400 dark:text-[#9CA3AF] mt-1 font-medium">{kpi.sub}</p>}
                     </div>
                 ))}
             </div>
@@ -205,10 +205,10 @@ export default function ShopDashboard() {
             {/* Charts Row 1: Evolution & Hourly */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Evolution Area Chart */}
-                <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                <div className="lg:col-span-2 bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-5 shadow-xs">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                            <TrendingUp size={18} className="text-brand-600" />
+                        <h2 className="text-base font-bold text-gray-900 dark:text-[#F9FAFB] flex items-center gap-2">
+                            <TrendingUp size={18} className="text-brand-600 dark:text-brand-400" />
                             Évolution Chiffre d'affaires vs Marge
                         </h2>
                     </div>
@@ -216,17 +216,17 @@ export default function ShopDashboard() {
                         <AreaChart data={evolutionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
                                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                                 </linearGradient>
                                 <linearGradient id="colorMargin" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
                                     <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis dataKey="dateFormatted" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
-                            <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.3} />
+                            <XAxis dataKey="dateFormatted" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} dy={10} />
+                            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                             <RechartsTooltip content={<CustomTooltip />} />
                             <Area type="monotone" dataKey="revenue" name="Chiffre d'affaires" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
                             <Area type="monotone" dataKey="margin" name="Marge brute" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorMargin)" />
@@ -235,20 +235,20 @@ export default function ShopDashboard() {
                 </div>
 
                 {/* Hourly Sales */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                    <h2 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-5 shadow-xs">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-[#F9FAFB] mb-6 flex items-center gap-2">
                         <Users size={18} className="text-orange-500" />
                         Heures d'affluence
                     </h2>
                     {hourlyData.length === 0 ? (
-                        <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm bg-gray-50 rounded-xl">Aucune donnée</div>
+                        <div className="flex items-center justify-center h-[280px] text-gray-400 dark:text-[#9CA3AF] text-sm bg-gray-50 dark:bg-[#1F2937]/50 rounded-xl">Aucune donnée</div>
                     ) : (
                         <ResponsiveContainer width="100%" height={280}>
                             <BarChart data={hourlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} tickLine={false} dy={10} />
-                                <YAxis tick={{ fontSize: 11, fill: '#64748b' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" strokeOpacity={0.3} />
+                                <XAxis dataKey="hour" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} dy={10} />
+                                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                                 <Bar dataKey="revenue" name="Revenu" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={40} />
                             </BarChart>
                         </ResponsiveContainer>
@@ -260,13 +260,13 @@ export default function ShopDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {/* Categories */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                    <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-5 shadow-xs">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-[#F9FAFB] mb-4 flex items-center gap-2">
                         <Package size={18} className="text-purple-500" />
                         Ventes par catégorie
                     </h2>
                     {categoryData.length === 0 ? (
-                        <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm bg-gray-50 rounded-xl">Aucune donnée</div>
+                        <div className="flex items-center justify-center h-[250px] text-gray-400 dark:text-[#9CA3AF] text-sm bg-gray-50 dark:bg-[#1F2937]/50 rounded-xl">Aucune donnée</div>
                     ) : (
                         <>
                             <ResponsiveContainer width="100%" height={200}>
@@ -281,9 +281,9 @@ export default function ShopDashboard() {
                             </ResponsiveContainer>
                             <div className="grid grid-cols-2 gap-2 mt-2 max-h-[80px] overflow-y-auto pr-2 custom-scrollbar">
                                 {categoryData.map((c, i) => (
-                                    <div key={c.name} className="flex items-center gap-2 text-[11px] bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
+                                    <div key={c.name} className="flex items-center gap-2 text-[11px] bg-gray-50 dark:bg-[#1F2937]/60 px-2 py-1.5 rounded-lg border border-gray-100 dark:border-[#374151]">
                                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                                        <span className="text-gray-700 truncate font-medium">{c.name}</span>
+                                        <span className="text-gray-700 dark:text-[#D1D5DB] truncate font-medium">{c.name}</span>
                                     </div>
                                 ))}
                             </div>
@@ -292,26 +292,26 @@ export default function ShopDashboard() {
                 </div>
 
                 {/* Top Products */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                    <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-5 shadow-xs">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-[#F9FAFB] mb-4 flex items-center gap-2">
                         <ShoppingCart size={18} className="text-blue-500" />
                         Top 5 Produits
                     </h2>
                     {data.top_products?.length === 0 ? (
-                        <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm bg-gray-50 rounded-xl">Aucune donnée</div>
+                        <div className="flex items-center justify-center h-[250px] text-gray-400 dark:text-[#9CA3AF] text-sm bg-gray-50 dark:bg-[#1F2937]/50 rounded-xl">Aucune donnée</div>
                     ) : (
                         <div className="space-y-3">
                             {data.top_products?.map((p, i) => (
-                                <div key={p.id} className="flex items-center gap-3 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 transition-colors">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
+                                <div key={p.id} className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-[#1F2937]/50 hover:bg-gray-100 dark:hover:bg-[#1F2937] rounded-xl border border-gray-100 dark:border-[#374151] transition-colors">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
                                         #{i + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-sm text-gray-900 truncate">{p.name}</p>
-                                        <p className="text-[11px] text-gray-500">{p.total_sold} vendus</p>
+                                        <p className="font-bold text-sm text-gray-900 dark:text-[#F9FAFB] truncate">{p.name}</p>
+                                        <p className="text-[11px] text-gray-500 dark:text-[#D1D5DB]">{p.total_sold} vendus</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-sm text-gray-900">{formatFCFA(p.total_revenue)}</p>
+                                        <p className="font-bold text-sm text-gray-900 dark:text-[#F9FAFB]">{formatFCFA(p.total_revenue)}</p>
                                     </div>
                                 </div>
                             ))}
@@ -320,26 +320,26 @@ export default function ShopDashboard() {
                 </div>
 
                 {/* Top Clients */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                    <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] p-5 shadow-xs">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-[#F9FAFB] mb-4 flex items-center gap-2">
                         <Users size={18} className="text-teal-500" />
                         Meilleurs Clients
                     </h2>
                     {data.top_clients?.length === 0 ? (
-                        <div className="flex items-center justify-center h-[250px] text-gray-400 text-sm bg-gray-50 rounded-xl">Aucune donnée</div>
+                        <div className="flex items-center justify-center h-[250px] text-gray-400 dark:text-[#9CA3AF] text-sm bg-gray-50 dark:bg-[#1F2937]/50 rounded-xl">Aucune donnée</div>
                     ) : (
                         <div className="space-y-3">
                             {data.top_clients?.map((c, i) => (
-                                <div key={c.id} className="flex items-center gap-3 p-2.5 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-100 transition-colors">
+                                <div key={c.id} className="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-[#1F2937]/50 hover:bg-gray-100 dark:hover:bg-[#1F2937] rounded-xl border border-gray-100 dark:border-[#374151] transition-colors">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-xs shrink-0">
                                         {c.full_name?.charAt(0) || '?'}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-sm text-gray-900 truncate">{c.full_name}</p>
-                                        <p className="text-[11px] text-gray-500">{c.total_purchases} achat(s)</p>
+                                        <p className="font-bold text-sm text-gray-900 dark:text-[#F9FAFB] truncate">{c.full_name}</p>
+                                        <p className="text-[11px] text-gray-500 dark:text-[#D1D5DB]">{c.total_purchases} achat(s)</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-sm text-gray-900">{formatFCFA(c.total_spent)}</p>
+                                        <p className="font-bold text-sm text-gray-900 dark:text-[#F9FAFB]">{formatFCFA(c.total_spent)}</p>
                                     </div>
                                 </div>
                             ))}
@@ -354,11 +354,10 @@ export default function ShopDashboard() {
                     width: 4px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #f1f5f9;
-                    border-radius: 4px;
+                    background: transparent;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #cbd5e1;
+                    background: #4B5563;
                     border-radius: 4px;
                 }
             `}</style>
