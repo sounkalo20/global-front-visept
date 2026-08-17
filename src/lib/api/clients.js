@@ -19,4 +19,7 @@ export const clientsApi = {
 
   getStats: (companyId) =>
     api.get(`/clients/stats?company_id=${companyId}`),
+
+  bulkAction: (companyId, { ids, action, params = {} }) =>
+    api.post(`/clients/bulk?company_id=${companyId}`, { ids, action, params }),
 };

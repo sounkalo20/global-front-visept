@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Box, History, PackageOpen } from 'lucide-react';
+import { ArrowLeft, Box, History, PackageOpen, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -13,11 +13,13 @@ import {
 } from '@/components/ui/table';
 import { warehouseApi } from '@/lib/api/warehouses';
 import { format } from 'date-fns';
+import CancelTransferModal from './CancelTransferModal';
 
 export default function GlobalProductDetails({ product, onClose }) {
   const [stocks, setStocks] = useState([]);
   const [movements, setMovements] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [cancelModalMovement, setCancelModalMovement] = useState(null);
 
   useEffect(() => {
     if (product) {
@@ -48,6 +50,7 @@ export default function GlobalProductDetails({ product, onClose }) {
     switch (type) {
         case 'in_from_supplier': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Entrée (Fournisseur)</Badge>;
         case 'transfer_to_shop': return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Transfert (Boutique)</Badge>;
+        case 'transfer_cancel': return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Annulation Transfert</Badge>;
         case 'transfer_to_warehouse': return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Transfert (Entrepôt)</Badge>;
         case 'adjustment': return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Ajustement</Badge>;
         case 'manual': return <Badge variant="outline" className="bg-gray-50 text-gray-700">Manuel</Badge>;
@@ -139,6 +142,7 @@ export default function GlobalProductDetails({ product, onClose }) {
                       <TableHead>Type</TableHead>
                       <TableHead className="text-right">Quantité</TableHead>
                       <TableHead className="text-right">Stock Final</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -164,6 +168,23 @@ export default function GlobalProductDetails({ product, onClose }) {
                         <TableCell className="text-right font-medium">
                           {Number(mov.stock_after)}
                         </TableCell>
+                        <TableCell className="text-right">
+                          {mov.movement_type === 'transfer_to_shop' ? (
+                            mov.is_cancelled === 1 ? (
+                              <span className="text-xs text-gray-400 italic">Annulé</span>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => setCancelModalMovement(mov)}
+                              >
+                                <XCircle size={14} className="mr-1" />
+                                Annuler
+                              </Button>
+                            )
+                          ) : null}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -173,6 +194,13 @@ export default function GlobalProductDetails({ product, onClose }) {
           </div>
         </div>
       </div>
+
+      <CancelTransferModal
+        isOpen={!!cancelModalMovement}
+        onClose={() => setCancelModalMovement(null)}
+        movement={cancelModalMovement}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }

@@ -23,3 +23,8 @@ export const deleteEmployee = async (id, companyId) => {
     });
     return response.data;
 };
+
+export const bulkEmployeeAction = async (companyId, { ids, action, params = {} }) => {
+    const response = await api.post(`/employees/bulk?company_id=${companyId}`, { ids, action, params, company_id: companyId });
+    return response.data;
+};

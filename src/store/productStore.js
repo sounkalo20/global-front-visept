@@ -3,6 +3,7 @@ import { productsApi } from "@/lib/api/products";
 
 const useProductStore = create((set, get) => ({
   products: [],
+  posProducts: [],
   totalProducts: 0,
   totalPages: 1,
   currentPage: 1,
@@ -29,6 +30,27 @@ const useProductStore = create((set, get) => ({
     } catch (error) {
       set({
         error: error.response?.data?.message || "Erreur lors du chargement.",
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchPosProducts: async (companyId) => {
+    if (!companyId) {
+      set({ posProducts: [], isLoading: false });
+      return;
+    }
+    set({ isLoading: true, error: null });
+    try {
+      const response = await productsApi.getAll(companyId, { limit: 'all', is_active: 'true' });
+      const { products } = response.data.data;
+      set({
+        posProducts: products,
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error: error.response?.data?.message || "Erreur lors du chargement (POS).",
         isLoading: false,
       });
     }
@@ -64,16 +86,35 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  deleteProduct: async (id, companyId) => {
+  deleteProduct: async (id, companyId, options = {}) => {
     try {
-      await productsApi.delete(id, companyId);
+      await productsApi.delete(id, companyId, options);
+      // Au lieu de supprimer la ligne, on met is_active à 0
       set((state) => ({
-        products: state.products.filter((p) => p.id !== id),
+        products: state.products.map((p) =>
+          p.id === id ? { ...p, is_active: 0 } : p
+        ),
       }));
       return { success: true };
     } catch (error) {
       const message =
         error.response?.data?.message || "Erreur suppression produit.";
+      return { success: false, message };
+    }
+  },
+
+  reactivateProduct: async (id, companyId) => {
+    try {
+      await productsApi.reactivate(id, companyId);
+      set((state) => ({
+        products: state.products.map((p) =>
+          p.id === id ? { ...p, is_active: 1 } : p
+        ),
+      }));
+      return { success: true };
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Erreur lors de la réactivation.";
       return { success: false, message };
     }
   },
@@ -98,7 +139,17 @@ const useProductStore = create((set, get) => ({
     }
   },
 
-  clearProducts: () => set({ products: [], isLoading: false, error: null }),
+  executeBulkAction: async (companyId, { ids, action, params = {} }) => {
+    try {
+      const response = await productsApi.bulkAction(companyId, { ids, action, params });
+      return { success: true, data: response.data.data, message: response.data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Erreur lors de l'action en masse.";
+      return { success: false, message };
+    }
+  },
+
+  clearProducts: () => set({ products: [], posProducts: [], isLoading: false, error: null }),
 }));
 
 export default useProductStore;

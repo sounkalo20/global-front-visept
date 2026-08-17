@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
+import usePermissionsStore from '@/store/permissionsStore';
 import { getNavigationByType } from '@/lib/config/navigation';
 import { BUSINESS_TYPE_MAP } from '@/lib/config/businessTypeMap';
 
 export default function useNavigation() {
     const { isSuperAdmin } = useAuthStore();
     const { activeCompany } = useCompanyStore();
+    const { hasPermission, isFetched: permsFetched, permissions, isSystemRole, roleName } = usePermissionsStore();
 
     const navigation = useMemo(() => {
         // 1. Super admin
@@ -24,22 +26,26 @@ export default function useNavigation() {
             baseNav = getNavigationByType('SHOP');
         }
 
-        // Filter out items that require a role the user doesn't have
-        const role = activeCompany?.my_role || 'manager'; // owner, manager, cashier
-        const isOwner = role === 'owner';
-        const isCashier = role === 'cashier';
+        // Si les permissions ne sont pas chargées et qu'on n'est pas Super Admin, on ne montre rien
+        if (!isSuperAdmin && !permsFetched) return [];
 
         return baseNav.map(section => {
             return {
                 ...section,
                 items: section.items.filter(item => {
-                    if (item.requireRole === 'owner' && !isOwner) return false;
-                    if (isCashier && !item.allowCashier) return false;
+                    // Si l'item a requirePermission, vérifier avec le store
+                    if (item.requirePermission) {
+                        return hasPermission(item.requirePermission);
+                    }
+                    // Compatibilité avec les anciens flags si certains n'ont pas encore requirePermission
+                    if (item.requireRole === 'owner') return hasPermission('settings.manage');
+                    if (item.allowCashier) return true; // Tout le monde a accès si pas de restriction explicite
+                    
                     return true;
                 })
             };
         }).filter(section => section.items.length > 0);
-    }, [isSuperAdmin, activeCompany]);
+    }, [isSuperAdmin, activeCompany, hasPermission, permsFetched, permissions, isSystemRole, roleName]);
 
     return navigation;
 }

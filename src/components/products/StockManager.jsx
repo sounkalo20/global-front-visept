@@ -109,13 +109,13 @@ export default function StockManager({ product, onClose }) {
     <div className="space-y-5">
       {/* Tabs */}
       {product.catalog_product_id && (
-        <div className="flex border-b">
+        <div className="flex border-b border-gray-200 dark:border-[#374151]">
           <button
             type="button"
             onClick={() => setActiveTab('manual')}
-            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === 'manual'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            className={`flex-1 pb-2.5 text-sm font-semibold border-b-2 transition-all ${activeTab === 'manual'
+              ? 'border-brand-600 text-brand-600 dark:text-brand-400'
+              : 'border-transparent text-gray-500 dark:text-[#9CA3AF] hover:text-gray-700 dark:hover:text-[#F9FAFB]'
               }`}
           >
             Ajustement Manuel
@@ -123,9 +123,9 @@ export default function StockManager({ product, onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab('transfer')}
-            className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-all ${activeTab === 'transfer'
-              ? 'border-brand-600 text-brand-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
+            className={`flex-1 pb-2.5 text-sm font-semibold border-b-2 transition-all ${activeTab === 'transfer'
+              ? 'border-brand-600 text-brand-600 dark:text-brand-400'
+              : 'border-transparent text-gray-500 dark:text-[#9CA3AF] hover:text-gray-700 dark:hover:text-[#F9FAFB]'
               }`}
           >
             Transfert Entrepôt → Boutique
@@ -134,12 +134,12 @@ export default function StockManager({ product, onClose }) {
       )}
 
       {/* Info Stock Boutique Actuel */}
-      <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-600">
+      <div className="bg-gray-50 dark:bg-[#1F2937]/50 p-3.5 rounded-xl border border-gray-200 dark:border-[#374151] flex items-center justify-between">
+        <div className="flex items-center gap-2 text-gray-600 dark:text-[#D1D5DB]">
           <Box size={18} />
           <span className="text-sm font-medium">Stock boutique actuel :</span>
         </div>
-        <span className="font-bold text-slate-800 text-base">
+        <span className="font-bold text-gray-900 dark:text-[#F9FAFB] text-base">
           {Number(product.current_stock)} {product.unit_symbol || 'pcs'}
         </span>
       </div>
@@ -159,7 +159,7 @@ export default function StockManager({ product, onClose }) {
               variant="outline"
               onClick={() => handleStockAction('add')}
               disabled={isSubmitting}
-              className="h-11 px-4 text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300 gap-1.5"
+              className="h-11 px-4 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800/60 hover:bg-green-50 dark:hover:bg-green-950/30 gap-1.5"
             >
               <Plus size={16} /> Ajouter
             </Button>
@@ -167,7 +167,7 @@ export default function StockManager({ product, onClose }) {
               variant="outline"
               onClick={() => handleStockAction('remove')}
               disabled={isSubmitting}
-              className="h-11 px-4 text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 gap-1.5"
+              className="h-11 px-4 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-red-950/30 gap-1.5"
             >
               <Minus size={16} /> Retirer
             </Button>
@@ -181,7 +181,7 @@ export default function StockManager({ product, onClose }) {
                 size="sm"
                 onClick={() => handleStockAction('add', qty)}
                 disabled={isSubmitting}
-                className="flex-1 h-9 text-xs font-semibold"
+                className="flex-1 h-9 text-xs font-semibold border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]"
               >
                 +{qty}
               </Button>
@@ -195,16 +195,16 @@ export default function StockManager({ product, onClose }) {
               <Loader2 className="animate-spin text-brand-600" size={24} />
             </div>
           ) : warehouseStocksList.length === 0 ? (
-            <p className="text-sm text-center text-gray-500 py-4">Aucun entrepôt disponible.</p>
+            <p className="text-sm text-center text-gray-500 dark:text-[#D1D5DB] py-4">Aucun entrepôt disponible.</p>
           ) : (
             <>
               {/* Select Warehouse */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Entrepôt Source</label>
+                <label className="text-xs font-semibold text-gray-500 dark:text-[#D1D5DB] uppercase tracking-wider">Entrepôt Source</label>
                 <select
                   value={selectedWarehouseId}
                   onChange={(e) => setSelectedWarehouseId(e.target.value)}
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 focus:border-brand-400 focus:ring-2 focus:ring-brand-100 outline-none transition-all appearance-none"
+                  className="w-full h-11 rounded-xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] px-4 text-sm text-gray-900 dark:text-[#F9FAFB] focus:border-brand-500 outline-none transition-all appearance-none"
                   style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2394a3b8%27 stroke-width=%272%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                 >
                   {warehouseStocksList.map((wh) => (
@@ -217,15 +217,15 @@ export default function StockManager({ product, onClose }) {
 
               {/* Stock in selected warehouse */}
               {selectedWarehouse && (
-                <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex justify-between text-sm">
-                  <span className="text-amber-800 font-medium">Stock disponible en entrepôt :</span>
-                  <span className="font-bold text-amber-900">{selectedWarehouse.quantity} {product.unit_symbol || 'pcs'}</span>
+                <div className="bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-3 flex justify-between text-sm">
+                  <span className="text-amber-800 dark:text-amber-300 font-medium">Stock disponible en entrepôt :</span>
+                  <span className="font-bold text-amber-900 dark:text-amber-200">{selectedWarehouse.quantity} {product.unit_symbol || 'pcs'}</span>
                 </div>
               )}
 
               {/* Quantity to transfer */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Quantité à transférer</label>
+                <label className="text-xs font-semibold text-gray-500 dark:text-[#D1D5DB] uppercase tracking-wider">Quantité à transférer</label>
                 <div className="flex gap-3">
                   <Input
                     type="number"
@@ -239,7 +239,7 @@ export default function StockManager({ product, onClose }) {
                   <Button
                     onClick={handleTransferSubmit}
                     disabled={isSubmitting || !selectedWarehouse || parseFloat(selectedWarehouse.quantity) <= 0}
-                    className="h-11 px-6 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-semibold gap-1.5"
+                    className="h-11 px-6 bg-brand-600 hover:bg-brand-700 text-white font-semibold gap-1.5"
                   >
                     {isSubmitting ? (
                       <Loader2 className="animate-spin" size={16} />

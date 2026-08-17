@@ -15,6 +15,7 @@ export const warehouseApi = {
     getGlobalProductMovements: (catalog_product_id, company_id) => api.get(`/warehouses/product/${catalog_product_id}/movements`, { params: { company_id } }),
     searchGlobalProducts: (query, company_id) => api.get(`/warehouses/search`, { params: { q: query, company_id } }),
     transferToShop: (id, data) => api.post(`/warehouses/${id}/transfer`, data),
+    cancelTransfer: (movementId) => api.post(`/warehouses/transfers/${movementId}/cancel`),
 
     // 🔥 NOUVEAU: Ajustements de stock
     getAdjustmentReasons: () => api.get('/warehouses/adjustment-reasons'),

@@ -109,7 +109,17 @@ const useClientStore = create((set, get) => ({
     } catch {}
   },
 
-  clearDetails: () => set({ clientDetails: null }),
+  executeBulkAction: async (companyId, { ids, action, params = {} }) => {
+    try {
+      const response = await clientsApi.bulkAction(companyId, { ids, action, params });
+      return { success: true, data: response.data.data, message: response.data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Erreur lors de l'action en masse sur les clients.";
+      return { success: false, message };
+    }
+  },
+
+  clearClients: () => set({ clients: [], clientDetails: null, searchResults: [] }),
 }));
 
 export default useClientStore;

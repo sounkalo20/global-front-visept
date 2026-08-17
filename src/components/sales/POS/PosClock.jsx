@@ -16,11 +16,11 @@ export default function PosClock() {
   const timeString = time.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="flex items-center gap-2 text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg border text-sm font-medium">
-      <Clock size={16} className="text-gray-400" />
+    <div className="flex items-center gap-2 text-gray-500 dark:text-[#D1D5DB] bg-gray-100 dark:bg-[#1F2937] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-[#374151] text-xs font-medium">
+      <Clock size={15} className="text-gray-400 dark:text-[#9CA3AF]" />
       <span className="capitalize">{dateString}</span>
-      <span className="text-gray-300">|</span>
-      <span>{timeString}</span>
+      <span className="text-gray-300 dark:text-[#374151]">|</span>
+      <span className="font-semibold text-gray-800 dark:text-[#F9FAFB]">{timeString}</span>
     </div>
   );
 }

@@ -67,14 +67,41 @@ export default function SaleDetail({ sale, onBack, onCancel, onReturn, editLink,
   const due = parseInt(sale.amount_due || 0);
   const paymentProgress = total > 0 ? Math.min(100, Math.round((paid / total) * 100)) : 0;
   
-  const [showEditErrorModal, setShowEditErrorModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalTitle, setErrorModalTitle] = useState("");
+  const [errorModalMessage, setErrorModalMessage] = useState("");
   const hasReturns = sale.returns && sale.returns.length > 0;
 
+  const triggerError = (title, message) => {
+    setErrorModalTitle(title);
+    setErrorModalMessage(message);
+    setShowErrorModal(true);
+  };
+
   const handleEditClick = () => {
-    if (hasReturns) {
-      setShowEditErrorModal(true);
+    if (sale.payment_status === 'debt' && paid > 0) {
+      triggerError(
+        "Modification impossible",
+        "Cette dette ne peut plus être modifiée car un paiement a déjà été encaissé."
+      );
+    } else if (hasReturns) {
+      triggerError(
+        "Modification impossible",
+        "Cette vente ne peut plus être modifiée car des retours produits ont déjà été enregistrés."
+      );
     } else {
       router.push(editLink + `/${sale.id}/edit`);
+    }
+  };
+
+  const handleCancelClick = () => {
+    if (sale.payment_status === 'debt' && paid > 0) {
+      triggerError(
+        "Annulation impossible",
+        "Cette dette ne peut plus être annulée car un paiement a déjà été encaissé."
+      );
+    } else {
+      onCancel(sale);
     }
   };
 
@@ -163,7 +190,7 @@ export default function SaleDetail({ sale, onBack, onCancel, onReturn, editLink,
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onCancel(sale)}
+                    onClick={handleCancelClick}
                     className="text-red-600 border-red-200 hover:bg-red-50"
                   >
                     <AlertCircle size={14} className="mr-1.5" /> Annuler
@@ -548,21 +575,19 @@ export default function SaleDetail({ sale, onBack, onCancel, onReturn, editLink,
         </motion.div>
       </div>
 
-      <Dialog open={showEditErrorModal} onOpenChange={setShowEditErrorModal}>
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangleIcon size={20} />
-              Modification impossible
+              {errorModalTitle}
             </DialogTitle>
             <DialogDescription className="pt-3">
-              Cette vente ne peut plus être modifiée car <strong>des retours produits ont déjà été enregistrés</strong>. 
-              <br/><br/>
-              Pour garantir l'intégrité comptable et l'historique des mouvements de stock, une vente ayant fait l'objet d'un retour est verrouillée en écriture. Si vous devez absolument corriger cette vente, vous devrez l'annuler entièrement et en créer une nouvelle.
+              {errorModalMessage}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button onClick={() => setShowEditErrorModal(false)}>Compris</Button>
+            <Button onClick={() => setShowErrorModal(false)}>Compris</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

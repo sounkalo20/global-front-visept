@@ -19,4 +19,7 @@ export const suppliersApi = {
 
     toggleStatus: (id, companyId) =>
         api.put(`/suppliers/${id}/toggle-status`, { company_id: companyId }),
+
+    bulkAction: (companyId, { ids, action, params = {} }) =>
+        api.post(`/suppliers/bulk?company_id=${companyId}`, { ids, action, params }),
 };

@@ -20,26 +20,26 @@ export default function ProductStats({ products, totalProductsCount }) {
       label: 'Total produits',
       value: totalProducts,
       icon: Package,
-      color: 'bg-blue-100 text-blue-600',
+      color: 'bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400',
     },
     {
       label: 'Stock faible',
       value: lowStock,
       icon: AlertTriangle,
-      color: 'bg-amber-100 text-amber-600',
+      color: 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400',
       warning: lowStock > 0,
     },
     {
       label: 'Valeur stock',
       value: `${totalValue.toLocaleString()} FCFA`,
       icon: DollarSign,
-      color: 'bg-green-100 text-green-600',
+      color: 'bg-green-100 dark:bg-green-950/60 text-green-600 dark:text-green-400',
     },
     {
       label: 'Prix moyen',
       value: `${Math.round(avgPrice).toLocaleString()} FCFA`,
       icon: TrendingUp,
-      color: 'bg-purple-100 text-purple-600',
+      color: 'bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400',
     },
   ];
 
@@ -51,15 +51,17 @@ export default function ProductStats({ products, totalProductsCount }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
-          className={`rounded-xl border bg-white p-4 shadow-sm ${stat.warning ? 'border-amber-300' : ''}`}
+          className={`rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-xs transition-colors ${
+            stat.warning ? 'border-amber-300 dark:border-amber-700/60' : ''
+          }`}
         >
           <div className="flex items-center gap-3">
             <div className={`rounded-lg p-2 ${stat.color}`}>
               <stat.icon size={18} />
             </div>
             <div>
-              <p className="text-xs text-gray-500">{stat.label}</p>
-              <p className="text-lg font-semibold">{stat.value}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{stat.label}</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-slate-100">{stat.value}</p>
             </div>
           </div>
         </motion.div>

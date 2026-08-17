@@ -16,12 +16,15 @@ const employeeSchema = z.object({
   last_name: z.string().min(1, 'Le nom est requis'),
   email: z.string().email('Email invalide'),
   phone: z.string().optional(),
-  role: z.enum(['manager', 'cashier'], { required_error: 'Le rôle est requis' }),
+  role_id: z.string().min(1, 'Le rôle est requis'),
   password: z.string().optional(),
 });
 
 export default function EmployeeModal({ isOpen, onClose, employeeToEdit, companyId, onEmployeeSaved }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
+  const { getRoles } = require('@/lib/api/rbac');
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     resolver: zodResolver(employeeSchema),
@@ -30,7 +33,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
       last_name: '',
       email: '',
       phone: '',
-      role: 'manager',
+      role_id: '',
       password: '',
     }
   });
@@ -42,7 +45,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: employeeToEdit.last_name || '',
         email: employeeToEdit.email || '',
         phone: employeeToEdit.phone || '',
-        role: employeeToEdit.role || 'manager',
+        role_id: employeeToEdit.role_id?.toString() || '',
         password: '',
       });
     } else {
@@ -51,11 +54,30 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         last_name: '',
         email: '',
         phone: '',
-        role: 'manager',
+        role_id: '',
         password: '',
       });
     }
   }, [employeeToEdit, reset, isOpen]);
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      if (companyId && isOpen) {
+        setIsLoadingRoles(true);
+        try {
+          const res = await getRoles(companyId);
+          // On ne permet pas d'assigner le rôle Propriétaire
+          const assignableRoles = res.data.roles.filter(r => r.name !== 'Propriétaire');
+          setRoles(assignableRoles);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setIsLoadingRoles(false);
+        }
+      }
+    };
+    fetchRoles();
+  }, [companyId, isOpen]);
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -101,59 +123,62 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="first_name">Prénom</Label>
+              <Label htmlFor="first_name" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Prénom</Label>
               <Input id="first_name" {...register('first_name')} disabled={isLoading} />
               {errors.first_name && <p className="text-xs text-red-500">{errors.first_name.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="last_name">Nom</Label>
+              <Label htmlFor="last_name" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Nom</Label>
               <Input id="last_name" {...register('last_name')} disabled={isLoading} />
               {errors.last_name && <p className="text-xs text-red-500">{errors.last_name.message}</p>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Email</Label>
             <Input id="email" type="email" {...register('email')} disabled={!!employeeToEdit || isLoading} />
             {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-            {!!employeeToEdit && <p className="text-xs text-gray-500">L'email ne peut pas être modifié.</p>}
+            {!!employeeToEdit && <p className="text-xs text-gray-500 dark:text-[#9CA3AF]">L'email ne peut pas être modifié.</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Téléphone</Label>
+            <Label htmlFor="phone" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Téléphone</Label>
             <Input id="phone" type="tel" {...register('phone')} disabled={isLoading} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="role">Rôle</Label>
+            <Label htmlFor="role_id" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Rôle</Label>
             <Select 
-              value={register('role').value} 
-              onValueChange={(val) => register('role').onChange({ target: { value: val, name: 'role' }})} 
-              defaultValue="manager"
-              {...register('role')}
+              value={register('role_id').value} 
+              onValueChange={(val) => register('role_id').onChange({ target: { value: val, name: 'role_id' }})} 
+              {...register('role_id')}
+              disabled={isLoading || isLoadingRoles}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un rôle" />
+                <SelectValue placeholder={isLoadingRoles ? "Chargement des rôles..." : "Sélectionnez un rôle"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="manager">Gérant</SelectItem>
-                <SelectItem value="cashier">Caissier</SelectItem>
+                {roles.map(role => (
+                  <SelectItem key={role.id} value={role.id.toString()}>
+                    {role.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
+            {errors.role_id && <p className="text-xs text-red-500">{errors.role_id.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe {employeeToEdit ? '(Laisser vide pour ne pas modifier)' : '*'}</Label>
+            <Label htmlFor="password" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Mot de passe {employeeToEdit ? '(Laisser vide pour ne pas modifier)' : '*'}</Label>
             <Input id="password" type="password" {...register('password')} disabled={isLoading} />
             {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
           </div>
 
-          <div className="pt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+          <div className="pt-4 border-t border-gray-200 dark:border-[#374151] flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {employeeToEdit ? 'Enregistrer' : 'Créer'}
             </Button>

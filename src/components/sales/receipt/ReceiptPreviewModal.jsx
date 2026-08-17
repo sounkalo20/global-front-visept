@@ -17,7 +17,7 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
 
   const handlePrint = () => {
     printReceipt(sale, activeCompany, user, paperSize, isProforma);
-    onOpenChange(false);
+    handleClose(false);
   };
 
   const handleClose = (openState) => {
@@ -29,37 +29,37 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-stone-50">
+      <DialogContent className="max-w-md bg-stone-50 dark:bg-[#111827]">
         <DialogHeader>
           <DialogTitle>Aperçu du ticket</DialogTitle>
         </DialogHeader>
         
         <div className="flex flex-col items-center gap-4 py-4">
           {/* Options de papier */}
-          <div className="flex bg-stone-200 p-1 rounded-lg">
+          <div className="flex bg-stone-200 dark:bg-[#1F2937] p-1 rounded-xl">
             <button
               onClick={() => setPaperSize('58mm')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === '58mm' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === '58mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
               58 mm
             </button>
             <button
               onClick={() => setPaperSize('80mm')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === '80mm' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === '80mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
               80 mm
             </button>
             <button
               onClick={() => setPaperSize('A4')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === 'A4' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === 'A4' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
               A4
             </button>
           </div>
 
-          {/* Aperçu */}
+          {/* Aperçu (Ticket réel thermique) */}
           <div 
-            className="bg-white border shadow-sm p-4 overflow-y-auto"
+            className="bg-white rounded-lg border border-gray-300 dark:border-[#374151] shadow-md p-4 overflow-y-auto"
             style={{ 
               width: paperSize === '58mm' ? '220px' : paperSize === '80mm' ? '300px' : '100%', 
               maxHeight: '400px' 
@@ -94,11 +94,11 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-2">
-          <Button variant="outline" onClick={() => handleClose(false)}>
+        <div className="flex justify-end gap-3 pt-3 border-t border-gray-200 dark:border-[#374151]">
+          <Button variant="outline" onClick={() => handleClose(false)} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">
             Fermer
           </Button>
-          <Button onClick={handlePrint} disabled={isPrinting} className="bg-stone-900 text-white hover:bg-stone-800">
+          <Button onClick={handlePrint} disabled={isPrinting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
             <Printer size={16} className="mr-2" />
             {isPrinting ? 'Impression...' : 'Imprimer'}
           </Button>

@@ -22,7 +22,14 @@ const statusConfig = {
     disputed: { label: 'Litige', className: 'bg-orange-100 text-orange-700' },
 };
 
-export default function OrdersTable() {
+export default function OrdersTable({
+    selectedIds,
+    onToggleSelect,
+    onToggleSelectAll,
+    isAllPageSelected,
+    isSomePageSelected,
+    isSelected,
+} = {}) {
     const { orders, pagination, isLoading, setPage, cancelOrder, updateStatus } = useSupplierOrderStore();
     const [selectedId, setSelectedId] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -50,58 +57,95 @@ export default function OrdersTable() {
     if (isLoading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-t-transparent" /></div>;
 
     if (orders.length === 0) return (
-        <div className="text-center py-12 text-gray-500 bg-white rounded-xl border">
-            <Package size={48} className="mx-auto text-gray-300 mb-3" />
-            <p className="font-medium text-gray-400">Aucune commande trouvée</p>
+        <div className="text-center py-12 text-gray-500 dark:text-[#D1D5DB] bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151]">
+            <Package size={48} className="mx-auto text-gray-300 dark:text-[#4B5563] mb-3" />
+            <p className="font-medium text-gray-400 dark:text-[#9CA3AF]">Aucune commande trouvée</p>
         </div>
     );
 
     return (
         <>
-            <div className="bg-white rounded-xl border overflow-hidden">
+            <div className="bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-[#374151] overflow-hidden">
                 <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>N° Commande</TableHead>
-                            <TableHead>Fournisseur</TableHead>
-                            <TableHead className="text-right">Total</TableHead>
-                            <TableHead className="text-right">Payé</TableHead>
-                            <TableHead className="text-right">Reste</TableHead>
-                            <TableHead className="text-center">Statut</TableHead>
-                            <TableHead className="text-center">Articles</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
+                    <TableHeader className="bg-gray-50/80 dark:bg-[#1F2937]/80">
+                        <TableRow className="border-b border-gray-200 dark:border-[#374151]">
+                            {onToggleSelect && (
+                                <TableHead className="w-10 text-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllPageSelected || false}
+                                        ref={(input) => {
+                                            if (input) input.indeterminate = isSomePageSelected || false;
+                                        }}
+                                        onChange={onToggleSelectAll}
+                                        aria-label="Sélectionner toutes les commandes"
+                                        className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                    />
+                                </TableHead>
+                            )}
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">N° Commande</TableHead>
+                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Fournisseur</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Total</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Payé</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Reste</TableHead>
+                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>
+                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Articles</TableHead>
+                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
-                        {orders.map((order) => (
-                            <TableRow key={order.id} className={order.status === 'canceled' ? 'opacity-60' : ''}>
-                                <TableCell>
-                                    <p className="font-medium text-sm">{order.order_number}</p>
-                                    <p className="text-xs text-gray-400">{new Date(order.created_at).toLocaleDateString('fr-FR')}</p>
-                                </TableCell>
-                                <TableCell className="text-sm">{order.supplier_name}</TableCell>
-                                <TableCell className="text-right text-sm font-medium">{Number(order.total_amount).toLocaleString()} FCFA</TableCell>
-                                <TableCell className="text-right text-sm text-green-600">{Number(order.total_paid).toLocaleString()} FCFA</TableCell>
-                                <TableCell className="text-right text-sm text-red-600">{Number(order.remaining_balance).toLocaleString()} FCFA</TableCell>
-                                <TableCell className="text-center">
-                                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[order.status]?.className}`}>
-                                        {statusConfig[order.status]?.label}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-center text-sm">{order.items_count || 0}</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => openDetail(order.id)}><Eye size={16} /></Button>
-                                        {['draft', 'ordered', 'confirmed'].includes(order.status) && (
-                                            <>
-                                                <Button variant="ghost" size="icon" onClick={() => openEdit(order)}><Pencil size={16} /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => openCancel(order)} className="text-red-600"><Ban size={16} /></Button>
-                                            </>
-                                        )}
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                    <TableBody className="divide-y divide-gray-100 dark:divide-[#374151]/60">
+                        {orders.map((order) => {
+                            const selected = isSelected?.(order.id) || false;
+                            return (
+                                <TableRow
+                                    key={order.id}
+                                    className={
+                                        selected
+                                            ? 'bg-brand-50/70 dark:bg-brand-950/40'
+                                            : order.status === 'canceled'
+                                            ? 'opacity-60 bg-gray-50 dark:bg-[#1F2937]/30'
+                                            : 'hover:bg-gray-50/80 dark:hover:bg-[#1F2937]/50'
+                                    }
+                                >
+                                    {onToggleSelect && (
+                                        <TableCell className="text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selected}
+                                                onChange={() => onToggleSelect(order.id)}
+                                                aria-label={`Sélectionner ${order.order_number}`}
+                                                className="w-4 h-4 rounded border-gray-300 dark:border-[#374151] accent-brand-600 cursor-pointer"
+                                            />
+                                        </TableCell>
+                                    )}
+                                    <TableCell>
+                                        <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{order.order_number}</p>
+                                        <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{new Date(order.created_at).toLocaleDateString('fr-FR')}</p>
+                                    </TableCell>
+                                    <TableCell className="text-sm text-gray-700 dark:text-[#D1D5DB]">{order.supplier_name}</TableCell>
+                                    <TableCell className="text-right text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">{Number(order.total_amount).toLocaleString()} FCFA</TableCell>
+                                    <TableCell className="text-right text-sm text-green-600 dark:text-green-400 font-medium">{Number(order.total_paid).toLocaleString()} FCFA</TableCell>
+                                    <TableCell className="text-right text-sm text-red-600 dark:text-red-400 font-medium">{Number(order.remaining_balance).toLocaleString()} FCFA</TableCell>
+                                    <TableCell className="text-center">
+                                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig[order.status]?.className}`}>
+                                            {statusConfig[order.status]?.label}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-center text-sm text-gray-700 dark:text-[#D1D5DB]">{order.items_count || 0}</TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => openDetail(order.id)} className="dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]"><Eye size={16} /></Button>
+                                            {['draft', 'ordered', 'confirmed'].includes(order.status) && (
+                                                <>
+                                                    <Button variant="ghost" size="icon" onClick={() => openEdit(order)} className="dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]"><Pencil size={16} /></Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => openCancel(order)} className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"><Ban size={16} /></Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>

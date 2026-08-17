@@ -40,10 +40,10 @@ const productSchema = z.object({
 // --- Tooltip component maison ---
 const Tooltip = ({ content, children }) => (
     <span className="group relative ml-1.5 inline-flex cursor-help">
-        <HelpCircle size={14} className="text-slate-400 hover:text-slate-600 transition-colors" />
-        <span className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-48 rounded-lg bg-slate-800 px-3 py-2 text-[11px] leading-relaxed text-slate-100 opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50 text-center">
+        <HelpCircle size={14} className="text-gray-400 dark:text-[#9CA3AF] hover:text-gray-600 dark:hover:text-[#F9FAFB] transition-colors" />
+        <span className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full w-48 rounded-xl bg-gray-900 dark:bg-[#1F2937] border border-gray-800 dark:border-[#374151] px-3 py-2 text-[11px] leading-relaxed text-gray-100 dark:text-[#F9FAFB] opacity-0 shadow-xl transition-all duration-200 group-hover:opacity-100 z-50 text-center">
             {content}
-            <span className="absolute left-1/2 -bottom-1 -translate-x-1/2 h-2 w-2 rotate-45 bg-slate-800" />
+            <span className="absolute left-1/2 -bottom-1 -translate-x-1/2 h-2 w-2 rotate-45 bg-gray-900 dark:bg-[#1F2937] border-r border-b border-gray-800 dark:border-[#374151]" />
         </span>
     </span>
 );
@@ -55,8 +55,8 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color }) => (
             <Icon size={20} className="text-white" />
         </div>
         <div>
-            <h3 className="font-semibold text-slate-800">{title}</h3>
-            <p className="text-xs text-slate-400">{subtitle}</p>
+            <h3 className="font-semibold text-gray-900 dark:text-[#F9FAFB]">{title}</h3>
+            <p className="text-xs text-gray-500 dark:text-[#D1D5DB]">{subtitle}</p>
         </div>
     </div>
 );
@@ -211,12 +211,12 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
             <DialogContent className="!max-w-4xl max-h-[90vh] overflow-y-auto p-0">
 
                 {/* --- Header --- */}
-                <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b px-8 py-5">
+                <div className="sticky top-0 z-10 bg-white/90 dark:bg-[#111827]/90 backdrop-blur-md border-b border-gray-200 dark:border-[#374151] px-8 py-5">
                     <DialogHeader>
-                        <DialogTitle className="text-xl font-bold text-slate-800">
+                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-[#F9FAFB]">
                             {isEditing ? '✏️ Modifier le produit' : '✨ Nouveau produit'}
                         </DialogTitle>
-                        <DialogDescription className="text-sm text-slate-500 mt-1">
+                        <DialogDescription className="text-sm text-gray-500 dark:text-[#D1D5DB] mt-1">
                             {isEditing
                                 ? 'Modifiez les informations du produit existant.'
                                 : 'Remplissez le formulaire ci-dessous pour ajouter un produit à votre inventaire.'}
@@ -225,13 +225,13 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                 </div>
 
                 {/* --- Formulaire --- */}
-                <form onSubmit={handleSubmit(onSubmit)} className="px-8 py-6 space-y-8">
+                <form onSubmit={handleSubmit(onSubmit)} className="px-8 py-6 space-y-8 bg-gray-50/50 dark:bg-[#0B0F14]">
 
                     {/* ───────── SECTION 1 : Informations générales ───────── */}
                     <motion.section
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                        className="rounded-2xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] p-6 shadow-xs"
                     >
                         <SectionHeader
                             icon={Package}
@@ -243,7 +243,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         <div className="space-y-5 mt-4">
                             {/* Nom */}
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Nom du produit <span className="text-red-400 ml-0.5">*</span>
                                     <Tooltip content="Le nom complet du produit tel qu'il apparaîtra dans votre catalogue et sur les tickets de caisse." />
                                 </label>
@@ -257,7 +257,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
 
                             {/* Description */}
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Description
                                     <Tooltip content="Une description courte (optionnelle) pour donner plus de détails sur le produit. Visible dans le catalogue." />
                                 </label>
@@ -272,7 +272,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                             {/* SKU + Code-barres */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         SKU (Référence)
                                         <Tooltip content="Code interne unique pour identifier le produit dans votre gestion. Laissez vide pour génération automatique." />
                                     </label>
@@ -284,7 +284,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                     />
                                 </div>
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         Code-barres
                                         <Tooltip content="Code-barres EAN/UPC du produit. Utilisé pour le scan rapide en caisse. Vous pouvez le scanner directement." />
                                     </label>
@@ -304,7 +304,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.05 }}
-                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                        className="rounded-2xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] p-6 shadow-xs"
                     >
                         <SectionHeader
                             icon={Coins}
@@ -317,12 +317,12 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Prix de revient */}
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         Prix de revient
                                         <Tooltip content="Le prix auquel vous achetez ce produit (coût d'achat). Sert à calculer vos marges." />
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#9CA3AF] text-sm font-medium">CFA</span>
                                         <Input
                                             type="number"
                                             step="0.01"
@@ -335,12 +335,12 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
 
                                 {/* Prix vente détail */}
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         Prix vente détail <span className="text-red-400 ml-0.5">*</span>
                                         <Tooltip content="Le prix auquel vous vendez ce produit à l'unité. C'est le prix affiché en boutique." />
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#9CA3AF] text-sm font-medium">CFA</span>
                                         <Input
                                             type="number"
                                             step="0.01"
@@ -356,12 +356,12 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                             {/* Prix de gros */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         Prix de gros
                                         <Tooltip content="Prix spécial pour les achats en grande quantité. Laissez 0 si vous ne proposez pas de tarif de gros." />
                                     </label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">CFA</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#9CA3AF] text-sm font-medium">CFA</span>
                                         <Input
                                             type="number"
                                             step="0.01"
@@ -372,7 +372,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                         Qté min. gros
                                         <Tooltip content="Quantité minimum à partir de laquelle le prix de gros s'applique." />
                                     </label>
@@ -392,7 +392,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                        className="rounded-2xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] p-6 shadow-xs"
                     >
                         <SectionHeader
                             icon={Box}
@@ -403,7 +403,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
 
                         <div className="grid grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Stock initial
                                     <Tooltip content="La quantité actuelle en stock. Pour un nouveau produit, indiquez le stock de départ." />
                                 </label>
@@ -415,7 +415,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                 />
                             </div>
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Seuil d'alerte
                                     <Tooltip content="Quantité minimum avant de recevoir une alerte de réapprovisionnement. Par défaut : 10 unités." />
                                 </label>
@@ -426,23 +426,23 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                         {...register('low_stock_threshold')}
                                         className="h-11 pr-10"
                                     />
-                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-[#9CA3AF]">
                                         unités
                                     </span>
                                 </div>
                             </div>
 
                             {!isEditing && warehouses.length > 0 && (
-                                <div className="col-span-2 mt-2 pt-4 border-t border-slate-100">
-                                    <label className="flex items-center text-sm font-medium text-slate-700 mb-3">
+                                <div className="col-span-2 mt-2 pt-4 border-t border-gray-200 dark:border-[#374151]">
+                                    <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-3">
                                         Stock initial en entrepôt
                                         <Tooltip content="Définissez les quantités initiales de ce produit dans vos entrepôts." />
                                     </label>
                                     <div className="grid grid-cols-2 gap-4">
                                         {warehouses.map(w => (
-                                            <div key={w.id} className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div key={w.id} className="flex items-center gap-3 bg-gray-50 dark:bg-[#1F2937]/50 p-3 rounded-xl border border-gray-200 dark:border-[#374151]">
                                                 <div className="flex-1">
-                                                    <p className="text-sm font-medium text-slate-800 line-clamp-1">{w.name}</p>
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-[#F9FAFB] line-clamp-1">{w.name}</p>
                                                 </div>
                                                 <div className="w-24">
                                                     <Input
@@ -467,7 +467,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
+                        className="rounded-2xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] p-6 shadow-xs"
                     >
                         <SectionHeader
                             icon={Tags}
@@ -479,7 +479,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         <div className="space-y-5 mt-4">
                             {/* Catégorie */}
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Catégorie
                                     <Tooltip content="Classez votre produit dans une catégorie pour mieux organiser votre inventaire et vos rapports de vente." />
                                 </label>
@@ -487,7 +487,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                     <div className="flex gap-2">
                                         <select
                                             {...register('category_id')}
-                                            className="flex-1 h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none transition-all appearance-none"
+                                            className="flex-1 h-11 rounded-xl border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] px-4 text-sm text-gray-900 dark:text-[#F9FAFB] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all appearance-none"
                                             style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2394a3b8%27 stroke-width=%272%27%3E%3Cpath d=%27m6 9 6 6 6-6%27/%3E%3C/svg%3E')", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                                         >
                                             <option value="">Aucune catégorie</option>
@@ -500,7 +500,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                             variant="outline"
                                             size="icon"
                                             onClick={() => setShowNewCategory(true)}
-                                            className="h-11 w-11 rounded-xl border-dashed border-slate-300 hover:border-violet-400 hover:text-violet-600 transition-all"
+                                            className="h-11 w-11 rounded-xl border-dashed border-gray-300 dark:border-[#374151] hover:border-brand-400 hover:text-brand-600 dark:text-[#D1D5DB] transition-all"
                                         >
                                             <Plus size={18} />
                                         </Button>
@@ -520,10 +520,10 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                                                 className="h-11"
                                                 autoFocus
                                             />
-                                            <Button type="button" size="sm" onClick={handleAddCategory} className="h-11 px-4 bg-violet-500 hover:bg-violet-600">
+                                            <Button type="button" size="sm" onClick={handleAddCategory} className="h-11 px-4 bg-brand-600 hover:bg-brand-700 text-white">
                                                 Ajouter
                                             </Button>
-                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)} className="h-11">
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)} className="h-11 dark:hover:bg-[#1F2937] dark:text-[#D1D5DB]">
                                                 Annuler
                                             </Button>
                                         </motion.div>
@@ -533,7 +533,7 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
 
                             {/* Image */}
                             <div>
-                                <label className="flex items-center text-sm font-medium text-slate-700 mb-1.5">
+                                <label className="flex items-center text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                     Image du produit
                                     <Tooltip content="Ajoutez une photo du produit. Format conseillé : carré, minimum 400x400px. Max 2 Mo." />
                                 </label>
@@ -547,20 +547,20 @@ export default function ProductModal({ open, onOpenChange, product, onSuccess })
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="flex justify-end gap-3 pt-4 border-t border-slate-100"
+                        className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#374151]"
                     >
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            className="h-11 px-6 rounded-xl"
+                            className="h-11 px-6 rounded-xl border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]"
                         >
                             Annuler
                         </Button>
                         <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="h-11 px-8 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 transition-all duration-300"
+                            className="h-11 px-8 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold shadow-lg shadow-brand-500/20 transition-all duration-300"
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center gap-2">

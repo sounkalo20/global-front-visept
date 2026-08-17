@@ -67,29 +67,29 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium">Titre *</label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Titre *</label>
             <Input placeholder="Ex: Facture électricité" error={errors.title?.message} {...register('title')} autoFocus />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Catégorie *</label>
-              <select {...register('category')} className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm">
+              <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Catégorie *</label>
+              <select {...register('category')} className="w-full h-10 rounded-xl border border-gray-300 dark:border-[#374151] bg-white dark:bg-[#111827] px-3 text-sm text-gray-900 dark:text-[#F9FAFB] focus:border-brand-500 outline-none">
                 {(categories || []).map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Montant *</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Montant *</label>
               <Input type="number" step="0.01" placeholder="0" error={errors.amount?.message} {...register('amount')} />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Description</label>
             <Input placeholder="Description (optionnelle)" {...register('description')} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Méthode de paiement</label>
-              <select {...register('payment_method')} className="w-full h-10 rounded-lg border border-gray-300 px-3 text-sm">
+              <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Méthode de paiement</label>
+              <select {...register('payment_method')} className="w-full h-10 rounded-xl border border-gray-300 dark:border-[#374151] bg-white dark:bg-[#111827] px-3 text-sm text-gray-900 dark:text-[#F9FAFB] focus:border-brand-500 outline-none">
                 <option value="cash">Cash</option>
                 <option value="mobile_money">Mobile Money</option>
                 <option value="bank_transfer">Virement</option>
@@ -98,18 +98,18 @@ export default function ExpenseModal({ open, onOpenChange, expense, onSuccess, c
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Date *</label>
+              <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Date *</label>
               <Input type="date" error={errors.expense_date?.message} {...register('expense_date')} />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Référence</label>
+            <label className="text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5 block">Référence</label>
             <Input placeholder="N° transaction (optionnel)" {...register('payment_reference')} />
           </div>
           
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Annuler</Button>
-            <Button type="submit" disabled={isSubmitting}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-[#374151]">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">Annuler</Button>
+            <Button type="submit" disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
               {isSubmitting ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
               {isEditing ? 'Enregistrer' : 'Créer'}
             </Button>

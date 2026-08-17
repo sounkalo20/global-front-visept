@@ -42,8 +42,8 @@ export default function ConfirmModal({
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <AlertTriangle size={20} className="text-red-600" />
+                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/60 flex items-center justify-center">
+                            <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
                         </div>
                         <DialogTitle>{title}</DialogTitle>
                     </div>

@@ -39,4 +39,7 @@ export const supplierOrdersApi = {
 
     getAllPayments: (companyId, params = {}) =>
         api.get('/supplier-payments', { params: { ...params, company_id: companyId } }),
+
+    bulkAction: (companyId, { ids, action, params = {} }) =>
+        api.post(`/supplier-orders/bulk?company_id=${companyId}`, { ids, action, params }),
 };

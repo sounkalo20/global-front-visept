@@ -19,4 +19,7 @@ export const expensesApi = {
 
   getCategories: (companyId) =>
     api.get(`/expenses/categories?company_id=${companyId}`),
+
+  bulkAction: (companyId, { ids, action, params = {} }) =>
+    api.post(`/expenses/bulk?company_id=${companyId}`, { ids, action, params }),
 };

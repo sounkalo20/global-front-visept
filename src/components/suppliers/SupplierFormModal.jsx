@@ -113,7 +113,7 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                             Nom du fournisseur <span className="text-red-400">*</span>
                         </label>
                         <Input
@@ -124,7 +124,7 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Nom du contact</label>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Nom du contact</label>
                         <Input
                             placeholder="Ex: Moussa Diallo"
                             {...register('contact_name')}
@@ -133,7 +133,7 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium mb-1">
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
                                 Téléphone <span className="text-red-400">*</span>
                             </label>
                             <Input
@@ -143,7 +143,7 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">Email</label>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Email</label>
                             <Input
                                 type="email"
                                 placeholder="contact@fournisseur.com"
@@ -154,7 +154,7 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Adresse</label>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Adresse</label>
                         <Input
                             placeholder="123 Rue Principale"
                             {...register('address')}
@@ -163,19 +163,19 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-sm font-medium mb-1">Ville</label>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Ville</label>
                             <Input placeholder="Bamako" {...register('city')} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">Pays</label>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Pays</label>
                             <Input placeholder="Mali" {...register('country')} />
                         </div>
                     </div>
 
                     {!isEditing && (
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Solde initial dû <span className="text-gray-400 font-normal">(optionnel)</span>
+                            <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">
+                                Solde initial dû <span className="text-gray-400 dark:text-[#9CA3AF] font-normal">(optionnel)</span>
                             </label>
                             <Input
                                 type="number"
@@ -184,14 +184,14 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
                                 placeholder="Montant déjà dû au fournisseur"
                                 {...register('initial_balance')}
                             />
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-gray-400 dark:text-[#9CA3AF] mt-1">
                                 Anciennes créances à suivre dans le système.
                             </p>
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium mb-1">Notes</label>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-[#D1D5DB] mb-1.5">Notes</label>
                         <Textarea
                             rows={3}
                             placeholder="Notes internes..."
@@ -200,10 +200,10 @@ export default function SupplierFormModal({ isOpen, onClose, supplier }) {
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+                        <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting} className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937]">
                             Annuler
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
                             {isSubmitting ? 'Enregistrement...' : isEditing ? 'Mettre à jour' : 'Créer'}
                         </Button>
                     </DialogFooter>

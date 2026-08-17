@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
+import usePermissionsStore from '@/store/permissionsStore';
 import { getBasePath } from '@/lib/config/navigation';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 
@@ -13,6 +14,7 @@ const noCompanyRoutes = ['/companies', '/companies/new'];
 export default function AuthGuard({ children }) {
   const { isAuthenticated, isLoading, isSuperAdmin, isSessionExpired } = useAuthStore();
   const { activeCompany, companies, isLoading: companiesLoading } = useCompanyStore();
+  const { roleName, isSystemRole, isFetched: permsFetched } = usePermissionsStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -36,12 +38,27 @@ export default function AuthGuard({ children }) {
         router.replace('/super_admin/dashboard');
       } else if (companies.length === 0) {
         router.replace('/companies');
-      } else {
+      } else if (permsFetched) { // On attend les permissions pour savoir où l'envoyer
         const company = activeCompany || companies[0];
         const base = getBasePath(company.business_type?.code || 'SHOP');
-        router.replace(`${base}/dashboard`);
+        
+        if (isSystemRole && roleName === 'Caissier') {
+          router.replace(`${base}/pos/shift`);
+        } else {
+          router.replace(`${base}/dashboard`);
+        }
       }
       return;
+    }
+
+    // Redirection si le caissier tente d'accéder au dashboard classique
+    if (isAuthenticated && !isSuperAdmin && permsFetched && pathname.endsWith('/dashboard')) {
+      if (isSystemRole && roleName === 'Caissier') {
+        const company = activeCompany || companies[0];
+        const base = getBasePath(company.business_type?.code || 'SHOP');
+        router.replace(`${base}/pos/shift`);
+        return;
+      }
     }
 
     // Super admin sur route non admin
@@ -68,28 +85,10 @@ export default function AuthGuard({ children }) {
       return;
     }
 
-    // Contrôle d'accès basé sur les rôles
-    if (isAuthenticated && !isSuperAdmin && activeCompany && !publicRoutes.includes(pathname)) {
-      const role = activeCompany.my_role;
-      const base = getBasePath(activeCompany.business_type?.code || 'SHOP');
+    // Contrôle d'accès basé sur les rôles (supprimé car géré par PermissionGuard et RBAC)
+  }, [isAuthenticated, isLoading, isSuperAdmin, isSessionExpired, companies, activeCompany, companiesLoading, pathname, router, permsFetched, roleName, isSystemRole]);
 
-      if (role === 'cashier') {
-        const allowedCashierRoutes = [`${base}/sales/new`, '/profile'];
-        if (!allowedCashierRoutes.includes(pathname)) {
-          router.replace(`${base}/sales/new`);
-          return;
-        }
-      }
-
-      const isCompanies = pathname.endsWith('/companies') || pathname === '/companies';
-      if (role === 'manager' && isCompanies) {
-        router.replace(`${base}/dashboard`);
-        return;
-      }
-    }
-  }, [isAuthenticated, isLoading, isSuperAdmin, isSessionExpired, companies, activeCompany, companiesLoading, pathname, router]);
-
-  if (isLoading || companiesLoading) {
+  if (isLoading || companiesLoading || (isAuthenticated && !isSuperAdmin && companies.length > 0 && !permsFetched)) {
     return <LoadingScreen variant="fullscreen" message="Chargement" />;
   }
 

@@ -90,6 +90,16 @@ const useExpenseStore = create((set, get) => ({
     }
   },
 
+  executeBulkAction: async (companyId, { ids, action, params = {} }) => {
+    try {
+      const response = await expensesApi.bulkAction(companyId, { ids, action, params });
+      return { success: true, data: response.data.data, message: response.data.message };
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Erreur lors de l'action en masse sur les dépenses.";
+      return { success: false, message };
+    }
+  },
+
   clearDetails: () => set({ expenseDetails: null }),
 }));
 

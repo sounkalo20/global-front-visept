@@ -20,7 +20,9 @@ import {
     Truck,
     DollarSign as CircleDollarSign,
     Box,
-    RotateCcw
+    RotateCcw,
+    ClipboardCheck,
+    TrendingUp
 } from 'lucide-react';
 
 /**
@@ -58,40 +60,44 @@ export const shopNavigation = [
     {
         section: 'Général',
         items: [
-            { href: '/shop/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+            { href: '/shop/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, requirePermission: 'dashboard.view' },
+            { href: '/shop/profits', label: 'Bénéfices & Rentabilité', icon: TrendingUp, requirePermission: 'sales.view_margin' },
         ],
     },
     {
         section: 'Finance',
         items: [
-            { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, allowCashier: true },
-            { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, allowCashier: true },
-            { href: '/shop/expenses', label: 'Dépenses', icon: Receipt, allowCashier: true },
-            { href: '/shop/debts', label: 'Dettes', icon: DollarSign, allowCashier: true },
-            { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign }
+            { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, requirePermission: 'sales.view' },
+            { href: '/shop/cash', label: 'Caisse', icon: Receipt, requirePermission: 'sales.view' },
+            { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, requirePermission: 'sales.return' },
+            { href: '/shop/expenses', label: 'Dépenses', icon: DollarSign, requirePermission: 'dashboard.view' },
+            { href: '/shop/debts', label: 'Dettes', icon: DollarSign, requirePermission: 'dashboard.view' },
+            { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign, requirePermission: 'purchases.view' }
         ],
     },
     {
         section: 'Inventaire',
         items: [
-            { href: '/shop/products', label: 'Produits', icon: Package },
-            { href: '/shop/categories', label: 'Catégories', icon: FolderTree },
-            { href: '/shop/suppliers', label: 'Fournisseurs', icon: Truck },
-            { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart },
-            { href: '/shop/warehouses', label: 'Entrepôts', icon: Box }
+            { href: '/shop/products', label: 'Produits', icon: Package, requirePermission: 'products.view' },
+            { href: '/shop/categories', label: 'Catégories', icon: FolderTree, requirePermission: 'products.view' },
+            { href: '/shop/suppliers', label: 'Fournisseurs', icon: Truck, requirePermission: 'suppliers.view' },
+            { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart, requirePermission: 'purchases.view' },
+            { href: '/shop/warehouses', label: 'Entrepôts', icon: Box, requirePermission: 'warehouses.view' },
+            { href: '/shop/inventory', label: 'Inventaires Physiques', icon: ClipboardCheck, requirePermission: 'inventory.count' },
         ],
     },
     {
         section: 'CRM',
         items: [
-            { href: '/shop/clients', label: 'Clients', icon: Users },
+            { href: '/shop/clients', label: 'Clients', icon: Users, requirePermission: 'clients.view' },
         ],
     },
     {
         section: 'Entreprise',
         items: [
-            { href: '/shop/companies', label: 'Entreprises', icon: Building2, requireRole: 'owner' },
-            { href: '/shop/employees', label: 'Employés', icon: Users, requireRole: 'owner' },
+            { href: '/shop/companies', label: 'Paramètres', icon: Building2, requirePermission: 'settings.manage' },
+            { href: '/shop/employees', label: 'Employés', icon: Users, requirePermission: 'employees.view' },
+            { href: '/shop/roles', label: 'Rôles & Permissions', icon: Shield, requirePermission: 'roles.manage' },
         ],
     },
 ];
