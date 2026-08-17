@@ -43,7 +43,9 @@ export default function ProductTable({
     isAllPageSelected,
     isSomePageSelected,
     isSelected,
+    visibleColumns,
 }) {
+    const col = (id) => !visibleColumns || visibleColumns.has(id);
     const [stockModalProduct, setStockModalProduct] = useState(null);
     const [detailModalProduct, setDetailModalProduct] = useState(null);
     const { activeCompany } = useCompanyStore();
@@ -83,11 +85,11 @@ export default function ProductTable({
                                 </th>
                             )}
                             <th className="px-4 py-3 text-left">Produit</th>
-                            <th className="px-4 py-3 text-left">Catégorie</th>
+                            {col('category') && <th className="px-4 py-3 text-left">Catégorie</th>}
                             <th className="px-4 py-3 text-right">Prix détail</th>
-                            <th className="px-4 py-3 text-right">Prix gros</th>
-                            <th className="px-4 py-3 text-right">Stock</th>
-                            <th className="px-4 py-3 text-center">Statut</th>
+                            {col('wholesale') && <th className="px-4 py-3 text-right">Prix gros</th>}
+                            {col('stock') && <th className="px-4 py-3 text-right">Stock</th>}
+                            {col('status') && <th className="px-4 py-3 text-center">Statut</th>}
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -141,9 +143,11 @@ export default function ProductTable({
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm text-gray-600 dark:text-slate-400">{product.category_name || '-'}</span>
-                                    </td>
+                                    {col('category') && (
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm text-gray-600 dark:text-slate-400">{product.category_name || '-'}</span>
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-slate-100">
                                         {!product.is_available && parseFloat(product.retail_price) === 0 ? (
                                             <span className="text-xs bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full">Prix à définir</span>
@@ -151,10 +155,12 @@ export default function ProductTable({
                                             `${parseFloat(product.retail_price).toLocaleString()} FCFA`
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-slate-400">
-                                        {product.wholesale_price > 0 ? `${parseFloat(product.wholesale_price).toLocaleString()} FCFA` : '-'}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
+                                    {col('wholesale') && (
+                                        <td className="px-4 py-3 text-right text-sm text-gray-600 dark:text-slate-400">
+                                            {product.wholesale_price > 0 ? `${parseFloat(product.wholesale_price).toLocaleString()} FCFA` : '-'}
+                                        </td>
+                                    )}
+                                    {col('stock') && <td className="px-4 py-3 text-right">
                                         <div className="flex flex-col items-end gap-1">
                                             <div className="font-semibold text-gray-900 dark:text-slate-200 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs inline-flex items-center gap-1 border border-gray-200/60 dark:border-slate-700">
                                                 <span>boutique:</span>
@@ -174,12 +180,14 @@ export default function ProductTable({
                                                 </div>
                                             )}
                                         </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold', stockStatus.color)}>
-                                            {stockStatus.label}
-                                        </span>
-                                    </td>
+                                    </td>}
+                                    {col('status') && (
+                                        <td className="px-4 py-3 text-center">
+                                            <span className={cn('inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold', stockStatus.color)}>
+                                                {stockStatus.label}
+                                            </span>
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

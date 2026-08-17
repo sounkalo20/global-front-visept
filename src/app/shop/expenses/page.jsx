@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Folder, CreditCard, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExpenseStats from '@/components/expenses/ExpenseStats';
@@ -13,7 +14,10 @@ import ExportExpensesPDFDialog from '@/components/expenses/ExportExpensesPDFDial
 import BulkActionBar from '@/components/common/BulkActionBar';
 import BulkConfirmModal from '@/components/common/BulkConfirmModal';
 import BulkResultModal from '@/components/common/BulkResultModal';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { EXPENSES_COLUMNS } from '@/config/tableColumns';
 import useExpenseStore from '@/store/expenseStore';
 import useCompanyStore from '@/store/companyStore';
 import { toast } from 'sonner';
@@ -34,12 +38,13 @@ export default function ExpensesPage() {
   const { expenses, stats, categories, isLoading, fetchExpenses, fetchStats, fetchCategories, totalPages, executeBulkAction } = useExpenseStore();
   const { activeCompany } = useCompanyStore();
 
+  const searchParams = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [deletingExpense, setDeletingExpense] = useState(null);
   const [viewingExpense, setViewingExpense] = useState(null);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams?.get('search') || '');
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -47,6 +52,19 @@ export default function ExpensesPage() {
   const [sortBy, setSortBy] = useState('expense_date');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearch(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+    useColumnPreferences('expenses', EXPENSES_COLUMNS, activeCompany?.id);
 
   const [bulkConfirm, setBulkConfirm] = useState({
     open: false,
@@ -195,6 +213,13 @@ export default function ExpensesPage() {
           <p className="text-gray-500 dark:text-[#D1D5DB] text-sm">Suivi et gestion de vos dépenses ({expenses.length})</p>
         </div>
         <div className="flex items-center gap-3">
+          <ColumnSelector
+            columnsDef={EXPENSES_COLUMNS}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onReset={resetToDefaults}
+            hiddenCount={hiddenCount}
+          />
           <ExportExpensesPDFDialog />
           <Button onClick={() => { setEditingExpense(null); setModalOpen(true); }} className="bg-brand-600 hover:bg-brand-700 text-white">
             <Plus size={18} className="mr-2" /> Nouvelle dépense
@@ -233,6 +258,7 @@ export default function ExpensesPage() {
             isAllPageSelected={bulkSelection.isAllPageSelected}
             isSomePageSelected={bulkSelection.isSomePageSelected}
             isSelected={bulkSelection.isSelected}
+            visibleColumns={visibleColumns}
           />
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between flex-wrap gap-3">

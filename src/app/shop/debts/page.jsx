@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Download, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DebtStats from '@/components/debts/DebtStats';
@@ -9,7 +9,10 @@ import DebtTable from '@/components/debts/DebtTable';
 import EmptyDebtState from '@/components/debts/EmptyDebtState';
 import ExportDebtsPDFDialog from '@/components/debts/ExportDebtsPDFDialog';
 import BulkActionBar from '@/components/common/BulkActionBar';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { DEBTS_COLUMNS } from '@/config/tableColumns';
 import useDebtStore from '@/store/debtStore';
 import useCompanyStore from '@/store/companyStore';
 import { jsPDF } from 'jspdf';
@@ -23,14 +26,28 @@ import PageSizeSelector, { getStoredPageSize } from '@/components/ui/PageSizeSel
 export default function DebtsPage() {
   const { debts, stats, totalPages, isLoading, fetchDebts, fetchStats } = useDebtStore();
   const { activeCompany } = useCompanyStore();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams?.get('search') || '');
   const [status, setStatus] = useState('');
   const [overdue, setOverdue] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearch(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+    useColumnPreferences('debts', DEBTS_COLUMNS, activeCompany?.id);
 
   const loadData = useCallback(() => {
     if (activeCompany) {
@@ -139,6 +156,13 @@ export default function DebtsPage() {
           <p className="text-gray-500 dark:text-[#D1D5DB] text-sm">Suivi des ventes à crédit ({debts?.length || 0})</p>
         </div>
         <div className="flex items-center gap-3">
+          <ColumnSelector
+            columnsDef={DEBTS_COLUMNS}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onReset={resetToDefaults}
+            hiddenCount={hiddenCount}
+          />
           <ExportDebtsPDFDialog />
           <Button onClick={() => router.push('/shop/debts/new')} className="bg-brand-600 hover:bg-brand-700 text-white">
             <Plus size={18} className="mr-2" /> Nouvelle vente à crédit
@@ -175,6 +199,7 @@ export default function DebtsPage() {
             isAllPageSelected={bulkSelection.isAllPageSelected}
             isSomePageSelected={bulkSelection.isSomePageSelected}
             isSelected={bulkSelection.isSelected}
+            visibleColumns={visibleColumns}
           />
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between flex-wrap gap-3">

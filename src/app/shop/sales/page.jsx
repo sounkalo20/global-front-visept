@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, Download, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SalesStats from '@/components/sales/SalesStats';
@@ -8,7 +8,10 @@ import SalesFilters from '@/components/sales/SalesFilters';
 import SalesTable from '@/components/sales/SalesTable';
 import ExportSalesPDFDialog from '@/components/sales/ExportSalesPDFDialog';
 import BulkActionBar from '@/components/common/BulkActionBar';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { SALES_COLUMNS } from '@/config/tableColumns';
 import useSaleStore from '@/store/saleStore';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -28,14 +31,28 @@ import { toast } from 'sonner';
 export default function SalesPage() {
   const { sales, stats, totalPages, isLoading, fetchSales, fetchStats } = useSaleStore();
   const { activeCompany } = useCompanyStore();
+  const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams?.get('search') || '');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [status, setStatus] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearch(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+    useColumnPreferences('sales', SALES_COLUMNS, activeCompany?.id);
 
   useEffect(() => {
     if (activeCompany) {
@@ -136,6 +153,13 @@ export default function SalesPage() {
           <p className="text-gray-500 dark:text-[#D1D5DB] text-sm">Historique et gestion des ventes ({sales.length})</p>
         </div>
         <div className="flex items-center gap-3">
+          <ColumnSelector
+            columnsDef={SALES_COLUMNS}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onReset={resetToDefaults}
+            hiddenCount={hiddenCount}
+          />
           <ExportSalesPDFDialog />
           <HasPermission required="sales.create">
             <Button onClick={() => router.push('/shop/sales/new')} size="lg" className="bg-brand-600 hover:bg-brand-700 text-white">
@@ -168,6 +192,7 @@ export default function SalesPage() {
             isAllPageSelected={bulkSelection.isAllPageSelected}
             isSomePageSelected={bulkSelection.isSomePageSelected}
             isSelected={bulkSelection.isSelected}
+            visibleColumns={visibleColumns}
           />
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between flex-wrap gap-3">

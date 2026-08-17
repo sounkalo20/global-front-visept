@@ -1,6 +1,7 @@
 // app/shop/suppliers/page.jsx
 'use client';
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Truck, Plus, Upload, CheckCircle2, EyeOff, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SupplierStatsCards from '@/components/suppliers/SupplierStatsCards';
@@ -12,7 +13,10 @@ import DataExportButton from '@/components/common/DataExportButton';
 import BulkActionBar from '@/components/common/BulkActionBar';
 import BulkConfirmModal from '@/components/common/BulkConfirmModal';
 import BulkResultModal from '@/components/common/BulkResultModal';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { SUPPLIERS_COLUMNS } from '@/config/tableColumns';
 import useSupplierStore from '@/store/supplierStore';
 import useCompanyStore from '@/store/companyStore';
 import { toast } from 'sonner';
@@ -22,8 +26,13 @@ import HasPermission from '@/components/auth/HasPermission';
 export default function SuppliersPage() {
     const { suppliers, pagination, stats, isLoading, filters, setFilters, setPage, fetchSuppliers, executeBulkAction } = useSupplierStore();
     const { activeCompany } = useCompanyStore();
+    const searchParams = useSearchParams();
     const [formOpen, setFormOpen] = useState(false);
     const [importModalOpen, setImportModalOpen] = useState(false);
+
+    // Préférences de colonnes
+    const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+        useColumnPreferences('suppliers', SUPPLIERS_COLUMNS, activeCompany?.id);
 
     // Modals pour les Bulk Actions
     const [bulkConfirm, setBulkConfirm] = useState({
@@ -38,9 +47,15 @@ export default function SuppliersPage() {
     const [isBulkExecuting, setIsBulkExecuting] = useState(false);
     const [bulkResult, setBulkResult] = useState({ open: false, result: null });
 
+    // Synchroniser la recherche si l'URL change
     useEffect(() => {
-        fetchSuppliers();
-    }, [fetchSuppliers]);
+        const urlQuery = searchParams?.get('search');
+        if (urlQuery !== null && urlQuery !== undefined) {
+            setFilters({ search: urlQuery });
+        } else {
+            fetchSuppliers();
+        }
+    }, [searchParams, fetchSuppliers, setFilters]);
 
     // Hook de sélection en masse
     const bulkSelection = useBulkSelection(suppliers);
@@ -166,6 +181,13 @@ export default function SuppliersPage() {
                         </p>
                     </div>
                     <div className="flex items-center gap-2.5 flex-wrap">
+                        <ColumnSelector
+                            columnsDef={SUPPLIERS_COLUMNS}
+                            visibleColumns={visibleColumns}
+                            onToggle={toggleColumn}
+                            onReset={resetToDefaults}
+                            hiddenCount={hiddenCount}
+                        />
                         <DataExportButton moduleName="suppliers" />
                         <HasPermission required="suppliers.create">
                             <Button
@@ -206,6 +228,7 @@ export default function SuppliersPage() {
                     isAllPageSelected={bulkSelection.isAllPageSelected}
                     isSomePageSelected={bulkSelection.isSomePageSelected}
                     isSelected={bulkSelection.isSelected}
+                    visibleColumns={visibleColumns}
                 />
 
                 {/* Barre d'actions en masse flottante */}

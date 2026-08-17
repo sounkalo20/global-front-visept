@@ -17,8 +17,10 @@ export default function ClientTable({
     isAllPageSelected,
     isSomePageSelected,
     isSelected,
+    visibleColumns,
 }) {
     const router = useRouter();
+    const col = (id) => !visibleColumns || visibleColumns.has(id);
 
     const getBadge = (client) => {
         if (parseFloat(client.current_debt) > 0) return { label: 'Débiteur', color: 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400' };
@@ -49,11 +51,11 @@ export default function ClientTable({
                                 </th>
                             )}
                             <th className="px-4 py-3 text-left">Client</th>
-                            <th className="px-4 py-3 text-left">Contact</th>
-                            <th className="px-4 py-3 text-right">Achats</th>
-                            <th className="px-4 py-3 text-right">Total dépensé</th>
-                            <th className="px-4 py-3 text-right">Dette</th>
-                            <th className="px-4 py-3 text-center">Statut</th>
+                            {col('contact') && <th className="px-4 py-3 text-left">Contact</th>}
+                            {col('purchases') && <th className="px-4 py-3 text-right">Achats</th>}
+                            {col('total_spent') && <th className="px-4 py-3 text-right">Total dépensé</th>}
+                            {col('debt') && <th className="px-4 py-3 text-right">Dette</th>}
+                            {col('status') && <th className="px-4 py-3 text-center">Statut</th>}
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -90,24 +92,32 @@ export default function ClientTable({
                                         <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{client.full_name}</p>
                                         {client.city && <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{client.city}</p>}
                                     </td>
-                                    <td className="px-4 py-3">
-                                        <div className="space-y-0.5">
-                                            <p className="text-xs text-gray-700 dark:text-[#D1D5DB] flex items-center gap-1"><Phone size={11} className="text-gray-400 dark:text-[#9CA3AF]" /> {client.phone}</p>
-                                            {client.email && <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-[#9CA3AF]"><Mail size={11} className="text-gray-400 dark:text-[#9CA3AF]" /> {client.email}</p>}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-[#D1D5DB]">{client.total_purchase_count || 0}</td>
-                                    <td className="px-4 py-3 text-right font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">
-                                        {parseInt(client.total_purchases || 0).toLocaleString()} F
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <span className={cn('text-sm font-semibold', parseFloat(client.current_debt) > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-[#9CA3AF]')}>
-                                            {parseInt(client.current_debt || 0).toLocaleString()} F
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
-                                    </td>
+                                    {col('contact') && (
+                                        <td className="px-4 py-3">
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs text-gray-700 dark:text-[#D1D5DB] flex items-center gap-1"><Phone size={11} className="text-gray-400 dark:text-[#9CA3AF]" /> {client.phone}</p>
+                                                {client.email && <p className="text-xs flex items-center gap-1 text-gray-500 dark:text-[#9CA3AF]"><Mail size={11} className="text-gray-400 dark:text-[#9CA3AF]" /> {client.email}</p>}
+                                            </div>
+                                        </td>
+                                    )}
+                                    {col('purchases') && <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-[#D1D5DB]">{client.total_purchase_count || 0}</td>}
+                                    {col('total_spent') && (
+                                        <td className="px-4 py-3 text-right font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">
+                                            {parseInt(client.total_purchases || 0).toLocaleString()} F
+                                        </td>
+                                    )}
+                                    {col('debt') && (
+                                        <td className="px-4 py-3 text-right">
+                                            <span className={cn('text-sm font-semibold', parseFloat(client.current_debt) > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400 dark:text-[#9CA3AF]')}>
+                                                {parseInt(client.current_debt || 0).toLocaleString()} F
+                                            </span>
+                                        </td>
+                                    )}
+                                    {col('status') && (
+                                        <td className="px-4 py-3 text-center">
+                                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center justify-end gap-1">
                                             <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300" onClick={() => router.push(`${viewLink}/${client.id}`)}>

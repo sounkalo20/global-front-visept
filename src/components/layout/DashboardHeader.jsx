@@ -1,7 +1,7 @@
 // components/layout/DashboardHeader.jsx
 'use client';
 import { useRouter, usePathname } from 'next/navigation';
-import { Menu, PanelLeft, ChevronRight, LogOut, Settings, User, Building2, Shield } from 'lucide-react';
+import { Menu, PanelLeft, ChevronRight, LogOut, Settings, User, Building2, Shield, Search } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import ThemeToggle from '@/components/layout/ThemeToggle';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
 import useSidebarStore from '@/store/sidebarStore';
+import useCommandPaletteStore from '@/store/commandPaletteStore';
 
 // Mapping des routes pour le breadcrumb
 const pageTitles = {
@@ -58,6 +59,7 @@ export default function DashboardHeader() {
   const { user, isSuperAdmin, logout } = useAuthStore();
   const { activeCompany } = useCompanyStore();
   const { isCollapsed, toggleCollapsed, toggleMobile } = useSidebarStore();
+  const openCommandPalette = useCommandPaletteStore((state) => state.open);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -130,6 +132,21 @@ export default function DashboardHeader() {
         </div>
 
         <div className="flex items-center gap-2.5">
+          {/* Bouton Recherche Globale / Command Palette */}
+          {!isSuperAdmin && activeCompany && (
+            <button
+              onClick={openCommandPalette}
+              className="flex items-center gap-2 px-3 h-9 text-xs font-medium rounded-xl border border-gray-200 dark:border-[#374151] bg-gray-50/80 dark:bg-[#1F2937]/80 text-gray-500 dark:text-[#9CA3AF] hover:text-gray-900 dark:hover:text-[#F9FAFB] hover:bg-gray-100 dark:hover:bg-[#374151] transition-all shadow-2xs"
+              title="Rechercher partout (Ctrl + K)"
+            >
+              <Search size={14} className="text-gray-400 dark:text-[#9CA3AF]" />
+              <span className="hidden sm:inline">Rechercher...</span>
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-gray-400 dark:text-[#9CA3AF] bg-white dark:bg-[#111827] border border-gray-200 dark:border-[#374151] rounded shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+          )}
+
           {/* Bouton de bascule Mode Sombre / Clair */}
           <ThemeToggle />
 

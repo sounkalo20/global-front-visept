@@ -32,8 +32,10 @@ export default function SalesTable({
   isAllPageSelected,
   isSomePageSelected,
   isSelected,
+  visibleColumns,
 }) {
   const router = useRouter();
+  const col = (id) => !visibleColumns || visibleColumns.has(id);
 
   if (!sales || sales.length === 0) {
     return <p className="text-center text-gray-400 dark:text-[#9CA3AF] py-12">Aucune vente trouvée.</p>;
@@ -61,12 +63,12 @@ export default function SalesTable({
                 </th>
               )}
               <th className="px-4 py-3 text-left">N° Vente</th>
-              <th className="px-4 py-3 text-left">Client</th>
-              <th className="px-4 py-3 text-right">Articles</th>
+              {col('client') && <th className="px-4 py-3 text-left">Client</th>}
+              {col('items') && <th className="px-4 py-3 text-right">Articles</th>}
               <th className="px-4 py-3 text-right">Montant</th>
-              <th className="px-4 py-3 text-center">Paiement</th>
-              <th className="px-4 py-3 text-center">Statut</th>
-              <th className="px-4 py-3 text-left">Vendeur</th>
+              {col('payment') && <th className="px-4 py-3 text-center">Paiement</th>}
+              {col('status') && <th className="px-4 py-3 text-center">Statut</th>}
+              {col('seller') && <th className="px-4 py-3 text-left">Vendeur</th>}
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -112,18 +114,24 @@ export default function SalesTable({
                     </div>
                     <p className="text-xs text-gray-400 dark:text-[#9CA3AF] mt-0.5">{new Date(sale.sale_date).toLocaleDateString('fr-FR')}</p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-[#D1D5DB]">
-                    {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-[#D1D5DB]">{sale.items_count || '-'}</td>
+                  {col('client') && (
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-[#D1D5DB]">
+                      {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
+                    </td>
+                  )}
+                  {col('items') && <td className="px-4 py-3 text-right text-sm text-gray-700 dark:text-[#D1D5DB]">{sale.items_count || '-'}</td>}
                   <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-[#F9FAFB]">{parseInt(sale.total_amount).toLocaleString()} F</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-semibold', payStatus.color)}>{payStatus.label}</span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-semibold', orderStatus.color)}>{orderStatus.label}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">{sale.seller_name || '-'}</td>
+                  {col('payment') && (
+                    <td className="px-4 py-3 text-center">
+                      <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-semibold', payStatus.color)}>{payStatus.label}</span>
+                    </td>
+                  )}
+                  {col('status') && (
+                    <td className="px-4 py-3 text-center">
+                      <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-semibold', orderStatus.color)}>{orderStatus.label}</span>
+                    </td>
+                  )}
+                  {col('seller') && <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">{sale.seller_name || '-'}</td>}
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" onClick={() => router.push(`/shop/sales/${sale.id}`)} className="h-8 w-8 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]">
                       <Eye size={15} />

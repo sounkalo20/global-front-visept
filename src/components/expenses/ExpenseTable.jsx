@@ -43,7 +43,9 @@ export default function ExpenseTable({
     isAllPageSelected,
     isSomePageSelected,
     isSelected,
+    visibleColumns,
 }) {
+    const col = (id) => !visibleColumns || visibleColumns.has(id);
     if (!expenses || expenses.length === 0) {
         return <p className="text-center text-gray-400 dark:text-[#9CA3AF] py-12">Aucune dépense trouvée.</p>;
     }
@@ -70,10 +72,10 @@ export default function ExpenseTable({
                                 </th>
                             )}
                             <th className="px-4 py-3 text-left">Dépense</th>
-                            <th className="px-4 py-3 text-center">Catégorie</th>
+                            {col('category') && <th className="px-4 py-3 text-center">Catégorie</th>}
                             <th className="px-4 py-3 text-right">Montant</th>
-                            <th className="px-4 py-3 text-center">Paiement</th>
-                            <th className="px-4 py-3 text-left">Date</th>
+                            {col('payment') && <th className="px-4 py-3 text-center">Paiement</th>}
+                            {col('date') && <th className="px-4 py-3 text-left">Date</th>}
                             <th className="px-4 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
@@ -112,18 +114,24 @@ export default function ExpenseTable({
                                             <p className="text-xs text-gray-400 dark:text-[#9CA3AF] truncate max-w-[250px]">{expense.description}</p>
                                         )}
                                     </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
-                                    </td>
+                                    {col('category') && (
+                                        <td className="px-4 py-3 text-center">
+                                            <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-right">
                                         <span className="font-semibold text-red-600 dark:text-red-400">{parseInt(expense.amount).toLocaleString()} FCFA</span>
                                     </td>
-                                    <td className="px-4 py-3 text-center text-sm text-gray-700 dark:text-[#D1D5DB]">
-                                        <span title={expense.payment_method}>{paymentIcon(expense.payment_method)} {expense.payment_method?.replace('_', ' ')}</span>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">
-                                        <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(expense.expense_date).toLocaleDateString('fr-FR')}</span>
-                                    </td>
+                                    {col('payment') && (
+                                        <td className="px-4 py-3 text-center text-sm text-gray-700 dark:text-[#D1D5DB]">
+                                            <span title={expense.payment_method}>{paymentIcon(expense.payment_method)} {expense.payment_method?.replace('_', ' ')}</span>
+                                        </td>
+                                    )}
+                                    {col('date') && (
+                                        <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">
+                                            <span className="flex items-center gap-1"><Calendar size={12} /> {new Date(expense.expense_date).toLocaleDateString('fr-FR')}</span>
+                                        </td>
+                                    )}
                                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center justify-end gap-1">
                                             <Button variant="ghost" size="icon" className="h-8 w-8 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]" onClick={() => onView(expense)}><Eye size={15} /></Button>

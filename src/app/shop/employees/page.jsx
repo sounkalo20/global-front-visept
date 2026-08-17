@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Search, Edit2, Trash2, Mail, Phone, User as UserIcon, CheckCircle2, Ban, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,21 +17,37 @@ import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { toast } from 'sonner';
 import { FeatureLockedOverlay } from '@/components/ui/FeatureLockedOverlay';
 import { useSubscription } from '@/hooks/useSubscription';
-import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import HasPermission from '@/components/auth/HasPermission';
 import { cn } from '@/lib/utils';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import ColumnSelector from '@/components/common/ColumnSelector';
+import { EMPLOYEES_COLUMNS } from '@/config/tableColumns';
 
 export default function EmployeesPage() {
   const { activeCompany } = useCompanyStore();
   const { hasFeature } = useSubscription();
+  const searchParams = useSearchParams();
   const [employees, setEmployees] = useState([]);
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams?.get('search') || '');
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearchQuery(urlQuery);
+    }
+  }, [searchParams]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [employeeToEdit, setEmployeeToEdit] = useState(null);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, isVisible, hiddenCount } =
+    useColumnPreferences('employees', EMPLOYEES_COLUMNS, activeCompany?.id);
+  const col = isVisible;
 
   // Modals pour les Bulk Actions
   const [bulkConfirm, setBulkConfirm] = useState({
@@ -239,16 +256,27 @@ export default function EmployeesPage() {
               </HasPermission>
             </div>
 
-            {/* Search */}
-            <div className="mb-6 max-w-md relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#9CA3AF]" size={18} />
-              <Input
-                type="text"
-                placeholder="Rechercher par nom, email ou rôle..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 dark:bg-[#111827] dark:border-[#374151] dark:text-[#F9FAFB]"
-              />
+            {/* Search & Columns */}
+            <div className="mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="max-w-md w-full relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#9CA3AF]" size={18} />
+                <Input
+                  type="text"
+                  placeholder="Rechercher par nom, email ou rôle..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 dark:bg-[#111827] dark:border-[#374151] dark:text-[#F9FAFB]"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <ColumnSelector
+                  columnsDef={EMPLOYEES_COLUMNS}
+                  visibleColumns={visibleColumns}
+                  onToggle={toggleColumn}
+                  onReset={resetToDefaults}
+                  hiddenCount={hiddenCount}
+                />
+              </div>
             </div>
 
             {/* Table / List */}
@@ -289,9 +317,9 @@ export default function EmployeesPage() {
                           />
                         </th>
                         <th className="px-6 py-4 font-semibold uppercase text-xs">Nom & Prénom</th>
-                        <th className="px-6 py-4 font-semibold uppercase text-xs">Contact</th>
-                        <th className="px-6 py-4 font-semibold uppercase text-xs">Rôle</th>
-                        <th className="px-6 py-4 font-semibold uppercase text-xs">Date d'ajout</th>
+                        {col('contact') && <th className="px-6 py-4 font-semibold uppercase text-xs">Contact</th>}
+                        {col('role') && <th className="px-6 py-4 font-semibold uppercase text-xs">Rôle</th>}
+                        {col('added_date') && <th className="px-6 py-4 font-semibold uppercase text-xs">Date d'ajout</th>}
                         <th className="px-6 py-4 font-semibold uppercase text-xs text-right">Actions</th>
                       </tr>
                     </thead>
@@ -332,26 +360,32 @@ export default function EmployeesPage() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-6 py-4 space-y-1">
-                              <div className="flex items-center text-gray-600 dark:text-[#D1D5DB]">
-                                <Mail size={14} className="mr-2 text-gray-400 dark:text-[#9CA3AF]" />
-                                {emp.email}
-                              </div>
-                              {emp.phone && (
+                            {col('contact') && (
+                              <td className="px-6 py-4 space-y-1">
                                 <div className="flex items-center text-gray-600 dark:text-[#D1D5DB]">
-                                  <Phone size={14} className="mr-2 text-gray-400 dark:text-[#9CA3AF]" />
-                                  {emp.phone}
+                                  <Mail size={14} className="mr-2 text-gray-400 dark:text-[#9CA3AF]" />
+                                  {emp.email}
                                 </div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-500/20">
-                                {emp.role_name}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-gray-500 dark:text-[#9CA3AF]">
-                              {new Date(emp.joined_at).toLocaleDateString('fr-FR')}
-                            </td>
+                                {emp.phone && (
+                                  <div className="flex items-center text-gray-600 dark:text-[#D1D5DB]">
+                                    <Phone size={14} className="mr-2 text-gray-400 dark:text-[#9CA3AF]" />
+                                    {emp.phone}
+                                  </div>
+                                )}
+                              </td>
+                            )}
+                            {col('role') && (
+                              <td className="px-6 py-4">
+                                <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-700/10 dark:ring-blue-500/20">
+                                  {emp.role_name}
+                                </span>
+                              </td>
+                            )}
+                            {col('added_date') && (
+                              <td className="px-6 py-4 text-gray-500 dark:text-[#9CA3AF]">
+                                {new Date(emp.joined_at).toLocaleDateString('fr-FR')}
+                              </td>
+                            )}
                             <td className="px-6 py-4 text-right">
                               <div className="flex justify-end gap-1">
                                 <HasPermission required="employees.edit">

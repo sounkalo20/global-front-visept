@@ -32,7 +32,9 @@ export default function SuppliersTable({
     isAllPageSelected,
     isSomePageSelected,
     isSelected,
+    visibleColumns,
 } = {}) {
+    const col = (id) => !visibleColumns || visibleColumns.has(id);
     const { suppliers, pagination, isLoading, setPage, deleteSupplier, toggleStatus } =
         useSupplierStore();
     const router = useRouter();
@@ -127,12 +129,12 @@ export default function SuppliersTable({
                                 </TableHead>
                             )}
                             <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Fournisseur</TableHead>
-                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Contact</TableHead>
-                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Téléphone</TableHead>
-                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Ville</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Total achats</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Solde dû</TableHead>
-                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>
+                            {col('contact') && <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Contact</TableHead>}
+                            {col('phone') && <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Téléphone</TableHead>}
+                            {col('city') && <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Ville</TableHead>}
+                            {col('total_orders') && <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Total achats</TableHead>}
+                            {col('balance') && <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Solde dû</TableHead>}
+                            {col('status') && <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>}
                             <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -165,24 +167,30 @@ export default function SuppliersTable({
                                         <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{supplier.company_name}</p>
                                         {supplier.email && <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{supplier.email}</p>}
                                     </TableCell>
-                                <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.contact_name || '-'}</TableCell>
-                                <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.phone}</TableCell>
-                                <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.city || '-'}</TableCell>
-                                <TableCell className="text-right text-sm font-semibold text-gray-900 dark:text-slate-100">
-                                    {Number(supplier.total_purchases || 0).toLocaleString()} FCFA
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <span className={`text-sm font-semibold ${parseFloat(supplier.current_balance) > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-slate-400'}`}>
-                                        {Number(supplier.current_balance || 0).toLocaleString()} FCFA
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    {supplier.is_active ? (
-                                        <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400">Actif</span>
-                                    ) : (
-                                        <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400">Inactif</span>
-                                    )}
-                                </TableCell>
+                                {col('contact') && <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.contact_name || '-'}</TableCell>}
+                                {col('phone') && <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.phone}</TableCell>}
+                                {col('city') && <TableCell className="text-sm text-gray-700 dark:text-slate-300">{supplier.city || '-'}</TableCell>}
+                                {col('total_orders') && (
+                                    <TableCell className="text-right text-sm font-semibold text-gray-900 dark:text-slate-100">
+                                        {Number(supplier.total_purchases || 0).toLocaleString()} FCFA
+                                    </TableCell>
+                                )}
+                                {col('balance') && (
+                                    <TableCell className="text-right">
+                                        <span className={`text-sm font-semibold ${parseFloat(supplier.current_balance) > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-slate-400'}`}>
+                                            {Number(supplier.current_balance || 0).toLocaleString()} FCFA
+                                        </span>
+                                    </TableCell>
+                                )}
+                                {col('status') && (
+                                    <TableCell className="text-center">
+                                        {supplier.is_active ? (
+                                            <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-950/60 text-green-700 dark:text-green-400">Actif</span>
+                                        ) : (
+                                            <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400">Inactif</span>
+                                        )}
+                                    </TableCell>
+                                )}
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1">
                                         <Button variant="ghost" size="icon" onClick={() => openDetail(supplier.id)} title="Voir détails" className="hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-slate-300">

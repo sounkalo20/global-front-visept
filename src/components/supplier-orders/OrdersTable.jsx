@@ -29,7 +29,9 @@ export default function OrdersTable({
     isAllPageSelected,
     isSomePageSelected,
     isSelected,
+    visibleColumns,
 } = {}) {
+    const col = (id) => !visibleColumns || visibleColumns.has(id);
     const { orders, pagination, isLoading, setPage, cancelOrder, updateStatus } = useSupplierOrderStore();
     const [selectedId, setSelectedId] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -84,12 +86,12 @@ export default function OrdersTable({
                                 </TableHead>
                             )}
                             <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">N° Commande</TableHead>
-                            <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Fournisseur</TableHead>
+                            {col('supplier') && <TableHead className="text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Fournisseur</TableHead>}
                             <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Total</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Payé</TableHead>
-                            <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Reste</TableHead>
-                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>
-                            <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Articles</TableHead>
+                            {col('paid') && <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Payé</TableHead>}
+                            {col('remaining') && <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Reste</TableHead>}
+                            {col('status') && <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Statut</TableHead>}
+                            {col('items') && <TableHead className="text-center text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Articles</TableHead>}
                             <TableHead className="text-right text-gray-500 dark:text-[#D1D5DB] text-xs font-semibold uppercase">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -120,18 +122,20 @@ export default function OrdersTable({
                                     )}
                                     <TableCell>
                                         <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{order.order_number}</p>
-                                        <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{new Date(order.created_at).toLocaleDateString('fr-FR')}</p>
+                                        {col('date') && <p className="text-xs text-gray-400 dark:text-[#9CA3AF]">{new Date(order.created_at).toLocaleDateString('fr-FR')}</p>}
                                     </TableCell>
-                                    <TableCell className="text-sm text-gray-700 dark:text-[#D1D5DB]">{order.supplier_name}</TableCell>
+                                    {col('supplier') && <TableCell className="text-sm text-gray-700 dark:text-[#D1D5DB]">{order.supplier_name}</TableCell>}
                                     <TableCell className="text-right text-sm font-semibold text-gray-900 dark:text-[#F9FAFB]">{Number(order.total_amount).toLocaleString()} FCFA</TableCell>
-                                    <TableCell className="text-right text-sm text-green-600 dark:text-green-400 font-medium">{Number(order.total_paid).toLocaleString()} FCFA</TableCell>
-                                    <TableCell className="text-right text-sm text-red-600 dark:text-red-400 font-medium">{Number(order.remaining_balance).toLocaleString()} FCFA</TableCell>
-                                    <TableCell className="text-center">
-                                        <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig[order.status]?.className}`}>
-                                            {statusConfig[order.status]?.label}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="text-center text-sm text-gray-700 dark:text-[#D1D5DB]">{order.items_count || 0}</TableCell>
+                                    {col('paid') && <TableCell className="text-right text-sm text-green-600 dark:text-green-400 font-medium">{Number(order.total_paid).toLocaleString()} FCFA</TableCell>}
+                                    {col('remaining') && <TableCell className="text-right text-sm text-red-600 dark:text-red-400 font-medium">{Number(order.remaining_balance).toLocaleString()} FCFA</TableCell>}
+                                    {col('status') && (
+                                        <TableCell className="text-center">
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${statusConfig[order.status]?.className}`}>
+                                                {statusConfig[order.status]?.label}
+                                            </span>
+                                        </TableCell>
+                                    )}
+                                    {col('items') && <TableCell className="text-center text-sm text-gray-700 dark:text-[#D1D5DB]">{order.items_count || 0}</TableCell>}
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <Button variant="ghost" size="icon" onClick={() => openDetail(order.id)} className="dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]"><Eye size={16} /></Button>

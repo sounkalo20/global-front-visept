@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Upload, CheckCircle2, EyeOff, Folder, Trash2, Layers, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,10 @@ import DataExportButton from '@/components/common/DataExportButton';
 import BulkActionBar from '@/components/common/BulkActionBar';
 import BulkConfirmModal from '@/components/common/BulkConfirmModal';
 import BulkResultModal from '@/components/common/BulkResultModal';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { PRODUCTS_COLUMNS } from '@/config/tableColumns';
 import useProductStore from '@/store/productStore';
 import useCompanyStore from '@/store/companyStore';
 import useCategoryStore from '@/store/categoryStore';
@@ -38,17 +42,31 @@ export default function ProductsPage() {
   const { categories, fetchCategories } = useCategoryStore();
   const { canAddMore, limits } = useSubscription();
 
+  const searchParams = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [deletingProduct, setDeletingProduct] = useState(null);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams?.get('search') || '');
   const [stockFilter, setStockFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('active');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearch(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+    useColumnPreferences('products', PRODUCTS_COLUMNS, activeCompany?.id);
 
   // Modals pour les Bulk Actions
   const [bulkConfirm, setBulkConfirm] = useState({
@@ -252,6 +270,13 @@ export default function ProductsPage() {
             <p className="text-gray-500 dark:text-[#D1D5DB] mt-1">{totalProducts} produit{totalProducts > 1 ? 's' : ''}</p>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
+            <ColumnSelector
+              columnsDef={PRODUCTS_COLUMNS}
+              visibleColumns={visibleColumns}
+              onToggle={toggleColumn}
+              onReset={resetToDefaults}
+              hiddenCount={hiddenCount}
+            />
             <DataExportButton moduleName="products" />
             <ExportProductsPDFButton />
             
@@ -325,6 +350,7 @@ export default function ProductsPage() {
               isAllPageSelected={bulkSelection.isAllPageSelected}
               isSomePageSelected={bulkSelection.isSomePageSelected}
               isSelected={bulkSelection.isSelected}
+              visibleColumns={visibleColumns}
             />
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between flex-wrap gap-3">

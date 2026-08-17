@@ -1,6 +1,7 @@
 // app/shop/supplier-orders/page.jsx
 'use client';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Package, Plus, Send, CheckCircle2, Ban, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import OrderStatsCards from '@/components/supplier-orders/OrderStatsCards';
@@ -10,7 +11,10 @@ import OrderFormModal from '@/components/supplier-orders/OrderFormModal';
 import BulkActionBar from '@/components/common/BulkActionBar';
 import BulkConfirmModal from '@/components/common/BulkConfirmModal';
 import BulkResultModal from '@/components/common/BulkResultModal';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { SUPPLIER_ORDERS_COLUMNS } from '@/config/tableColumns';
 import useSupplierOrderStore from '@/store/supplierOrderStore';
 import useCompanyStore from '@/store/companyStore';
 import { toast } from 'sonner';
@@ -18,7 +22,12 @@ import { toast } from 'sonner';
 export default function SupplierOrdersPage() {
     const { orders, pagination, stats, filters, setFilters, fetchOrders, executeBulkAction } = useSupplierOrderStore();
     const { activeCompany } = useCompanyStore();
+    const searchParams = useSearchParams();
     const [formOpen, setFormOpen] = useState(false);
+
+    // Préférences de colonnes
+    const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+        useColumnPreferences('supplier_orders', SUPPLIER_ORDERS_COLUMNS, activeCompany?.id);
 
     // Modals pour les Bulk Actions
     const [bulkConfirm, setBulkConfirm] = useState({
@@ -33,7 +42,15 @@ export default function SupplierOrdersPage() {
     const [isBulkExecuting, setIsBulkExecuting] = useState(false);
     const [bulkResult, setBulkResult] = useState({ open: false, result: null });
 
-    useEffect(() => { fetchOrders(); }, [fetchOrders]);
+    // Synchroniser la recherche si l'URL change
+    useEffect(() => {
+        const urlQuery = searchParams?.get('search');
+        if (urlQuery !== null && urlQuery !== undefined) {
+            setFilters({ search: urlQuery });
+        } else {
+            fetchOrders();
+        }
+    }, [searchParams, fetchOrders, setFilters]);
 
     // Hook de sélection en masse
     const bulkSelection = useBulkSelection(orders);
@@ -148,10 +165,19 @@ export default function SupplierOrdersPage() {
                         Gérez vos bons de commande et réceptions ({pagination?.total_count || orders.length})
                     </p>
                 </div>
-                <Button onClick={() => setFormOpen(true)} className="bg-brand-600 hover:bg-brand-700 text-white">
-                    <Plus size={16} className="mr-2" />
-                    Nouvelle commande
-                </Button>
+                <div className="flex items-center gap-3">
+                    <ColumnSelector
+                        columnsDef={SUPPLIER_ORDERS_COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onToggle={toggleColumn}
+                        onReset={resetToDefaults}
+                        hiddenCount={hiddenCount}
+                    />
+                    <Button onClick={() => setFormOpen(true)} className="bg-brand-600 hover:bg-brand-700 text-white">
+                        <Plus size={16} className="mr-2" />
+                        Nouvelle commande
+                    </Button>
+                </div>
             </div>
             <OrderStatsCards stats={stats} />
             <OrderFilters filters={filters} onFiltersChange={setFilters} />
@@ -162,6 +188,7 @@ export default function SupplierOrdersPage() {
                 isAllPageSelected={bulkSelection.isAllPageSelected}
                 isSomePageSelected={bulkSelection.isSomePageSelected}
                 isSelected={bulkSelection.isSelected}
+                visibleColumns={visibleColumns}
             />
 
             {/* Barre d'actions en masse flottante */}

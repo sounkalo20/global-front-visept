@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, Upload, CheckCircle2, EyeOff, MapPin, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ClientStats from '@/components/clients/ClientStats';
@@ -13,7 +14,10 @@ import DataExportButton from '@/components/common/DataExportButton';
 import BulkActionBar from '@/components/common/BulkActionBar';
 import BulkConfirmModal from '@/components/common/BulkConfirmModal';
 import BulkResultModal from '@/components/common/BulkResultModal';
+import ColumnSelector from '@/components/common/ColumnSelector';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useColumnPreferences } from '@/hooks/useColumnPreferences';
+import { CLIENTS_COLUMNS } from '@/config/tableColumns';
 import useClientStore from '@/store/clientStore';
 import useCompanyStore from '@/store/companyStore';
 import { toast } from 'sonner';
@@ -28,16 +32,30 @@ export default function ClientsPage() {
   const { clients, stats, totalClients, isLoading, fetchClients, fetchStats, totalPages, executeBulkAction } = useClientStore();
   const { activeCompany } = useCompanyStore();
 
+  const searchParams = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [deletingClient, setDeletingClient] = useState(null);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams?.get('search') || '');
   const [debtFilter, setDebtFilter] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getStoredPageSize(20));
+
+  // Synchroniser la recherche si l'URL change
+  useEffect(() => {
+    const urlQuery = searchParams?.get('search');
+    if (urlQuery !== null && urlQuery !== undefined) {
+      setSearch(urlQuery);
+      setPage(1);
+    }
+  }, [searchParams]);
+
+  // Préférences de colonnes
+  const { visibleColumns, toggleColumn, resetToDefaults, hiddenCount } =
+    useColumnPreferences('clients', CLIENTS_COLUMNS, activeCompany?.id);
 
   // Modals pour les Bulk Actions
   const [bulkConfirm, setBulkConfirm] = useState({
@@ -189,6 +207,13 @@ export default function ClientsPage() {
           <p className="text-gray-500 dark:text-[#D1D5DB] text-sm">Gérez votre base de clients ({totalClients || clients.length})</p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
+          <ColumnSelector
+            columnsDef={CLIENTS_COLUMNS}
+            visibleColumns={visibleColumns}
+            onToggle={toggleColumn}
+            onReset={resetToDefaults}
+            hiddenCount={hiddenCount}
+          />
           <DataExportButton moduleName="clients" />
           <HasPermission required="clients.create">
             <Button
@@ -232,6 +257,7 @@ export default function ClientsPage() {
             isAllPageSelected={bulkSelection.isAllPageSelected}
             isSomePageSelected={bulkSelection.isSomePageSelected}
             isSelected={bulkSelection.isSelected}
+            visibleColumns={visibleColumns}
           />
           {totalPages > 1 && (
             <div className="mt-6 flex items-center justify-between flex-wrap gap-3">

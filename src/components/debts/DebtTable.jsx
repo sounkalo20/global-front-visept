@@ -24,8 +24,10 @@ export default function DebtTable({
   isAllPageSelected,
   isSomePageSelected,
   isSelected,
+  visibleColumns,
 }) {
   const router = useRouter();
+  const col = (id) => !visibleColumns || visibleColumns.has(id);
 
   // Vérifier que debts est un tableau
   if (!debts || !Array.isArray(debts) || debts.length === 0) {
@@ -58,12 +60,12 @@ export default function DebtTable({
                 </th>
               )}
               <th className="px-4 py-3 text-left">Client</th>
-              <th className="px-4 py-3 text-left">Vente</th>
+              {col('sale') && <th className="px-4 py-3 text-left">Vente</th>}
               <th className="px-4 py-3 text-right">Total</th>
-              <th className="px-4 py-3 text-right">Payé</th>
+              {col('paid') && <th className="px-4 py-3 text-right">Payé</th>}
               <th className="px-4 py-3 text-right">Reste</th>
-              <th className="px-4 py-3 text-center">Statut</th>
-              <th className="px-4 py-3 text-left">Échéance</th>
+              {col('status') && <th className="px-4 py-3 text-center">Statut</th>}
+              {col('due_date') && <th className="px-4 py-3 text-left">Échéance</th>}
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -101,16 +103,20 @@ export default function DebtTable({
                     <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB]">{debt.client_name || 'Inconnu'}</p>
                     <p className="text-xs text-gray-400 dark:text-[#9CA3AF] flex items-center gap-1"><Phone size={10} /> {debt.client_phone || '-'}</p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-[#D1D5DB]">{debt.sale_number || `#${debt.id}`}</td>
+                  {col('sale') && <td className="px-4 py-3 text-sm text-gray-700 dark:text-[#D1D5DB]">{debt.sale_number || `#${debt.id}`}</td>}
                   <td className="px-4 py-3 text-right font-semibold text-gray-900 dark:text-[#F9FAFB]">{parseInt(debt.total_amount || 0).toLocaleString()} F</td>
-                  <td className="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400 font-medium">{totalPaid.toLocaleString()} F</td>
+                  {col('paid') && <td className="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400 font-medium">{totalPaid.toLocaleString()} F</td>}
                   <td className="px-4 py-3 text-right font-semibold text-red-600 dark:text-red-400">{parseInt(debt.remaining_amount || 0).toLocaleString()} F</td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">
-                    {debt.due_date ? new Date(debt.due_date).toLocaleDateString('fr-FR') : '-'}
-                  </td>
+                  {col('status') && (
+                    <td className="px-4 py-3 text-center">
+                      <span className={cn('rounded-full px-2.5 py-0.5 text-xs font-semibold', badge.color)}>{badge.label}</span>
+                    </td>
+                  )}
+                  {col('due_date') && (
+                    <td className="px-4 py-3 text-sm text-gray-500 dark:text-[#9CA3AF]">
+                      {debt.due_date ? new Date(debt.due_date).toLocaleDateString('fr-FR') : '-'}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" className="h-8 w-8 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937]" onClick={() => router.push(`/shop/debts/${debt.id}`)}>
                       <Eye size={15} />
