@@ -21,7 +21,8 @@ import {
     DollarSign as CircleDollarSign,
     Box,
     RotateCcw,
-    ClipboardCheck
+    ClipboardCheck,
+    TrendingUp
 } from 'lucide-react';
 
 /**
@@ -60,6 +61,7 @@ export const shopNavigation = [
         section: 'Général',
         items: [
             { href: '/shop/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, requirePermission: 'dashboard.view' },
+            { href: '/shop/profits', label: 'Bénéfices & Rentabilité', icon: TrendingUp, requirePermission: 'sales.view_margin' },
         ],
     },
     {
