@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { History, Loader2, ArrowRight, Eye } from 'lucide-react';
 import { salesApi } from '@/lib/api/sales';
@@ -33,14 +33,20 @@ export default function QuickHistoryModal({ open, onOpenChange }) {
   const loadHistory = async () => {
     setIsLoading(true);
     try {
-      const params = { limit: 10 };
       if (isCashier && activeSession) {
-        params.cash_session_id = activeSession.id;
+        const res = await salesApi.getAll(activeCompany.id, { 
+          cash_session_id: activeSession.id,
+          limit: 20 
+        });
+        setSales(res.data.data.sales || []);
+      } else {
+        const res = await salesApi.getAll(activeCompany.id, { 
+          limit: 10 
+        });
+        setSales(res.data.data.sales || []);
       }
-      const response = await salesApi.getAll(activeCompany.id, params);
-      setSales(response.data.data.sales || []);
     } catch (error) {
-      console.error('Failed to load history', error);
+      console.error("Failed to load POS history", error);
     } finally {
       setIsLoading(false);
     }
@@ -64,6 +70,9 @@ export default function QuickHistoryModal({ open, onOpenChange }) {
               <History size={20} className="text-gray-500" />
               {isCashier ? "Ventes de la session actuelle" : "10 dernières ventes"}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Historique des transactions récentes et réimpression des tickets
+            </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">

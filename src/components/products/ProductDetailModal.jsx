@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Loader2, Calendar, History, User, Info, Coins, Package, Box } from 'lucide-react';
 import { productsApi } from '@/lib/api/products';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ export default function ProductDetailModal({ open, onOpenChange, product, compan
             setMovementsData(res.data.data);
           }
         })
-        .catch(err => console.error(err))
+        .catch(err => console.error("Erreur mouvements produit:", err))
         .finally(() => setLoadingMovements(false));
     }
   }, [open, product, companyId]);
@@ -42,7 +42,9 @@ export default function ProductDetailModal({ open, onOpenChange, product, compan
           )}
           <div>
             <DialogTitle className="text-lg font-bold text-gray-900 dark:text-[#F9FAFB]">{product.name}</DialogTitle>
-            <p className="text-xs text-gray-400 dark:text-[#9CA3AF] mt-0.5">ID Boutique: #{product.id} {product.sku ? `| SKU: ${product.sku}` : ''}</p>
+            <DialogDescription className="text-xs text-gray-400 dark:text-[#9CA3AF] mt-0.5">
+              ID Boutique: #{product.id} {product.sku ? `| SKU: ${product.sku}` : ''}
+            </DialogDescription>
           </div>
         </div>
 

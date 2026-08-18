@@ -411,7 +411,7 @@ export default function ProductsPage() {
         isDestructive={bulkConfirm.isDestructive}
         confirmLabel={bulkConfirm.confirmLabel || 'Confirmer'}
         warningMessage={bulkConfirm.warningMessage}
-        options={bulkConfirm.options}
+        options={bulkConfirm.actionType === 'change_category' ? categoryOptions : (bulkConfirm.options || [])}
         optionsLabel={bulkConfirm.optionsLabel}
         isLoading={isBulkExecuting}
       />

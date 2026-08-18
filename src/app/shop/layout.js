@@ -1,5 +1,5 @@
-// app/shop/layout.jsx
 'use client';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileSidebar from '@/components/layout/MobileSidebar';
@@ -9,6 +9,14 @@ import CommandPalette from '@/components/common/CommandPalette';
 export default function ShopLayout({ children }) {
   const pathname = usePathname();
   const isPosRoute = pathname.includes('/sales/new') || pathname.match(/\/sales\/.*\/edit/) || pathname.includes('/pos/');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('Service Worker registration skipped:', err);
+      });
+    }
+  }, []);
 
   if (isPosRoute) {
     return (

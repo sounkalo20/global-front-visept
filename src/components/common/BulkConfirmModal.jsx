@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, Info, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function BulkConfirmModal({
@@ -55,7 +54,7 @@ export default function BulkConfirmModal({
   const requiresInput = showInput || actionType === 'input' || actionType === 'change_city';
   const isConfirmDisabled =
     isLoading ||
-    (requiresSelect && !selectedValue) ||
+    (requiresSelect && (selectedValue === '' || selectedValue === undefined || selectedValue === null)) ||
     (requiresInput && inputRequired && !inputText.trim());
 
   return (
@@ -110,23 +109,39 @@ export default function BulkConfirmModal({
           {requiresSelect && (
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-gray-700 dark:text-[#D1D5DB]">
-                {optionsLabel} *
+                {optionsLabel} <span className="text-red-500">*</span>
               </label>
-              <Select value={selectedValue} onValueChange={setSelectedValue}>
-                <SelectTrigger className="w-full bg-white dark:bg-[#111827] border-gray-200 dark:border-[#374151] text-gray-900 dark:text-[#F9FAFB]">
-                  <SelectValue placeholder="Choisir une option..." />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-[#1F2937] border-gray-200 dark:border-[#374151]">
+              <div className="relative">
+                <select
+                  value={selectedValue}
+                  onChange={(e) => setSelectedValue(e.target.value)}
+                  className="w-full h-10 px-3 pr-10 rounded-xl border border-gray-300 dark:border-[#374151] bg-white dark:bg-[#111827] text-xs font-medium text-gray-900 dark:text-[#F9FAFB] focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none transition-all appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                  }}
+                >
+                  <option value="" disabled className="text-gray-400 dark:text-gray-500 bg-white dark:bg-[#111827]">
+                    Choisir une option...
+                  </option>
                   {options.map((opt, idx) => {
-                    const optVal = (opt.value === '' || opt.value === null || opt.value === undefined) ? 'none' : opt.value.toString();
+                    const optVal =
+                      opt.value === '' || opt.value === null || opt.value === undefined
+                        ? 'none'
+                        : opt.value.toString();
                     return (
-                      <SelectItem key={`${optVal}-${idx}`} value={optVal} className="text-gray-900 dark:text-[#F9FAFB]">
+                      <option
+                        key={`${optVal}-${idx}`}
+                        value={optVal}
+                        className="text-gray-900 dark:text-[#F9FAFB] bg-white dark:bg-[#111827] py-1.5"
+                      >
                         {opt.label}
-                      </SelectItem>
+                      </option>
                     );
                   })}
-                </SelectContent>
-              </Select>
+                </select>
+              </div>
             </div>
           )}
 
@@ -168,7 +183,7 @@ export default function BulkConfirmModal({
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937] text-xs h-9"
+            className="border-gray-200 dark:border-[#374151] dark:text-[#D1D5DB] dark:hover:bg-[#1F2937] text-xs h-9 cursor-pointer"
           >
             Annuler
           </Button>
@@ -176,7 +191,7 @@ export default function BulkConfirmModal({
             type="button"
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`text-xs font-semibold h-9 px-4 ${
+            className={`text-xs font-semibold h-9 px-4 cursor-pointer ${
               isDestructive
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-brand-600 hover:bg-brand-700 text-white'

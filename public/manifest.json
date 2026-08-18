@@ -1,0 +1,16 @@
+{
+  "name": "VISEPT POS",
+  "short_name": "VISEPT",
+  "description": "Terminal Point de Vente & Gestion Commerciale",
+  "start_url": "/shop/sales/new",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#18181b",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

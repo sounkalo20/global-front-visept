@@ -25,6 +25,9 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import ProductGrid from './ProductGrid';
 import CartPanel from './CartPanel';
@@ -33,6 +36,8 @@ import PaymentSection from './PaymentSection';
 import PosClock from './PosClock';
 import QuickHistoryModal from './QuickHistoryModal';
 import PosReturnModal from './PosReturnModal';
+import NetworkStatusBadge from './NetworkStatusBadge';
+import OfflineSyncModal from './OfflineSyncModal';
 import ThemeToggle from '@/components/layout/ThemeToggle';
 import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
@@ -41,6 +46,16 @@ import useCompanyStore from '@/store/companyStore';
 import useCashStore from '@/store/cashStore';
 import useAuthStore from '@/store/authStore';
 import usePermissionsStore from '@/store/permissionsStore';
+import useOfflineStore from '@/store/offlineStore';
+import syncManager from '@/lib/sync/offlineSyncManager';
+import {
+  saveCatalogue,
+  getCatalogue,
+  saveActiveSession,
+  enqueueOfflineSale,
+  updateLocalStock,
+  getOrCreateDeviceId,
+} from '@/lib/db/posDatabase';
 import useFullscreen from '@/hooks/useFullscreen';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import LoadingScreen from '@/components/ui/LoadingScreen';
@@ -62,8 +77,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const [isProforma, setIsProforma] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [isMobilePaymentOpen, setIsMobilePaymentOpen] = useState(false);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuthStore();
+  const { isOnline, isServerReachable, pendingCount } = useOfflineStore();
   
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
   const [closingAmount, setClosingAmount] = useState('');
@@ -82,12 +100,34 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
   useEffect(() => {
     if (activeCompany) {
-      fetchPosProducts(activeCompany.id);
+      // Démarrer le SyncManager
+      syncManager.start(activeCompany.id);
+
+      fetchPosProducts(activeCompany.id).then(() => {
+        const prods = useProductStore.getState().posProducts;
+        if (prods && prods.length > 0) {
+          saveCatalogue(activeCompany.id, prods);
+        }
+      }).catch(async () => {
+        // Fallback IndexedDB si hors-ligne
+        const localProds = await getCatalogue(activeCompany.id);
+        if (localProds && localProds.length > 0) {
+          useProductStore.setState({ posProducts: localProds });
+        }
+      });
+
       if (mode === 'create') {
         cart.clearCart();
-        fetchActiveSession(activeCompany.id);
+        fetchActiveSession(activeCompany.id).then(() => {
+          const sess = useCashStore.getState().activeSession;
+          if (sess) saveActiveSession(activeCompany.id, sess);
+        });
       }
     }
+
+    return () => {
+      syncManager.stop();
+    };
   }, [activeCompany, mode]);
 
   useEffect(() => {
@@ -112,15 +152,124 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
     setIsSubmitting(true);
     const payload = isEditMode ? cart.getUpdatePayload(activeCompany.id) : cart.getPayload(activeCompany.id);
-    const result = isEditMode ? await updateSale(saleId, payload) : await createSale(payload);
-    setIsSubmitting(false);
 
-    if (result.success) {
-      toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
-      setIsProforma(false);
-      setCompletedSale(result.sale);
-    } else {
-      toast.error(result.message);
+    // Détection si hors-ligne
+    const isNetworkDown = !navigator.onLine || !isServerReachable;
+
+    if (isNetworkDown && !isEditMode) {
+      // Traitement hors-ligne
+      try {
+        const offlineUuid = crypto.randomUUID ? crypto.randomUUID() : ('off_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const randSeq = Math.floor(1000 + Math.random() * 9000);
+        const tempNumber = `OFF-${dateStr}-${randSeq}`;
+        const deviceId = getOrCreateDeviceId();
+
+        await enqueueOfflineSale(activeCompany.id, {
+          offline_uuid: offlineUuid,
+          temp_number: tempNumber,
+          device_id: deviceId,
+          payload,
+          created_at: new Date().toISOString(),
+        });
+
+        await updateLocalStock(activeCompany.id, cart.items);
+
+        const provisionalSale = {
+          id: offlineUuid,
+          sale_number: tempNumber,
+          sale_date: new Date().toISOString(),
+          client_name: cart.clientName || 'Client passager',
+          items: cart.items.map(i => ({
+            ...i,
+            product_name: i.product_name,
+            unit_price: i.unit_price,
+            quantity: i.quantity,
+            total_price: i.unit_price * i.quantity,
+          })),
+          subtotal: cart.getSubtotal(),
+          discount_amount: cart.getDiscountAmount(),
+          total_amount: cart.getTotal(),
+          amount_paid: cart.amountPaid || cart.getTotal(),
+          payment_method: cart.paymentMethod,
+          payments: cart.payments,
+          is_provisional: true,
+        };
+
+        setIsSubmitting(false);
+        setIsProforma(false);
+        setCompletedSale(provisionalSale);
+        setIsMobilePaymentOpen(false);
+        cart.clearCart();
+
+        toast.success(`Vente enregistrée en mode hors-ligne (${tempNumber}) !`);
+        syncManager.checkHealthAndSync();
+        return;
+      } catch (err) {
+        console.error("Erreur enregistrement offline:", err);
+        setIsSubmitting(false);
+        toast.error("Erreur lors de l'enregistrement hors-ligne.");
+        return;
+      }
+    }
+
+    try {
+      const result = isEditMode ? await updateSale(saleId, payload) : await createSale(payload);
+      setIsSubmitting(false);
+
+      if (result.success) {
+        toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
+        setIsProforma(false);
+        setCompletedSale(result.sale);
+        setIsMobilePaymentOpen(false);
+      } else {
+        // Si l'erreur est de type réseau lors de l'envoi, bascule automatique offline
+        if (!isEditMode && (!navigator.onLine || result.message?.includes('Network') || result.message?.includes('connexion'))) {
+          toast.warning("Connexion interrompue. Enregistrement local en cours...");
+          setIsSubmitting(false);
+          // Relance en mode hors-ligne
+          const offlineUuid = crypto.randomUUID ? crypto.randomUUID() : ('off_' + Date.now());
+          const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+          const tempNumber = `OFF-${dateStr}-${Math.floor(1000 + Math.random() * 9000)}`;
+          const deviceId = getOrCreateDeviceId();
+
+          await enqueueOfflineSale(activeCompany.id, {
+            offline_uuid: offlineUuid,
+            temp_number: tempNumber,
+            device_id: deviceId,
+            payload,
+            created_at: new Date().toISOString(),
+          });
+
+          await updateLocalStock(activeCompany.id, cart.items);
+
+          const provisionalSale = {
+            id: offlineUuid,
+            sale_number: tempNumber,
+            sale_date: new Date().toISOString(),
+            client_name: cart.clientName || 'Client passager',
+            items: cart.items.map(i => ({ ...i, product_name: i.product_name })),
+            subtotal: cart.getSubtotal(),
+            discount_amount: cart.getDiscountAmount(),
+            total_amount: cart.getTotal(),
+            amount_paid: cart.amountPaid || cart.getTotal(),
+            payment_method: cart.paymentMethod,
+            payments: cart.payments,
+            is_provisional: true,
+          };
+
+          setCompletedSale(provisionalSale);
+          setIsMobilePaymentOpen(false);
+          cart.clearCart();
+          toast.success(`Vente enregistrée en mode hors-ligne (${tempNumber}) !`);
+          syncManager.checkHealthAndSync();
+        } else {
+          toast.error(result.message);
+        }
+      }
+    } catch (e) {
+      setIsSubmitting(false);
+      toast.error("Erreur lors de la validation.");
     }
   };
 
@@ -147,6 +296,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
     };
     setIsProforma(true);
     setCompletedSale(proformaSale);
+    setIsMobilePaymentOpen(false);
   };
 
   const handleReceiptClosed = () => {
@@ -227,16 +377,19 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-[#D1D5DB]">
             <ThemeToggle />
-            {activeSession && (
-              <Button 
-                variant="destructive" 
-                size="sm" 
+            {/* Indicateur de Connexion & Synchro CO-07 */}
+            <NetworkStatusBadge onClick={() => setSyncModalOpen(true)} />
+
+            {activeSession && !isEditMode && (
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   setClosingAmount(activeSession.expected_closing_amount);
                   setClosingNotes('');
                   setShowCloseShiftModal(true);
-                }} 
-                className="hidden md:flex gap-2"
+                }}
+                className="hidden md:flex gap-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/60 hover:bg-red-50 dark:hover:bg-red-950/30"
               >
                 <LogOut size={16} />
                 Fermer la caisse
@@ -417,8 +570,8 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
         </div>
       </div>
 
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-[#374151] z-50">
-        <Sheet>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#111827] border-t border-gray-200 dark:border-[#374151] z-40">
+        <Sheet open={isMobilePaymentOpen} onOpenChange={setIsMobilePaymentOpen}>
           <SheetTrigger asChild>
             <Button
               className="w-full h-12 text-base font-semibold rounded-xl"
@@ -433,7 +586,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[95vh] p-0 flex flex-col bg-gray-50 dark:bg-[#0B0F14] border-t border-gray-200 dark:border-[#374151] z-[100]" showCloseButton={true}>
+          <SheetContent side="bottom" className="h-[95vh] p-0 flex flex-col bg-gray-50 dark:bg-[#0B0F14] border-t border-gray-200 dark:border-[#374151] z-[90]" showCloseButton={true}>
+            <SheetHeader className="sr-only">
+              <SheetTitle>Finalisation du panier et règlement</SheetTitle>
+              <SheetDescription>Sélectionnez le client et les modes de règlement</SheetDescription>
+            </SheetHeader>
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 border-b border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] mb-4">
                 <div className="flex justify-between items-center font-medium mb-2">
@@ -588,6 +745,13 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       <PosReturnModal
         open={showReturn}
         onOpenChange={setShowReturn}
+      />
+
+      {/* ─── Modal Synchronisation Hors-Ligne ─── */}
+      <OfflineSyncModal
+        open={syncModalOpen}
+        onOpenChange={setSyncModalOpen}
+        companyId={activeCompany?.id}
       />
     </div>
   );

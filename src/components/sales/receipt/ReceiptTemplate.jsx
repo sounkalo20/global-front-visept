@@ -21,7 +21,14 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
       </div>
       
       <div className="text-center mb-2">
-        <div className="font-bold">{isProforma ? 'PROFORMA' : 'TICKET'} N° {sale.sale_number}</div>
+        <div className="font-bold">
+          {sale.is_provisional ? 'REÇU PROVISOIRE (HORS-LIGNE)' : isProforma ? 'PROFORMA' : 'TICKET'} N° {sale.sale_number}
+        </div>
+        {sale.is_provisional && (
+          <div className="text-[10px] italic mt-0.5 text-amber-700 dark:text-amber-400">
+            * Vente enregistrée localement - En attente de synchronisation *
+          </div>
+        )}
         <div>Date: {formatDate(sale.sale_date || new Date())}</div>
       </div>
       

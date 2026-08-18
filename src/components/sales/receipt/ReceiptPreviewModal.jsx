@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import ReceiptTemplate from './ReceiptTemplate';
@@ -32,6 +32,9 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
       <DialogContent className="max-w-md bg-stone-50 dark:bg-[#111827]">
         <DialogHeader>
           <DialogTitle>Aperçu du ticket</DialogTitle>
+          <DialogDescription className="sr-only">
+            Aperçu et impression du ticket de caisse
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex flex-col items-center gap-4 py-4">

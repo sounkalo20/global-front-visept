@@ -21,6 +21,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
 } from '@/components/ui/dialog';
 
 const getStockStatus = (product) => {
@@ -327,6 +328,9 @@ export default function ProductTable({
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle>Gérer le stock - {stockModalProduct?.name}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                            Ajustement et gestion du stock pour ce produit
+                        </DialogDescription>
                     </DialogHeader>
                     {stockModalProduct && (
                         <StockManager 
