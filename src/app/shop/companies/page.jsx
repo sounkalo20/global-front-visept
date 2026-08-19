@@ -57,10 +57,20 @@ export default function CompaniesPage() {
               Gérez vos entreprises et sélectionnez celle sur laquelle travailler.
             </p>
           </div>
-          <Button onClick={() => setShowCreateForm(!showCreateForm)}>
-            <Plus size={18} className="mr-2" />
-            Nouvelle entreprise
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => router.push('/shop/settings/receipt')}
+              className="border-gray-200"
+              title="Personnaliser le modèle de ticket de caisse et reçu"
+            >
+              Ticket de caisse
+            </Button>
+            <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+              <Plus size={18} className="mr-2" />
+              Nouvelle entreprise
+            </Button>
+          </div>
         </div>
 
         {showCreateForm && (

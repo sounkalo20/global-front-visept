@@ -28,6 +28,8 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
             expected_at: '',
             shipping_cost: '0',
             tax_amount: '0',
+            discount_type: 'none',
+            discount_value: '0',
             notes: '',
             items: [{ product_id: '', quantity_ordered: '1', unit_cost: '0' }],
             initial_payment: { amount: '0', payment_method: 'cash', payment_date: new Date().toISOString().split('T')[0], payment_reference: '', note: '' },
@@ -50,12 +52,15 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
                     expected_at: order.expected_at ? order.expected_at.split('T')[0] : '',
                     shipping_cost: order.shipping_cost || '0',
                     tax_amount: order.tax_amount || '0',
+                    discount_type: order.discount_type || 'none',
+                    discount_value: order.discount_value || '0',
                     notes: order.notes || '',
                     items: [{ product_id: '', quantity_ordered: '1', unit_cost: '0' }],
                 });
             } else {
                 reset({
-                    supplier_id: '', reference: '', expected_at: '', shipping_cost: '0', tax_amount: '0', notes: '',
+                    supplier_id: '', reference: '', expected_at: '', shipping_cost: '0', tax_amount: '0',
+                    discount_type: 'none', discount_value: '0', notes: '',
                     items: [{ product_id: '', quantity_ordered: '1', unit_cost: '0' }],
                     initial_payment: { amount: '0', payment_method: 'cash', payment_date: new Date().toISOString().split('T')[0], payment_reference: '', note: '' },
                 });
@@ -100,7 +105,7 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
                             <Input placeholder="Bon de commande..." {...register('reference')} />
                         </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
                             <label className="block text-sm font-medium mb-1">Livraison prévue</label>
                             <Input type="date" {...register('expected_at')} />
@@ -110,8 +115,26 @@ export default function OrderFormModal({ isOpen, onClose, order }) {
                             <Input type="number" step="0.01" min="0" {...register('shipping_cost')} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium mb-1">Taxe</label>
-                            <Input type="number" step="0.01" min="0" {...register('tax_amount')} />
+                            <label className="block text-sm font-medium mb-1">Type de remise</label>
+                            <Select value={watch('discount_type') || 'none'} onValueChange={(v) => setValue('discount_type', v)}>
+                                <SelectTrigger><SelectValue placeholder="Aucune" /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Aucune</SelectItem>
+                                    <SelectItem value="percentage">Pourcentage (%)</SelectItem>
+                                    <SelectItem value="fixed">Montant fixe (FCFA)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Valeur remise</label>
+                            <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                placeholder={watch('discount_type') === 'percentage' ? 'Ex: 10%' : 'Ex: 5000'}
+                                disabled={watch('discount_type') === 'none' || !watch('discount_type')}
+                                {...register('discount_value')}
+                            />
                         </div>
                     </div>
 

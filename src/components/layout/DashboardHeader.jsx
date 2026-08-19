@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import CompanySwitcher from '@/components/companies/CompanySwitcher';
 import ThemeToggle from '@/components/layout/ThemeToggle';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
 import useSidebarStore from '@/store/sidebarStore';
@@ -146,6 +147,9 @@ export default function DashboardHeader() {
               </kbd>
             </button>
           )}
+
+          {/* Notifications en temps réel */}
+          {!isSuperAdmin && activeCompany && <NotificationBell />}
 
           {/* Bouton de bascule Mode Sombre / Clair */}
           <ThemeToggle />

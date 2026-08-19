@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import ReceiptTemplate from './ReceiptTemplate';
+import InvoiceA4Template from './InvoiceA4Template';
 import useReceiptPrinter from '@/hooks/useReceiptPrinter';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
@@ -29,71 +30,53 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-stone-50 dark:bg-[#111827]">
+      <DialogContent className={`transition-all duration-200 ${paperSize === 'A4' ? 'max-w-3xl' : 'max-w-md'} bg-stone-50 dark:bg-[#111827]`}>
         <DialogHeader>
-          <DialogTitle>Aperçu du ticket</DialogTitle>
+          <DialogTitle>{paperSize === 'A4' ? 'Aperçu de la Facture A4' : 'Aperçu du ticket'}</DialogTitle>
           <DialogDescription className="sr-only">
-            Aperçu et impression du ticket de caisse
+            Aperçu et impression du ticket de caisse ou de la facture
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex flex-col items-center gap-4 py-4">
-          {/* Options de papier */}
+        <div className="flex flex-col items-center gap-4 py-2">
+          {/* Options de format de papier */}
           <div className="flex bg-stone-200 dark:bg-[#1F2937] p-1 rounded-xl">
             <button
               onClick={() => setPaperSize('58mm')}
-              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === '58mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${paperSize === '58mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
-              58 mm
+              Ticket 58 mm
             </button>
             <button
               onClick={() => setPaperSize('80mm')}
-              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === '80mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${paperSize === '80mm' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
-              80 mm
+              Ticket 80 mm
             </button>
             <button
               onClick={() => setPaperSize('A4')}
-              className={`px-3 py-1 text-sm font-semibold rounded-lg transition-colors ${paperSize === 'A4' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
+              className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${paperSize === 'A4' ? 'bg-white dark:bg-[#111827] shadow text-stone-900 dark:text-[#F9FAFB]' : 'text-stone-500 dark:text-[#9CA3AF] hover:text-stone-700 dark:hover:text-[#F9FAFB]'}`}
             >
-              A4
+              Facture A4
             </button>
           </div>
 
-          {/* Aperçu (Ticket réel thermique) */}
+          {/* Zone d'aperçu dynamique */}
           <div 
-            className="bg-white rounded-lg border border-gray-300 dark:border-[#374151] shadow-md p-4 overflow-y-auto"
+            className="bg-white rounded-xl border border-gray-300 dark:border-[#374151] shadow-md p-4 overflow-y-auto w-full flex justify-center"
             style={{ 
-              width: paperSize === '58mm' ? '220px' : paperSize === '80mm' ? '300px' : '100%', 
-              maxHeight: '400px' 
+              maxHeight: '520px' 
             }}
           >
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#000' }}>
-              <style>{`
-                .receipt-preview .text-center { text-align: center; }
-                .receipt-preview .text-right { text-align: right; }
-                .receipt-preview .font-bold { font-weight: bold; }
-                .receipt-preview .flex { display: flex; }
-                .receipt-preview .justify-between { justify-content: space-between; }
-                .receipt-preview .mb-1 { margin-bottom: 4px; }
-                .receipt-preview .mb-2 { margin-bottom: 8px; }
-                .receipt-preview .mt-2 { margin-top: 8px; }
-                .receipt-preview .border-t { border-top: 1px dashed #000; }
-                .receipt-preview .border-b { border-bottom: 1px dashed #000; }
-                .receipt-preview .py-1 { padding-top: 4px; padding-bottom: 4px; }
-                .receipt-preview table { width: 100%; border-collapse: collapse; }
-                .receipt-preview th, .receipt-preview td { text-align: left; padding: 2px 0; }
-                .receipt-preview th.text-right, .receipt-preview td.text-right { text-align: right; }
-                .receipt-preview th.text-center, .receipt-preview td.text-center { text-align: center; }
-              `}</style>
-              <div className="receipt-preview">
-                {paperSize === 'A4' ? (
-                   <p className="text-sm text-center text-gray-500 my-8">Aperçu A4 non disponible dans cette petite fenêtre.<br/>Veuillez imprimer pour voir le résultat.</p>
-                ) : (
-                  <ReceiptTemplate sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
-                )}
+            {paperSize === 'A4' ? (
+              <div className="w-full">
+                <InvoiceA4Template sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
               </div>
-            </div>
+            ) : (
+              <div style={{ width: paperSize === '58mm' ? '220px' : '300px' }}>
+                <ReceiptTemplate sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -103,7 +86,7 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
           </Button>
           <Button onClick={handlePrint} disabled={isPrinting} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
             <Printer size={16} className="mr-2" />
-            {isPrinting ? 'Impression...' : 'Imprimer'}
+            {isPrinting ? 'Impression...' : `Imprimer (${paperSize})`}
           </Button>
         </div>
       </DialogContent>

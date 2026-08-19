@@ -69,10 +69,12 @@ export const shopNavigation = [
         items: [
             { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, requirePermission: 'sales.view' },
             { href: '/shop/cash', label: 'Caisse', icon: Receipt, requirePermission: 'sales.view' },
+            { href: '/shop/journal', label: 'Journal des Opérations', icon: FileText, requirePermission: 'journal.view' },
             { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, requirePermission: 'sales.return' },
             { href: '/shop/expenses', label: 'Dépenses', icon: DollarSign, requirePermission: 'dashboard.view' },
             { href: '/shop/debts', label: 'Dettes', icon: DollarSign, requirePermission: 'dashboard.view' },
-            { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign, requirePermission: 'purchases.view' }
+            { href: '/shop/supplier-payments', label: 'Paiements Fournisseurs', icon: CircleDollarSign, requirePermission: 'purchases.view' },
+            { href: '/shop/supplier-credits', label: 'Avoirs Fournisseurs', icon: RotateCcw, requirePermission: 'suppliers.view' },
         ],
     },
     {
@@ -80,6 +82,8 @@ export const shopNavigation = [
         items: [
             { href: '/shop/products', label: 'Produits', icon: Package, requirePermission: 'products.view' },
             { href: '/shop/categories', label: 'Catégories', icon: FolderTree, requirePermission: 'products.view' },
+            { href: '/shop/inventory/predictions', label: 'Prédictions Ruptures', icon: TrendingUp, requirePermission: 'stock_prediction.view' },
+            { href: '/shop/reports/stock', label: 'Rapports & Valeur Stock', icon: ClipboardList, requirePermission: 'inventory.view' },
             { href: '/shop/suppliers', label: 'Fournisseurs', icon: Truck, requirePermission: 'suppliers.view' },
             { href: '/shop/supplier-orders', label: 'Commandes Fournisseurs', icon: ShoppingCart, requirePermission: 'purchases.view' },
             { href: '/shop/warehouses', label: 'Entrepôts', icon: Box, requirePermission: 'warehouses.view' },
