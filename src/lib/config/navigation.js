@@ -65,6 +65,7 @@ export const shopNavigation = [
         section: 'Finance',
         items: [
             { href: '/shop/sales', label: 'Ventes', icon: ShoppingCart, allowCashier: true },
+            { href: '/shop/proformas', label: 'Proformas', icon: FileText, allowCashier: true },
             { href: '/shop/returns', label: 'Retours Produits', icon: RotateCcw, allowCashier: true },
             { href: '/shop/expenses', label: 'Dépenses', icon: Receipt, allowCashier: true },
             { href: '/shop/debts', label: 'Dettes', icon: DollarSign, allowCashier: true },

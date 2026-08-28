@@ -1,9 +1,8 @@
-// app/shop/sales/new/pos-layout.jsx (REMPLACER)
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronUp, ChevronDown, Maximize2, Minimize2, History, User, LogOut, FileText, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -22,6 +21,7 @@ import QuickHistoryModal from './QuickHistoryModal';
 import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useSaleStore from '@/store/saleStore';
+import useProformaStore from '@/store/proformaStore';
 import useCompanyStore from '@/store/companyStore';
 import useAuthStore from '@/store/authStore';
 import useFullscreen from '@/hooks/useFullscreen';
@@ -31,16 +31,23 @@ import ReceiptPreviewModal from '@/components/sales/receipt/ReceiptPreviewModal'
 
 export default function PosLayout({ mode = 'create', saleId = null, backLink }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const proformaIdParam = searchParams.get('proforma_id');
+
   const { activeCompany } = useCompanyStore();
   const { posProducts, fetchPosProducts } = useProductStore();
   const { createSale, updateSale, fetchSaleById, currentSale } = useSaleStore();
+  const { createProforma, fetchProformaById } = useProformaStore();
+
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingProforma, setIsSavingProforma] = useState(false);
   const [isLoadingSale, setIsLoadingSale] = useState(false);
   const [cartExpanded, setCartExpanded] = useState(true);
   const [completedSale, setCompletedSale] = useState(null);
   const [isProforma, setIsProforma] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [loadedProforma, setLoadedProforma] = useState(null);
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuthStore();
 
@@ -66,6 +73,27 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
     }
   }, [isEditMode, saleId, activeCompany]);
 
+  // Chargement d'un proforma existant s'il est passé en paramètre URL (Transformation en vente)
+  useEffect(() => {
+    if (proformaIdParam && activeCompany && !isEditMode) {
+      setIsLoadingSale(true);
+      fetchProformaById(proformaIdParam, activeCompany.id).then((pf) => {
+        if (pf) {
+          if (pf.status === 'converted') {
+            toast.error(`Le proforma ${pf.proforma_number} a déjà été converti en vente.`);
+          } else if (pf.status === 'canceled') {
+            toast.error(`Le proforma ${pf.proforma_number} est annulé.`);
+          } else {
+            cart.loadFromProforma(pf);
+            setLoadedProforma(pf);
+            toast.success(`Proforma ${pf.proforma_number} chargé dans la caisse.`);
+          }
+        }
+        setIsLoadingSale(false);
+      });
+    }
+  }, [proformaIdParam, activeCompany, isEditMode]);
+
   const handleAddToCart = useCallback((product) => {
     cart.addItem(product);
   }, []);
@@ -88,15 +116,16 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success(isEditMode ? 'Vente modifiée !' : 'Vente validée !');
+      toast.success(isEditMode ? 'Vente modifiée !' : (loadedProforma ? 'Proforma converti et vente validée !' : 'Vente validée !'));
       setIsProforma(false);
       setCompletedSale(result.sale);
+      setLoadedProforma(null);
     } else {
       toast.error(result.message);
     }
   };
 
-  const handleProforma = () => {
+  const handleProforma = async () => {
     if (!activeCompany || cart.items.length === 0) {
       toast.error('Le panier est vide.');
       return;
@@ -106,29 +135,44 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       toast.error("Impossible de générer une facture proforma pour un montant total nul (0 FCFA).");
       return;
     }
-    // Créer un objet de vente "factice" basé sur le panier actuel pour l'impression
-    const proformaSale = {
-      sale_number: `PRF-${Date.now()}`,
-      sale_date: new Date().toISOString(),
-      client_name: cart.clientName,
-      subtotal: cart.getSubtotal(),
-      discount_amount: cart.getDiscountAmount(),
-      total_amount: currentTotal,
-      amount_paid: cart.amountPaid || 0,
-      payment_method: cart.paymentMethod,
-      items: cart.items.map(item => ({
-        product_name: item.product_name,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.unit_price * item.quantity
-      }))
-    };
-    setIsProforma(true);
-    setCompletedSale(proformaSale);
+
+    setIsSavingProforma(true);
+    const proformaPayload = cart.getProformaPayload(activeCompany.id);
+    const res = await createProforma(proformaPayload);
+    setIsSavingProforma(false);
+
+    if (res.success && res.proforma) {
+      const pf = res.proforma;
+      toast.success(`Proforma ${pf.proforma_number} enregistré avec succès !`);
+
+      // Formater pour le composant d'impression
+      const printableProforma = {
+        sale_number: pf.proforma_number,
+        sale_date: pf.proforma_date || pf.created_at,
+        client_name: pf.client_name || cart.clientName,
+        subtotal: parseFloat(pf.subtotal),
+        discount_amount: parseFloat(pf.discount_amount),
+        total_amount: parseFloat(pf.total_amount),
+        amount_paid: 0,
+        payment_method: 'none',
+        items: (pf.items || []).map((item) => ({
+          product_name: item.product_name,
+          quantity: parseFloat(item.quantity),
+          unit_price: parseFloat(item.unit_price),
+          total_price: parseFloat(item.total_price),
+        })),
+      };
+
+      setIsProforma(true);
+      setCompletedSale(printableProforma);
+    } else {
+      toast.error(res.message || "Erreur lors de l'enregistrement du proforma.");
+    }
   };
 
   const handleReceiptClosed = () => {
     cart.clearCart();
+    setLoadedProforma(null);
     if (activeCompany) fetchPosProducts(activeCompany.id);
     setCompletedSale(null);
   };
@@ -219,6 +263,21 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           </div>
         </header>
 
+        {/* Banner si un Proforma est chargé pour conversion en vente */}
+        {loadedProforma && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-xs sm:text-sm text-amber-800 shrink-0">
+            <div className="flex items-center gap-2">
+              <FileText size={16} className="text-amber-600 shrink-0" />
+              <span>
+                <strong>Transformation Proforma :</strong> N° <span className="font-mono font-semibold">{loadedProforma.proforma_number}</span> chargé dans la caisse.
+              </span>
+            </div>
+            <Badge variant="outline" className="bg-amber-100 border-amber-300 text-amber-900 font-medium">
+              Proforma d'origine intact
+            </Badge>
+          </div>
+        )}
+
         {/* Zone produits */}
         <div className="flex-1 overflow-hidden">
           <ProductGrid products={posProducts} onAddToCart={handleAddToCart} cartItems={cart.items} />
@@ -294,9 +353,14 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
           <Button
             onClick={handleProforma}
             variant="outline"
-            className="flex-1 h-12 text-sm font-semibold rounded-xl"
-            disabled={cart.items.length === 0}
+            className="flex-1 h-12 text-sm font-semibold rounded-xl border-amber-300 hover:bg-amber-50 text-amber-900"
+            disabled={isSavingProforma || isSubmitting || cart.items.length === 0}
           >
+            {isSavingProforma ? (
+              <Loader2 size={18} className="animate-spin mr-1" />
+            ) : (
+              <FileText size={18} className="mr-1" />
+            )}
             Proforma
           </Button>
           <Button

@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 const useCartStore = create((set, get) => ({
   items: [],
+  proformaId: null,
   clientId: null,
   clientName: null,
   discountType: "none",
@@ -10,6 +11,39 @@ const useCartStore = create((set, get) => ({
   paymentReference: "",
   amountPaid: 0,
   notes: "",
+
+  // CHARGER UN PROFORMA EXISTANT DANS LE PANIER (pour transformation en vente)
+  loadFromProforma: (proforma) => {
+    const items = (proforma.items || []).map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      product_image: item.product_image,
+      unit_symbol: item.unit_symbol || "pcs",
+      sku: item.product_sku,
+      quantity: parseFloat(item.quantity),
+      unit_price: parseFloat(item.unit_price),
+      retail_price: parseFloat(item.retail_price_ref || item.unit_price),
+      wholesale_price: parseFloat(item.wholesale_price_ref || 0),
+      wholesale_min_qty: 1,
+      price_type: item.price_type || "retail",
+      discount_amount: parseFloat(item.discount_amount || 0),
+      manage_stock: true,
+      current_stock: 999999,
+    }));
+
+    set({
+      items,
+      proformaId: proforma.id,
+      clientId: proforma.client_id || null,
+      clientName: proforma.client_name || null,
+      discountType: proforma.discount_type || "none",
+      discountValue: parseFloat(proforma.discount_value || 0),
+      paymentMethod: "cash",
+      paymentReference: "",
+      amountPaid: 0,
+      notes: proforma.notes || "",
+    });
+  },
 
   // CHARGER UNE VENTE EXISTANTE DANS LE PANIER (pour modification)
   loadFromSale: (sale) => {
@@ -127,6 +161,7 @@ const useCartStore = create((set, get) => ({
   clearCart: () => {
     set({
       items: [],
+      proformaId: null,
       clientId: null,
       clientName: null,
       discountType: "none",
@@ -185,12 +220,34 @@ const useCartStore = create((set, get) => ({
     );
   },
 
-  // Préparer le payload pour l'API
+  // Préparer le payload pour enregistrer un proforma
+  getProformaPayload: (companyId) => {
+    const state = get();
+    return {
+      company_id: companyId,
+      client_id: state.clientId,
+      client_name: state.clientName,
+      items: state.items.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        price_type: item.price_type,
+        discount_amount: item.discount_amount,
+      })),
+      discount_type: state.discountType,
+      discount_value:
+        state.discountType !== "none" ? state.discountValue : null,
+      notes: state.notes || null,
+    };
+  },
+
+  // Préparer le payload pour créer une vente à l'API
   getPayload: (companyId) => {
     const state = get();
     const total = state.getTotal();
     return {
       company_id: companyId,
+      proforma_id: state.proformaId || null,
       client_id: state.clientId,
       client_name: state.clientName,
       items: state.items.map((item) => ({

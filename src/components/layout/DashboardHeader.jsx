@@ -28,6 +28,7 @@ const pageTitles = {
   // Shop
   '/shop/dashboard': 'Tableau de bord',
   '/shop/sales': 'Ventes',
+  '/shop/proformas': 'Proformas',
   '/shop/expenses': 'Dépenses',
   '/shop/debts': 'Dettes',
   '/shop/products': 'Produits',

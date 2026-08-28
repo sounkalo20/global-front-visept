@@ -33,13 +33,16 @@ export default function useReceiptPrinter() {
       }
       body {
         margin: 0;
-        padding: ${isA4 ? '10mm' : '8px'};
-        font-family: ${isA4 ? 'Arial, sans-serif' : 'monospace'};
+        padding: ${isA4 ? '0' : '8px'};
+        font-family: ${isA4 ? 'Arial, Helvetica, sans-serif' : 'monospace'};
         font-size: 12px;
         color: #000;
         width: ${widthCSS};
+        background: #fff;
       }
       * { box-sizing: border-box; }
+
+      /* ── Utilitaires ticket thermique ── */
       .text-center { text-align: center; }
       .text-right { text-align: right; }
       .text-left { text-align: left; }
@@ -53,10 +56,21 @@ export default function useReceiptPrinter() {
       .border-b { border-bottom: 1px dashed #000; }
       .py-1 { padding-top: 4px; padding-bottom: 4px; }
       .py-2 { padding-top: 8px; padding-bottom: 8px; }
+
+      /* ── Tableau ── */
       table { width: 100%; border-collapse: collapse; }
       th, td { text-align: left; padding: 2px 0; }
       th.text-right, td.text-right { text-align: right; }
       th.text-center, td.text-center { text-align: center; }
+
+      /* ── Support A4 : filigrane (position absolue dans wrapper relatif) ── */
+      img { max-width: 100%; }
+      [style*="position: absolute"] { position: absolute !important; }
+      [style*="position: relative"] { position: relative !important; }
+
+      /* ── Éviter coupure de page dans le tableau ── */
+      tr { page-break-inside: avoid; }
+      thead { display: table-header-group; }
     `;
     iframe.contentDocument.head.appendChild(style);
 

@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import ReceiptTemplate from './ReceiptTemplate';
+import InvoiceA4Template from './InvoiceA4Template';
 import useReceiptPrinter from '@/hooks/useReceiptPrinter';
 import useAuthStore from '@/store/authStore';
 import useCompanyStore from '@/store/companyStore';
 
 export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed, isProforma = false }) {
-  const [paperSize, setPaperSize] = useState('80mm');
+  const [paperSize, setPaperSize] = useState('A4');
   const { printReceipt, isPrinting } = useReceiptPrinter();
   const { user } = useAuthStore();
   const { activeCompany } = useCompanyStore();
@@ -27,45 +28,74 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
     }
   };
 
+  const isA4 = paperSize === 'A4';
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-stone-50">
-        <DialogHeader>
-          <DialogTitle>Aperçu du ticket</DialogTitle>
+      <DialogContent className="sm:max-w-3xl md:max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col bg-gray-100 p-0">
+        <DialogHeader className="bg-white px-6 py-4 border-b shrink-0">
+          <DialogTitle>Aperçu avant impression</DialogTitle>
         </DialogHeader>
-        
-        <div className="flex flex-col items-center gap-4 py-4">
-          {/* Options de papier */}
-          <div className="flex bg-stone-200 p-1 rounded-lg">
-            <button
-              onClick={() => setPaperSize('58mm')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === '58mm' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              58 mm
-            </button>
-            <button
-              onClick={() => setPaperSize('80mm')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === '80mm' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              80 mm
-            </button>
-            <button
-              onClick={() => setPaperSize('A4')}
-              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${paperSize === 'A4' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
-            >
-              A4
-            </button>
-          </div>
 
-          {/* Aperçu */}
-          <div 
-            className="bg-white border shadow-sm p-4 overflow-y-auto"
-            style={{ 
-              width: paperSize === '58mm' ? '220px' : paperSize === '80mm' ? '300px' : '100%', 
-              maxHeight: '400px' 
-            }}
-          >
-            <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#000' }}>
+        {/* Sélecteur de format */}
+        <div className="flex items-center gap-3 px-6 py-3 bg-white border-b shrink-0">
+          <span className="text-sm font-medium text-gray-600">Format :</span>
+          <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+            {['58mm', '80mm', 'A4'].map((size) => (
+              <button
+                key={size}
+                onClick={() => setPaperSize(size)}
+                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  paperSize === size
+                    ? 'bg-white shadow text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-gray-400 ml-2">
+            {isA4 ? 'Facture A4 style BDIA DECOR' : `Ticket thermique ${paperSize}`}
+          </span>
+        </div>
+
+        {/* Zone d'aperçu */}
+        <div className="flex-1 overflow-y-auto p-6 flex justify-center">
+          {isA4 ? (
+            /* ── Aperçu A4 ── */
+            <div
+              className="bg-white shadow-2xl"
+              style={{
+                width: '210mm',
+                minWidth: '210mm',
+                fontFamily: 'Arial, Helvetica, sans-serif',
+                fontSize: '12px',
+                color: '#1a1a1a',
+              }}
+            >
+              {/* Styles inline pour l'aperçu A4 */}
+              <style>{`
+                .a4-preview img { max-width: 100%; display: block; }
+                .a4-preview [style*="position: absolute"] { position: absolute !important; }
+                .a4-preview [style*="position: relative"] { position: relative !important; }
+                .a4-preview table { border-collapse: collapse; }
+              `}</style>
+              <div className="a4-preview">
+                <InvoiceA4Template sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
+              </div>
+            </div>
+          ) : (
+            /* ── Aperçu ticket thermique ── */
+            <div
+              className="bg-white border shadow-md p-4 overflow-y-auto"
+              style={{
+                width: paperSize === '58mm' ? '220px' : '300px',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                color: '#000',
+              }}
+            >
               <style>{`
                 .receipt-preview .text-center { text-align: center; }
                 .receipt-preview .text-right { text-align: right; }
@@ -84,21 +114,22 @@ export default function ReceiptPreviewModal({ sale, open, onOpenChange, onClosed
                 .receipt-preview th.text-center, .receipt-preview td.text-center { text-align: center; }
               `}</style>
               <div className="receipt-preview">
-                {paperSize === 'A4' ? (
-                   <p className="text-sm text-center text-gray-500 my-8">Aperçu A4 non disponible dans cette petite fenêtre.<br/>Veuillez imprimer pour voir le résultat.</p>
-                ) : (
-                  <ReceiptTemplate sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
-                )}
+                <ReceiptTemplate sale={sale} company={activeCompany} user={user} isProforma={isProforma} />
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        <div className="flex justify-end gap-3 mt-2">
+        {/* Boutons */}
+        <div className="flex justify-end gap-3 px-6 py-4 bg-white border-t shrink-0">
           <Button variant="outline" onClick={() => handleClose(false)}>
             Fermer
           </Button>
-          <Button onClick={handlePrint} disabled={isPrinting} className="bg-stone-900 text-white hover:bg-stone-800">
+          <Button
+            onClick={handlePrint}
+            disabled={isPrinting}
+            className="bg-[#d4006e] hover:bg-[#b0005a] text-white"
+          >
             <Printer size={16} className="mr-2" />
             {isPrinting ? 'Impression...' : 'Imprimer'}
           </Button>
