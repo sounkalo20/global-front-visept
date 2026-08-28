@@ -41,7 +41,7 @@ const useCartStore = create((set, get) => ({
       paymentMethod: sale.payment_method || "cash",
       paymentReference: sale.payment_reference || "",
       amountPaid: parseFloat(sale.amount_paid || 0),
-      payments: sale.payments && sale.payments.length > 0 
+      payments: sale.payments && sale.payments.length > 0
         ? sale.payments.map(p => ({ method: p.payment_method, amount: parseFloat(p.amount), reference: p.reference || "" }))
         : [{ method: sale.payment_method || "cash", amount: parseFloat(sale.amount_paid || 0), reference: sale.payment_reference || "" }],
       notes: sale.notes || "",
@@ -101,10 +101,10 @@ const useCartStore = create((set, get) => ({
       items: state.items.map((item) =>
         item.product_id === productId
           ? {
-              ...item,
-              unit_price: Number(price),
-              ...(priceType && { price_type: priceType }),
-            }
+            ...item,
+            unit_price: Number(price),
+            ...(priceType && { price_type: priceType }),
+          }
           : item,
       ),
     }));

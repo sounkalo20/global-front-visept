@@ -82,7 +82,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuthStore();
   const { isOnline, isServerReachable, pendingCount } = useOfflineStore();
-  
+
   const [showCloseShiftModal, setShowCloseShiftModal] = useState(false);
   const [closingAmount, setClosingAmount] = useState('');
   const [closingNotes, setClosingNotes] = useState('');
@@ -300,11 +300,11 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
   };
 
   const handleReceiptClosed = () => {
-      fetchPosProducts(activeCompany.id);
-      if (mode === 'create') {
-        cart.clearCart();
-        fetchActiveSession(activeCompany.id);
-      }
+    fetchPosProducts(activeCompany.id);
+    if (mode === 'create') {
+      cart.clearCart();
+      fetchActiveSession(activeCompany.id);
+    }
     setCompletedSale(null);
   };
 
@@ -319,7 +319,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       toast.success("Caisse fermée avec succès");
       setShowCloseShiftModal(false);
       fetchActiveSession(activeCompany.id);
-      
+
       // Rediriger le caissier vers la page d'ouverture de caisse
       if (isCashier) {
         router.replace('/shop/pos/shift');
@@ -443,7 +443,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                   <p className="text-sm font-medium text-gray-900 dark:text-[#F9FAFB]">{user?.first_name} {user?.last_name}</p>
                   <p className="text-xs text-brand-600 dark:text-brand-400 mt-0.5 capitalize">{isCashier ? 'Caissier' : activeCompany?.my_role} - {activeCompany?.name}</p>
                 </div>
-                
+
                 {/* Actions sur mobile uniquement */}
                 <div className="md:hidden">
                   <DropdownMenuSeparator className="bg-gray-100 dark:bg-[#374151]" />
@@ -456,7 +456,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                     </DropdownMenuItem>
                   )}
                   {activeSession && (
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => {
                         setClosingAmount(activeSession.expected_closing_amount);
                         setClosingNotes('');
@@ -623,45 +623,45 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                 />
               </div>
             </div>
-            
+
             <div className="mt-auto shrink-0 p-4 bg-white border-t flex gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-               <Button
-                  onClick={handleProforma}
-                  variant="outline"
-                  className="flex-1 h-12 text-sm font-semibold rounded-xl"
-                  disabled={cart.items.length === 0}
-                >
-                  Proforma
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  className="flex-1 h-12 text-sm font-semibold rounded-xl"
-                  disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
-                >
-                  {isSubmitting ? (
-                    <Loader2 size={20} className="animate-spin" />
-                  ) : cart.amountPaid < cartTotal ? (
-                    `Manque ${(cartTotal - cart.amountPaid).toLocaleString()}`
-                  ) : (
-                    <>
-                      <Save size={18} className="mr-2" />
-                      Valider
-                    </>
-                  )}
-                </Button>
+              <Button
+                onClick={handleProforma}
+                variant="outline"
+                className="flex-1 h-12 text-sm font-semibold rounded-xl"
+                disabled={cart.items.length === 0}
+              >
+                Proforma
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                className="flex-1 h-12 text-sm font-semibold rounded-xl"
+                disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
+              >
+                {isSubmitting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : cart.amountPaid < cartTotal ? (
+                  `Manque ${(cartTotal - cart.amountPaid).toLocaleString()}`
+                ) : (
+                  <>
+                    <Save size={18} className="mr-2" />
+                    Valider
+                  </>
+                )}
+              </Button>
             </div>
           </SheetContent>
         </Sheet>
       </div>
-      
+
       {completedSale && (
-        <ReceiptPreviewModal 
-          sale={completedSale} 
-          open={!!completedSale} 
+        <ReceiptPreviewModal
+          sale={completedSale}
+          open={!!completedSale}
           isProforma={isProforma}
           onOpenChange={(open) => {
             if (!open) handleReceiptClosed();
-          }} 
+          }}
         />
       )}
 
@@ -700,7 +700,7 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
                   className="w-full p-3 border rounded-xl font-bold text-xl"
                   placeholder="0"
                 />
-                
+
                 {closingAmount !== '' && Number(closingAmount) !== Number(activeSession.expected_closing_amount) && (
                   <div className={`mt-2 text-sm p-3 rounded-lg flex items-start gap-2 ${Number(closingAmount) > Number(activeSession.expected_closing_amount) ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                     <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -730,8 +730,8 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCloseShiftModal(false)}>Annuler</Button>
-            <Button 
-              onClick={handleCloseShift} 
+            <Button
+              onClick={handleCloseShift}
               variant="destructive"
               disabled={isClosing || (closingAmount !== '' && Number(closingAmount) !== Number(activeSession?.expected_closing_amount) && !closingNotes.trim())}
             >
@@ -755,4 +755,4 @@ export default function PosLayout({ mode = 'create', saleId = null, backLink }) 
       />
     </div>
   );
-}
+}
