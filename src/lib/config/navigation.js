@@ -116,13 +116,12 @@ export const restaurantNavigation = [
             { href: '/restaurant/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
         ],
     },
-    // {
-    //     section: 'Salle',
-    //     items: [
-    //         { href: '/restaurant/tables', label: 'Tables', icon: LayoutDashboard },
-    //         { href: '/restaurant/floor-plan', label: 'Plan de salle', icon: Building2 },
-    //     ],
-    // },
+    {
+        section: 'Salle & Service',
+        items: [
+            { href: '/restaurant/tables', label: 'Plan de Salle & Tables', icon: LayoutDashboard },
+        ],
+    },
     {
         section: 'Finance',
         items: [
@@ -132,11 +131,11 @@ export const restaurantNavigation = [
         ],
     },
     {
-        section: 'Cuisine',
+        section: 'Carte & Cuisine',
         items: [
-            // { href: '/restaurant/kitchen', label: 'Suivi cuisine', icon: Package },
-            { href: '/restaurant/products', label: 'Plats & Ingrédients', icon: FolderTree },
+            { href: '/restaurant/products', label: 'Plats & Ingrédients', icon: Package },
             { href: '/restaurant/categories', label: 'Catégories', icon: FolderTree },
+            { href: '/restaurant/menu/modifiers', label: 'Modificateurs & Options', icon: ClipboardList },
         ],
     },
     {
@@ -152,6 +151,8 @@ export const restaurantNavigation = [
         ],
     },
 ];
+
+
 
 /**
  * Navigation pour SUPERMARKET

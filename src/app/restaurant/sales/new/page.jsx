@@ -1,9 +1,7 @@
-// app/restaurant/sales/new/page.jsx
-'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronDown, ChevronUp, Utensils } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -11,31 +9,61 @@ import ProductGrid from '@/components/sales/POS/ProductGrid';
 import CartPanel from '@/components/sales/POS/CartPanel';
 import ClientSelector from '@/components/sales/POS/ClientSelector';
 import PaymentSection from '@/components/sales/POS/PaymentSection';
+import ModifierSelectorModal from '@/components/restaurant/pos/ModifierSelectorModal';
 import useCartStore from '@/store/cartStore';
 import useRestaurantDishStore from '@/store/restaurantDishStore';
 import useRestaurantSaleStore from '@/store/restaurantSaleStore';
+import useRestaurantModifierStore from '@/store/restaurantModifierStore';
 import useCompanyStore from '@/store/companyStore';
 import { cn } from '@/lib/utils';
 
 export default function RestaurantPosPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tableId = searchParams.get('table_id');
   const { activeCompany } = useCompanyStore();
   const { dishes, fetchDishes } = useRestaurantDishStore();
   const { createSale } = useRestaurantSaleStore();
+  const { getDishModifiers } = useRestaurantModifierStore();
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cartExpanded, setCartExpanded] = useState(true);
   const [itemNotes, setItemNotes] = useState({});
 
+  // Modificateurs state
+  const [modifierModalOpen, setModifierModalOpen] = useState(false);
+  const [selectedDishForModifiers, setSelectedDishForModifiers] = useState(null);
+  const [dishModifierGroups, setDishModifierGroups] = useState([]);
+  const [isCheckingModifiers, setIsCheckingModifiers] = useState(false);
+
   useEffect(() => {
     if (activeCompany) fetchDishes();
     cart.clearCart();
     cart.setDiscount('none', 0);
-  }, [activeCompany]);
 
-  const handleAddToCart = useCallback((product) => {
-    cart.addItem(product);
-  }, []);
+    if (tableId) {
+      cart.setTable(tableId);
+    }
+  }, [activeCompany, tableId]);
+
+  const handleAddToCart = useCallback(async (product) => {
+    setIsCheckingModifiers(true);
+    const res = await getDishModifiers(product.id);
+    setIsCheckingModifiers(false);
+
+    if (res.success && res.groups && res.groups.length > 0) {
+      setSelectedDishForModifiers(product);
+      setDishModifierGroups(res.groups);
+      setModifierModalOpen(true);
+    } else {
+      cart.addItem(product);
+    }
+  }, [getDishModifiers, cart]);
+
+  const handleConfirmModifiers = ({ product, quantity, unitPrice, extraPrice, modifierChoices }) => {
+    cart.addItemWithModifiers(product, quantity, unitPrice, extraPrice, modifierChoices);
+    toast.success(`${product.name} ajouté au panier !`);
+  };
 
   const handleNoteChange = (productId, note) => {
     setItemNotes(prev => ({ ...prev, [productId]: note }));
@@ -49,25 +77,7 @@ export default function RestaurantPosPage() {
 
     setIsSubmitting(true);
     const total = cart.getTotal();
-    const payload = {
-      company_id: activeCompany.id,
-      client_id: cart.clientId || null,
-      client_name: cart.clientName || null,
-      items: cart.items.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        price_type: item.price_type,
-        notes: itemNotes[item.product_id] || null,
-      })),
-      discount_type: cart.discountType,
-      discount_value: cart.discountValue,
-      payment_status: 'paid',
-      amount_paid: cart.amountPaid,
-      payment_method: cart.paymentMethod,
-      payment_reference: cart.paymentReference || null,
-      notes: null,
-    };
+    const payload = cart.getPayload(activeCompany.id);
 
     const result = await createSale(payload);
     setIsSubmitting(false);
@@ -76,6 +86,9 @@ export default function RestaurantPosPage() {
       toast.success('Commande validée !');
       cart.clearCart();
       fetchDishes();
+      if (tableId) {
+        router.push('/restaurant/tables');
+      }
     } else {
       toast.error(result.message);
     }
@@ -84,16 +97,23 @@ export default function RestaurantPosPage() {
   const itemsCount = cart.getItemsCount();
   const cartTotal = cart.getTotal();
 
+
   return (
     <div className="h-[calc(100vh-65px)] flex bg-gray-50">
       {/* Colonne gauche : Plats + Panier */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push('/restaurant/sales')}>
+            <Button variant="ghost" size="icon" onClick={() => router.push(tableId ? '/restaurant/tables' : '/restaurant/sales')}>
               <ArrowLeft size={20} />
             </Button>
             <h1 className="font-semibold text-lg">Nouvelle commande</h1>
+
+            {tableId && (
+              <Badge className="bg-emerald-600 text-white font-bold flex items-center gap-1">
+                <Utensils size={12} /> Table #{tableId}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-3 text-sm text-gray-500">
             <ShoppingCart size={16} />
@@ -103,6 +123,7 @@ export default function RestaurantPosPage() {
             )}
           </div>
         </header>
+
 
         <div className="flex-1 overflow-hidden">
           <ProductGrid products={dishes} onAddToCart={handleAddToCart} cartItems={cart.items} />
@@ -197,6 +218,15 @@ export default function RestaurantPosPage() {
           {isSubmitting ? <Loader2 size={18} className="animate-spin mr-2" /> : `Valider • ${cartTotal.toLocaleString()} FCFA`}
         </Button>
       </div>
+
+      {/* Modal de sélection des modificateurs pour le plat sélectionné */}
+      <ModifierSelectorModal
+        open={modifierModalOpen}
+        onOpenChange={setModifierModalOpen}
+        dish={selectedDishForModifiers}
+        groups={dishModifierGroups}
+        onConfirm={handleConfirmModifiers}
+      />
     </div>
   );
-}
+}

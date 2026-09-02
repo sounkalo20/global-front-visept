@@ -1,25 +1,47 @@
-// app/shop/sales/new/CartItem.jsx (REMPLACER)
 'use client';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemove }) {
+  const itemId = item.cart_item_id || item.product_id;
+  const unitTotal = item.unit_price + (item.extra_price || 0);
+
   const handlePriceTypeChange = (newType) => {
     const newPrice = newType === 'wholesale'
       ? (item.original_wholesale_price || item.wholesale_price)
       : (item.original_retail_price || item.retail_price);
-    onUpdatePrice(item.product_id, newPrice, newType);
+    onUpdatePrice(itemId, newPrice, newType);
   };
 
   return (
     <div className="px-4 py-3 hover:bg-gray-50/50 dark:hover:bg-[#1F2937]/50 transition-colors">
       {/* Nom + supprimer */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB] line-clamp-2 flex-1">
-          {item.product_name}
-        </p>
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-sm text-gray-900 dark:text-[#F9FAFB] line-clamp-2">
+            {item.product_name}
+          </p>
+
+          {/* Affichage des modificateurs / options */}
+          {item.modifier_choices && item.modifier_choices.length > 0 && (
+            <div className="mt-1 space-y-0.5">
+              {item.modifier_choices.map((choice, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />
+                  <span>{choice.group_name}: <strong>{choice.option_name}</strong></span>
+                  {Number(choice.extra_price) > 0 && (
+                    <span className="text-[10px] text-gray-500">
+                      (+{Number(choice.extra_price).toLocaleString()} FCFA)
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
-          onClick={() => onRemove(item.product_id)}
+          onClick={() => onRemove(itemId)}
           className="shrink-0 text-gray-400 dark:text-[#9CA3AF] hover:text-red-500 dark:hover:text-red-400 transition-colors mt-0.5"
         >
           <Trash2 size={16} />
@@ -27,7 +49,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
       </div>
 
       {/* Contrôles */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 mt-2">
         {/* Type de prix */}
         <select
           value={item.price_type || 'retail'}
@@ -38,11 +60,11 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
           {item.wholesale_price > 0 && <option value="wholesale">Gros</option>}
         </select>
 
-        {/* Prix unitaire */}
+        {/* Prix unitaire de base */}
         <input
           type="number"
           value={item.unit_price}
-          onChange={(e) => onUpdatePrice(item.product_id, parseFloat(e.target.value) || 0)}
+          onChange={(e) => onUpdatePrice(itemId, parseFloat(e.target.value) || 0)}
           className="w-20 text-xs text-center border border-gray-200 dark:border-[#374151] bg-white dark:bg-[#111827] text-gray-900 dark:text-[#F9FAFB] rounded-lg px-1 py-1.5 focus:outline-none focus:border-brand-500"
           min="0"
         />
@@ -50,7 +72,7 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
         {/* Quantité */}
         <div className="flex items-center gap-0.5 ml-auto">
           <button
-            onClick={() => onUpdateQuantity(item.product_id, item.quantity - 1)}
+            onClick={() => onUpdateQuantity(itemId, item.quantity - 1)}
             className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#374151] text-gray-700 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors"
           >
             <Minus size={13} />
@@ -61,29 +83,29 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
             onChange={(e) => {
               const val = e.target.value;
               if (val === '') {
-                onUpdateQuantity(item.product_id, '');
+                onUpdateQuantity(itemId, '');
                 return;
               }
               const numVal = parseInt(val, 10);
               if (!isNaN(numVal) && numVal >= 0) {
                 if (item.manage_stock && numVal > item.current_stock) {
-                  onUpdateQuantity(item.product_id, item.current_stock);
+                  onUpdateQuantity(itemId, item.current_stock);
                 } else {
-                  onUpdateQuantity(item.product_id, numVal);
+                  onUpdateQuantity(itemId, numVal);
                 }
               }
             }}
             onBlur={(e) => {
               const val = e.target.value;
               if (val === '' || parseInt(val, 10) <= 0) {
-                 onUpdateQuantity(item.product_id, 1);
+                 onUpdateQuantity(itemId, 1);
               }
             }}
             className="w-12 text-center text-sm font-semibold tabular-nums border border-gray-200 dark:border-[#374151] rounded px-1 py-1 focus:outline-none focus:border-brand-500 bg-white dark:bg-[#111827] text-gray-900 dark:text-[#F9FAFB]"
             min="1"
           />
           <button
-            onClick={() => onUpdateQuantity(item.product_id, item.quantity + 1)}
+            onClick={() => onUpdateQuantity(itemId, item.quantity + 1)}
             disabled={item.manage_stock && item.quantity >= item.current_stock}
             className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 dark:border-[#374151] text-gray-700 dark:text-[#D1D5DB] hover:bg-gray-100 dark:hover:bg-[#1F2937] transition-colors disabled:opacity-30"
           >
@@ -94,8 +116,8 @@ export default function CartItem({ item, onUpdateQuantity, onUpdatePrice, onRemo
 
       {/* Total ligne */}
       <p className="text-right text-sm font-bold text-brand-700 dark:text-brand-400 mt-1">
-        {(item.unit_price * item.quantity).toLocaleString()} FCFA
+        {(unitTotal * item.quantity).toLocaleString()} FCFA
       </p>
     </div>
   );
-}
+}

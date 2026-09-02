@@ -80,6 +80,61 @@ export const restaurantApi = {
     deletePayment: (id, companyId) =>
         api.delete(`/restaurant/payments/${id}`, { params: { company_id: companyId } }),
 
-    getDashboard: (companyId) =>
-        api.get('/restaurant/dashboard', { params: { company_id: companyId } }),
-};
+    // ── Modifier groups ─────────────────────────────────────────
+    getModifierGroups: (companyId) =>
+        api.get('/restaurant/modifier-groups', { params: { company_id: companyId } }),
+
+    createModifierGroup: (data) =>
+        api.post('/restaurant/modifier-groups', data),
+
+    updateModifierGroup: (id, data) =>
+        api.put(`/restaurant/modifier-groups/${id}`, data),
+
+    deleteModifierGroup: (id, companyId) =>
+        api.delete(`/restaurant/modifier-groups/${id}`, { params: { company_id: companyId } }),
+
+    // ── Dish <-> Modifier groups ────────────────────────────────
+    getDishModifiers: (dishId, companyId) =>
+        api.get(`/restaurant/dishes/${dishId}/modifiers`, { params: { company_id: companyId } }),
+
+    setDishModifiers: (dishId, data) =>
+        api.put(`/restaurant/dishes/${dishId}/modifiers`, data),
+
+    // ── Spaces ─────────────────────────────────────────────────
+    getSpaces: (companyId) =>
+        api.get('/restaurant/spaces', { params: { company_id: companyId } }),
+
+    createSpace: (data) =>
+        api.post('/restaurant/spaces', data),
+
+    updateSpace: (id, data) =>
+        api.put(`/restaurant/spaces/${id}`, data),
+
+    deleteSpace: (id, companyId) =>
+        api.delete(`/restaurant/spaces/${id}`, { params: { company_id: companyId } }),
+
+    // ── Tables & Floor Plan ────────────────────────────────────
+    getFloorPlan: (companyId, params = {}) =>
+        api.get('/restaurant/tables', { params: { ...params, company_id: companyId } }),
+
+    createTable: (data) =>
+        api.post('/restaurant/tables', data),
+
+    updateTable: (id, data) =>
+        api.put(`/restaurant/tables/${id}`, data),
+
+    updatePositions: (data) =>
+        api.put('/restaurant/tables/positions', data),
+
+    openSession: (data) =>
+        api.post('/restaurant/tables/open-session', data),
+
+    updateTableStatus: (id, data) =>
+        api.put(`/restaurant/tables/${id}/status`, data),
+
+    transferTable: (data) =>
+        api.post('/restaurant/tables/transfer', data),
+
+    mergeTables: (data) =>
+        api.post('/restaurant/tables/merge', data),
+};

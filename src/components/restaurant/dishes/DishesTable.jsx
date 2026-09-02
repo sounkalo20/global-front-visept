@@ -1,13 +1,12 @@
-// components/restaurant/DishesTable.jsx
-'use client';
 import { useState } from 'react';
-import { Eye, Pencil, Trash2, Power, PowerOff, Utensils } from 'lucide-react';
+import { Eye, Pencil, Trash2, Power, PowerOff, Utensils, Sliders } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
 import DishDetailModal from './DishDetailModal';
 import DishFormModal from './DishFormModal';
+import DishModifierAssignerModal from '@/components/restaurant/modifiers/DishModifierAssignerModal';
 import ConfirmModal from '@/components/super-admin/ConfirmModal';
 import useRestaurantDishStore from '@/store/restaurantDishStore';
 import { toast } from 'sonner';
@@ -18,6 +17,8 @@ export default function DishesTable() {
     const [selectedId, setSelectedId] = useState(null);
     const [detailOpen, setDetailOpen] = useState(false);
     const [formOpen, setFormOpen] = useState(false);
+    const [modifierOpen, setModifierOpen] = useState(false);
+    const [modifierDish, setModifierDish] = useState(null);
     const [editingDish, setEditingDish] = useState(null);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmAction, setConfirmAction] = useState(null);
@@ -26,6 +27,7 @@ export default function DishesTable() {
 
     const openDetail = (id) => { setSelectedId(id); setDetailOpen(true); };
     const openEdit = (dish) => { setEditingDish(dish); setFormOpen(true); };
+    const openModifiers = (dish) => { setModifierDish(dish); setModifierOpen(true); };
     const openDelete = (dish) => { setConfirmAction('delete'); setConfirmTarget(dish); setConfirmOpen(true); };
     const openToggle = (dish) => { setConfirmAction(dish.is_available ? 'disable' : 'enable'); setConfirmTarget(dish); setConfirmOpen(true); };
 
@@ -109,17 +111,19 @@ export default function DishesTable() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => openDetail(dish.id)}><Eye size={16} /></Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openEdit(dish)}><Pencil size={16} /></Button>
+                                        <Button variant="ghost" size="icon" title="Aperçu" onClick={() => openDetail(dish.id)}><Eye size={16} /></Button>
+                                        <Button variant="ghost" size="icon" title="Modificateurs & Options" onClick={() => openModifiers(dish)} className="text-orange-600 hover:bg-orange-50"><Sliders size={16} /></Button>
+                                        <Button variant="ghost" size="icon" title="Modifier" onClick={() => openEdit(dish)}><Pencil size={16} /></Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => openToggle(dish)}
+                                            title={dish.is_available ? 'Désactiver' : 'Activer'}
                                             className={dish.is_available ? 'text-amber-600' : 'text-green-600'}
                                         >
                                             {dish.is_available ? <PowerOff size={16} /> : <Power size={16} />}
                                         </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => openDelete(dish)} className="text-red-600">
+                                        <Button variant="ghost" size="icon" title="Supprimer" onClick={() => openDelete(dish)} className="text-red-600">
                                             <Trash2 size={16} />
                                         </Button>
                                     </div>
@@ -144,6 +148,7 @@ export default function DishesTable() {
 
             <DishDetailModal isOpen={detailOpen} onClose={() => setDetailOpen(false)} dishId={selectedId} onEdit={openEdit} />
             <DishFormModal isOpen={formOpen} onClose={() => { setFormOpen(false); setEditingDish(null); }} dish={editingDish} />
+            <DishModifierAssignerModal open={modifierOpen} onOpenChange={(val) => { setModifierOpen(val); if(!val) setModifierDish(null); }} dish={modifierDish} />
 
             <ConfirmModal
                 isOpen={confirmOpen}
@@ -157,4 +162,4 @@ export default function DishesTable() {
             />
         </>
     );
-}
+}
