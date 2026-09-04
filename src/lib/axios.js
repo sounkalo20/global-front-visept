@@ -8,12 +8,26 @@ const api = axios.create({
   },
 });
 
-// Intercepteur : ajouter automatiquement le token
+// Intercepteur : ajouter automatiquement le token et x-company-id
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('visept_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (!config.headers['x-company-id']) {
+      try {
+        const storedCompany = localStorage.getItem('visept_activeCompany');
+        if (storedCompany) {
+          const parsed = JSON.parse(storedCompany);
+          if (parsed?.id) {
+            config.headers['x-company-id'] = parsed.id;
+          }
+        }
+      } catch (e) {
+        console.error('Erreur lecture activeCompany dans axios:', e);
+      }
     }
   }
   return config;

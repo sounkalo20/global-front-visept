@@ -19,14 +19,14 @@ const employeeSchema = z.object({
   role_id: z.string().min(1, 'Le rôle est requis'),
   password: z.string().optional(),
 });
-
-export default function EmployeeModal({ isOpen, onClose, employeeToEdit, companyId, onEmployeeSaved }) {
+export default function EmployeeModal({ isOpen, onClose, employeeToEdit, employee, companyId, onEmployeeSaved, onSuccess }) {
+  const targetEmployee = employeeToEdit || employee;
   const [isLoading, setIsLoading] = useState(false);
   const [roles, setRoles] = useState([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const { getRoles } = require('@/lib/api/rbac');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       first_name: '',
@@ -38,17 +38,19 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
     }
   });
 
+  const selectedRoleId = watch('role_id');
+
   useEffect(() => {
-    if (employeeToEdit) {
+    if (targetEmployee && isOpen) {
       reset({
-        first_name: employeeToEdit.first_name || '',
-        last_name: employeeToEdit.last_name || '',
-        email: employeeToEdit.email || '',
-        phone: employeeToEdit.phone || '',
-        role_id: employeeToEdit.role_id?.toString() || '',
+        first_name: targetEmployee.first_name || '',
+        last_name: targetEmployee.last_name || '',
+        email: targetEmployee.email || '',
+        phone: targetEmployee.phone || '',
+        role_id: targetEmployee.role_id ? targetEmployee.role_id.toString() : '',
         password: '',
       });
-    } else {
+    } else if (!targetEmployee && isOpen) {
       reset({
         first_name: '',
         last_name: '',
@@ -58,7 +60,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
         password: '',
       });
     }
-  }, [employeeToEdit, reset, isOpen]);
+  }, [targetEmployee, reset, isOpen]);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -82,13 +84,13 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      if (employeeToEdit) {
+      if (targetEmployee) {
         // Mode édition
-        await updateEmployee(employeeToEdit.id, {
+        await updateEmployee(targetEmployee.id, {
           ...data,
           company_id: companyId,
         });
-        toast.success('Employé mis à jour');
+        toast.success('Employé mis à jour avec succès');
       } else {
         // Mode création
         if (!data.password) {
@@ -100,9 +102,10 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
           ...data,
           company_id: companyId,
         });
-        toast.success('Employé ajouté');
+        toast.success('Employé ajouté avec succès');
       }
-      onEmployeeSaved();
+      if (onEmployeeSaved) onEmployeeSaved();
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Une erreur est survenue');
@@ -116,7 +119,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {employeeToEdit ? 'Modifier l\'employé' : 'Ajouter un employé'}
+            {targetEmployee ? 'Modifier l\'employé' : 'Ajouter un employé'}
           </DialogTitle>
         </DialogHeader>
 
@@ -136,9 +139,9 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Email</Label>
-            <Input id="email" type="email" {...register('email')} disabled={!!employeeToEdit || isLoading} />
+            <Input id="email" type="email" {...register('email')} disabled={!!targetEmployee || isLoading} />
             {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-            {!!employeeToEdit && <p className="text-xs text-gray-500 dark:text-[#9CA3AF]">L'email ne peut pas être modifié.</p>}
+            {!!targetEmployee && <p className="text-xs text-gray-500 dark:text-[#9CA3AF]">L'email ne peut pas être modifié.</p>}
           </div>
 
           <div className="space-y-2">
@@ -149,9 +152,8 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
           <div className="space-y-2">
             <Label htmlFor="role_id" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Rôle</Label>
             <Select 
-              value={register('role_id').value} 
-              onValueChange={(val) => register('role_id').onChange({ target: { value: val, name: 'role_id' }})} 
-              {...register('role_id')}
+              value={selectedRoleId || ''} 
+              onValueChange={(val) => setValue('role_id', val, { shouldValidate: true })}
               disabled={isLoading || isLoadingRoles}
             >
               <SelectTrigger>
@@ -169,7 +171,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Mot de passe {employeeToEdit ? '(Laisser vide pour ne pas modifier)' : '*'}</Label>
+            <Label htmlFor="password" className="text-gray-700 dark:text-[#D1D5DB] font-semibold">Mot de passe {targetEmployee ? '(Laisser vide pour ne pas modifier)' : '*'}</Label>
             <Input id="password" type="password" {...register('password')} disabled={isLoading} />
             {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
           </div>
@@ -180,7 +182,7 @@ export default function EmployeeModal({ isOpen, onClose, employeeToEdit, company
             </Button>
             <Button type="submit" disabled={isLoading} className="bg-brand-600 hover:bg-brand-700 text-white font-semibold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {employeeToEdit ? 'Enregistrer' : 'Créer'}
+              {targetEmployee ? 'Enregistrer' : 'Créer'}
             </Button>
           </div>
         </form>

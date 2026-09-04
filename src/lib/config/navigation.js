@@ -113,44 +113,48 @@ export const restaurantNavigation = [
     {
         section: 'Général',
         items: [
-            { href: '/restaurant/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+            { href: '/restaurant/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, requirePermission: 'dashboard.view' },
         ],
     },
     {
         section: 'Salle & Service',
         items: [
-            { href: '/restaurant/tables', label: 'Plan de Salle & Tables', icon: LayoutDashboard },
+            { href: '/restaurant/tables', label: 'Plan de Salle & Tables', icon: LayoutDashboard, requirePermission: 'tables.view' },
+            { href: '/restaurant/kitchen', label: 'Écran Cuisine (KDS)', icon: ClipboardList, requirePermission: 'kitchen.view' },
         ],
     },
     {
         section: 'Finance',
         items: [
-            { href: '/restaurant/sales', label: 'Ventes', icon: ShoppingCart },
-            { href: '/restaurant/expenses', label: 'Dépenses', icon: Receipt },
-            { href: '/restaurant/debts', label: 'Dettes', icon: DollarSign },
+            { href: '/restaurant/sales', label: 'Ventes', icon: ShoppingCart, requirePermission: 'sales.view' },
+            { href: '/restaurant/expenses', label: 'Dépenses', icon: Receipt, requirePermission: 'dashboard.view' },
+            { href: '/restaurant/debts', label: 'Dettes', icon: DollarSign, requirePermission: 'dashboard.view' },
         ],
     },
     {
         section: 'Carte & Cuisine',
         items: [
-            { href: '/restaurant/products', label: 'Plats & Ingrédients', icon: Package },
-            { href: '/restaurant/categories', label: 'Catégories', icon: FolderTree },
-            { href: '/restaurant/menu/modifiers', label: 'Modificateurs & Options', icon: ClipboardList },
+            { href: '/restaurant/products', label: 'Plats & Ingrédients', icon: Package, requirePermission: 'products.view' },
+            { href: '/restaurant/categories', label: 'Catégories', icon: FolderTree, requirePermission: 'products.view' },
+            { href: '/restaurant/menu/modifiers', label: 'Modificateurs & Options', icon: ClipboardList, requirePermission: 'products.view' },
         ],
     },
     {
         section: 'CRM',
         items: [
-            { href: '/restaurant/clients', label: 'Clients', icon: Users },
+            { href: '/restaurant/clients', label: 'Clients', icon: Users, requirePermission: 'clients.view' },
         ],
     },
     {
         section: 'Entreprise',
         items: [
-            { href: '/restaurant/companies', label: 'Entreprises', icon: Building2 },
+            { href: '/restaurant/companies', label: 'Entreprises', icon: Building2, requirePermission: 'settings.manage' },
+            { href: '/restaurant/employees', label: 'Employés', icon: Users, requirePermission: 'employees.view' },
+            { href: '/restaurant/roles', label: 'Rôles & Permissions', icon: Shield, requirePermission: 'roles.manage' },
         ],
     },
 ];
+
 
 
 

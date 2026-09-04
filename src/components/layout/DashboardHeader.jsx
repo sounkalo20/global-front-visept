@@ -47,6 +47,8 @@ const pageTitles = {
   '/restaurant/expenses': 'Dépenses',
   '/restaurant/debts': 'Dettes',
   '/restaurant/clients': 'Clients',
+  '/restaurant/employees': 'Employés Restaurant',
+  '/restaurant/roles': 'Rôles & Permissions Restaurant',
   // Commun
   '/shop/companies': 'Entreprises',
   '/restaurant/companies': 'Entreprises',

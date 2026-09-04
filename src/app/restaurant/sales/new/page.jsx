@@ -1,16 +1,20 @@
+'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronDown, ChevronUp, Utensils } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, ShoppingCart, ChevronDown, ChevronUp, Utensils, Send, Receipt, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import ProductGrid from '@/components/sales/POS/ProductGrid';
-import CartPanel from '@/components/sales/POS/CartPanel';
 import ClientSelector from '@/components/sales/POS/ClientSelector';
-import PaymentSection from '@/components/sales/POS/PaymentSection';
 import ModifierSelectorModal from '@/components/restaurant/pos/ModifierSelectorModal';
-import useCartStore from '@/store/cartStore';
+import OrderModeHeader from '@/components/restaurant/pos/OrderModeHeader';
+import OrderModeSelector from '@/components/restaurant/pos/OrderModeSelector';
+import TableSelectorModal from '@/components/restaurant/pos/TableSelectorModal';
+import SplitBillModal from '@/components/restaurant/pos/SplitBillModal';
+import OrderSessionTabs from '@/components/restaurant/pos/OrderSessionTabs';
+import useRestaurantCartStore from '@/store/restaurantCartStore';
 import useRestaurantDishStore from '@/store/restaurantDishStore';
 import useRestaurantSaleStore from '@/store/restaurantSaleStore';
 import useRestaurantModifierStore from '@/store/restaurantModifierStore';
@@ -20,213 +24,261 @@ import { cn } from '@/lib/utils';
 export default function RestaurantPosPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tableId = searchParams.get('table_id');
+  const initialTableId = searchParams.get('table_id');
+  const initialSessionId = searchParams.get('session_id');
+
   const { activeCompany } = useCompanyStore();
   const { dishes, fetchDishes } = useRestaurantDishStore();
-  const { createSale } = useRestaurantSaleStore();
+  const { createSale, processSplitPayment } = useRestaurantSaleStore();
   const { getDishModifiers } = useRestaurantModifierStore();
-  const cart = useCartStore();
+  const cart = useRestaurantCartStore();
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [cartExpanded, setCartExpanded] = useState(true);
-  const [itemNotes, setItemNotes] = useState({});
+  const [tableModalOpen, setTableModalOpen] = useState(false);
+  const [splitModalOpen, setSplitModalOpen] = useState(false);
 
   // Modificateurs state
   const [modifierModalOpen, setModifierModalOpen] = useState(false);
   const [selectedDishForModifiers, setSelectedDishForModifiers] = useState(null);
   const [dishModifierGroups, setDishModifierGroups] = useState([]);
-  const [isCheckingModifiers, setIsCheckingModifiers] = useState(false);
 
   useEffect(() => {
     if (activeCompany) fetchDishes();
     cart.clearCart();
-    cart.setDiscount('none', 0);
 
-    if (tableId) {
-      cart.setTable(tableId);
+    if (initialTableId || initialSessionId) {
+      cart.setTableSession({
+        tableId: initialTableId,
+        tableSessionId: initialSessionId,
+      });
     }
-  }, [activeCompany, tableId]);
+  }, [activeCompany, initialTableId, initialSessionId]);
 
   const handleAddToCart = useCallback(async (product) => {
-    setIsCheckingModifiers(true);
     const res = await getDishModifiers(product.id);
-    setIsCheckingModifiers(false);
-
     if (res.success && res.groups && res.groups.length > 0) {
       setSelectedDishForModifiers(product);
       setDishModifierGroups(res.groups);
       setModifierModalOpen(true);
     } else {
       cart.addItem(product);
+      toast.success(`${product.name} ajouté !`);
     }
   }, [getDishModifiers, cart]);
 
   const handleConfirmModifiers = ({ product, quantity, unitPrice, extraPrice, modifierChoices }) => {
     cart.addItemWithModifiers(product, quantity, unitPrice, extraPrice, modifierChoices);
-    toast.success(`${product.name} ajouté au panier !`);
+    toast.success(`${product.name} personnalisé ajouté !`);
   };
 
-  const handleNoteChange = (productId, note) => {
-    setItemNotes(prev => ({ ...prev, [productId]: note }));
-  };
-
-  const handleSubmit = async () => {
-    if (!activeCompany || cart.items.length === 0) {
+  // Envoi des commandes en cuisine (KDS)
+  const handleSendToKitchen = async () => {
+    if (cart.items.length === 0) {
       toast.error('Le panier est vide.');
       return;
     }
 
+    if (cart.orderType === 'dine_in' && !cart.tableId) {
+      toast.error('Veuillez d abord sélectionner une table.');
+      setTableModalOpen(true);
+      return;
+    }
+
     setIsSubmitting(true);
-    const total = cart.getTotal();
-    const payload = cart.getPayload(activeCompany.id);
+    const payload = {
+      company_id: activeCompany.id,
+      order_type: cart.orderType,
+      table_id: cart.tableId,
+      table_session_id: cart.tableSessionId,
+      client_id: cart.clientId,
+      client_name: cart.clientName,
+      items: cart.items,
+      discount_type: cart.discountType,
+      discount_value: cart.discountValue,
+      notes: cart.notes,
+      payment_status: 'unpaid',
+      amount_paid: 0,
+      is_kitchen_order: true,
+      status: 'pending',
+    };
 
     const result = await createSale(payload);
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success('Commande validée !');
+      toast.success('Commande transmise en cuisine (KDS) avec succès !');
       cart.clearCart();
-      fetchDishes();
-      if (tableId) {
-        router.push('/restaurant/tables');
-      }
     } else {
-      toast.error(result.message);
+      toast.error(result.message || 'Erreur lors de l envoi.');
     }
   };
 
-  const itemsCount = cart.getItemsCount();
-  const cartTotal = cart.getTotal();
-
+  const subtotal = cart.getSubtotal();
+  const total = cart.getTotal();
+  const itemsCount = cart.items.length;
 
   return (
-    <div className="h-[calc(100vh-65px)] flex bg-gray-50">
-      {/* Colonne gauche : Plats + Panier */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b px-4 lg:px-6 py-3 flex items-center justify-between shrink-0 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push(tableId ? '/restaurant/tables' : '/restaurant/sales')}>
-              <ArrowLeft size={20} />
-            </Button>
-            <h1 className="font-semibold text-lg">Nouvelle commande</h1>
+    <div className="h-[calc(100vh-65px)] flex flex-col bg-gray-50">
+      {/* Header Contextuel Restaurant */}
+      <OrderModeHeader onOpenTableSelector={() => setTableModalOpen(true)} />
 
-            {tableId && (
-              <Badge className="bg-emerald-600 text-white font-bold flex items-center gap-1">
-                <Utensils size={12} /> Table #{tableId}
+      {/* Barre de Gestion Multi-Sessions & Tables Actives */}
+      <OrderSessionTabs onOpenTableSelector={() => setTableModalOpen(true)} />
+
+      <div className="flex-1 flex min-h-0">
+        {/* Colonne gauche : Mode Selector + Grille Plats */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="bg-white border-b px-4 py-2 flex items-center justify-between">
+            <OrderModeSelector
+              value={cart.orderType}
+              onChange={(mode) => cart.setOrderType(mode)}
+            />
+            <div className="text-sm font-medium text-gray-500 flex items-center gap-2">
+              <ShoppingCart size={16} />
+              <span>{itemsCount} plat{itemsCount > 1 ? 's' : ''}</span>
+              <Badge variant="outline" className="font-bold text-brand-700">
+                {total.toLocaleString()} FCFA
               </Badge>
-            )}
+            </div>
           </div>
-          <div className="flex items-center gap-3 text-sm text-gray-500">
-            <ShoppingCart size={16} />
-            <span>{itemsCount} plat{itemsCount > 1 ? 's' : ''}</span>
-            {itemsCount > 0 && (
-              <Badge variant="outline" className="font-bold">{cartTotal.toLocaleString()} FCFA</Badge>
-            )}
+
+          <div className="flex-1 overflow-hidden">
+            <ProductGrid products={dishes} onAddToCart={handleAddToCart} cartItems={cart.items} />
           </div>
-        </header>
-
-
-        <div className="flex-1 overflow-hidden">
-          <ProductGrid products={dishes} onAddToCart={handleAddToCart} cartItems={cart.items} />
         </div>
 
-        {itemsCount > 0 && (
-          <div className="border-t bg-white shadow-lg shrink-0">
-            <button
-              onClick={() => setCartExpanded(!cartExpanded)}
-              className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100"
-            >
-              <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <ShoppingCart size={16} /> Panier ({itemsCount})
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-brand-700">{cartTotal.toLocaleString()} FCFA</span>
-                {cartExpanded ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-              </div>
-            </button>
-            {cartExpanded && (
-              <div className="max-h-[300px] overflow-y-auto">
-                {/* Notes cuisine par article */}
-                {cart.items.map((item) => (
-                  <div key={item.product_id} className="px-4 py-2 border-b border-gray-50">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">{item.product_name} ×{item.quantity}</span>
-                      <span className="text-sm font-semibold">{(item.unit_price * item.quantity).toLocaleString()} F</span>
-                    </div>
-                    <Input
-                      placeholder="Note cuisine (ex: bien cuit, sans sel...)"
-                      value={itemNotes[item.product_id] || ''}
-                      onChange={(e) => handleNoteChange(item.product_id, e.target.value)}
-                      className="h-7 text-xs mt-1 rounded-lg"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Colonne droite : Panier & Actions Restaurant */}
+        <div className="w-[380px] xl:w-[420px] border-l bg-white flex flex-col shrink-0">
+          <div className="p-3 border-b bg-gray-50">
+            <ClientSelector clientName={cart.clientName} onSetClient={cart.setClient} />
           </div>
-        )}
-      </div>
 
-      {/* Colonne droite : Client + Paiement + Valider */}
-      <div className="w-[380px] xl:w-[420px] border-l bg-white flex flex-col shrink-0 hidden lg:flex">
-        <ClientSelector clientName={cart.clientName} onSetClient={cart.setClient} />
-
-        <div className="flex-1 overflow-y-auto">
-          <PaymentSection
-            paymentMethod={cart.paymentMethod}
-            onPaymentMethodChange={cart.setPaymentMethod}
-            amountPaid={cart.amountPaid}
-            onAmountPaidChange={cart.setAmountPaid}
-            paymentReference={cart.paymentReference}
-            onPaymentReferenceChange={cart.setPaymentReference}
-            discountType={cart.discountType}
-            onDiscountChange={cart.setDiscount}
-            discountValue={cart.discountValue}
-            onDiscountValueChange={(v) => cart.setDiscount(cart.discountType, v)}
-            total={cartTotal}
-          />
-        </div>
-
-        <div className="p-4 border-t">
-          <Button
-            onClick={handleSubmit}
-            className="w-full h-12 text-base font-semibold rounded-xl"
-            disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
-          >
-            {isSubmitting ? (
-              <Loader2 size={20} className="animate-spin mr-2" />
-            ) : cart.items.length === 0 ? (
-              'Panier vide'
-            ) : cart.amountPaid < cartTotal ? (
-              `Montant insuffisant • Manque ${(cartTotal - cart.amountPaid).toLocaleString()} FCFA`
+          {/* Liste des Plats dans le Panier */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {cart.items.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Utensils className="mx-auto h-12 w-12 mb-2 opacity-50" />
+                <p className="text-sm font-medium">Panier vide</p>
+                <p className="text-xs mt-1">Sélectionnez des plats à gauche pour composer la commande.</p>
+              </div>
             ) : (
-              <>
-                <Save size={18} className="mr-2" />
-                Valider • {cartTotal.toLocaleString()} FCFA
-              </>
+              cart.items.map((item, idx) => (
+                <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-sm text-gray-900">{item.name}</h4>
+                      <div className="text-xs text-gray-500">
+                        {item.unit_price.toLocaleString()} F × {item.quantity}
+                      </div>
+                    </div>
+                    <span className="font-bold text-sm text-gray-900">
+                      {((item.unit_price + (item.modifiers_total || 0)) * item.quantity).toLocaleString()} FCFA
+                    </span>
+                  </div>
+
+                  {item.modifiers && item.modifiers.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {item.modifiers.map((m, mIdx) => (
+                        <span key={mIdx} className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-medium">
+                          {m.option_name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <Input
+                    placeholder="Consigne cuisine (ex: sans sel, bien cuit)..."
+                    value={item.notes || ''}
+                    onChange={(e) => cart.updateItemNote(idx, e.target.value)}
+                    className="h-7 text-xs bg-white"
+                  />
+                </div>
+              ))
             )}
-          </Button>
+          </div>
+
+          {/* Actions & Boutons Envoi KDS / Encaisser */}
+          <div className="p-4 border-t bg-gray-50 space-y-3">
+            <div className="flex justify-between items-center text-sm font-bold text-gray-900">
+              <span>Total Commande :</span>
+              <span className="text-lg text-brand-700">{total.toLocaleString()} FCFA</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={handleSendToKitchen}
+                disabled={isSubmitting || cart.items.length === 0}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-12 rounded-xl text-xs flex flex-col items-center justify-center gap-0.5"
+              >
+                {isSubmitting ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <>
+                    <Send size={16} />
+                    <span>Envoyer KDS 🍳</span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                onClick={() => setSplitModalOpen(true)}
+                disabled={cart.items.length === 0}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl text-xs flex flex-col items-center justify-center gap-0.5"
+              >
+                <CreditCard size={16} />
+                <span>Encaisser 💳</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Mobile : bouton flottant */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t z-50">
-        <Button
-          onClick={handleSubmit}
-          className="w-full h-12 text-base font-semibold rounded-xl"
-          disabled={isSubmitting || cart.items.length === 0 || cart.amountPaid < cartTotal}
-        >
-          {isSubmitting ? <Loader2 size={18} className="animate-spin mr-2" /> : `Valider • ${cartTotal.toLocaleString()} FCFA`}
-        </Button>
-      </div>
+      {/* Modales Restaurant */}
+      {tableModalOpen && (
+        <TableSelectorModal
+          isOpen={tableModalOpen}
+          onClose={() => setTableModalOpen(false)}
+          onSelectTable={(table, session) => {
+            cart.setTableSession({
+              tableId: table.id,
+              tableSessionId: session?.id,
+              tableName: table.table_number || table.table_name,
+              numberOfGuests: session?.number_of_guests || 1,
+            });
+            setTableModalOpen(false);
+          }}
+        />
+      )}
 
-      {/* Modal de sélection des modificateurs pour le plat sélectionné */}
-      <ModifierSelectorModal
-        open={modifierModalOpen}
-        onOpenChange={setModifierModalOpen}
-        dish={selectedDishForModifiers}
-        groups={dishModifierGroups}
-        onConfirm={handleConfirmModifiers}
-      />
+      {splitModalOpen && (
+        <SplitBillModal
+          isOpen={splitModalOpen}
+          onClose={() => setSplitModalOpen(false)}
+          sale={{
+            id: cart.tableSessionId,
+            total_amount: total,
+            amount_paid: 0,
+            amount_due: total,
+            items: cart.items,
+          }}
+          onSuccess={() => {
+            setSplitModalOpen(false);
+            cart.clearCart();
+            router.push('/restaurant/tables');
+          }}
+        />
+      )}
+
+      {modifierModalOpen && (
+        <ModifierSelectorModal
+          open={modifierModalOpen}
+          onOpenChange={setModifierModalOpen}
+          dish={selectedDishForModifiers}
+          groups={dishModifierGroups}
+          onConfirm={handleConfirmModifiers}
+        />
+      )}
     </div>
   );
-}
+}
