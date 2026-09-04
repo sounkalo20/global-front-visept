@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     ArrowLeft,
@@ -10,11 +11,13 @@ import {
     AlertCircle,
     ShoppingCart,
     UserCheck,
-    ReceiptText
+    ReceiptText,
+    Printer
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import DebtReceiptPreviewModal from '@/components/debts/receipt/DebtReceiptPreviewModal';
 
 /* ================= STATUS ================= */
 const statusBadge = (status) => {
@@ -31,6 +34,7 @@ const statusBadge = (status) => {
 
 /* ================= COMPONENT ================= */
 export default function DebtDetail({ debt, onBack, onAddPayment, onCancel }) {
+    const [printModalOpen, setPrintModalOpen] = useState(false);
     if (!debt) return null;
 
     /* ================= SAFE NUMBERS ================= */
@@ -67,6 +71,11 @@ export default function DebtDetail({ debt, onBack, onAddPayment, onCancel }) {
                 </div>
 
                 <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setPrintModalOpen(true)}>
+                        <Printer size={16} className="mr-2" />
+                        Imprimer
+                    </Button>
+
                     {debt.status !== 'paid' && debt.status !== 'canceled' && (
                         <Button onClick={onAddPayment}>
                             <CreditCard size={16} className="mr-2" />
@@ -126,31 +135,50 @@ export default function DebtDetail({ debt, onBack, onAddPayment, onCancel }) {
                     {/* ================= SALE DETAILS ================= */}
                     <div className="rounded-xl border bg-white p-5 space-y-3">
                         <h3 className="font-medium flex items-center gap-2">
-                            <ReceiptText size={16} /> Détails de la vente
+                            <ReceiptText size={16} /> Détails financiers de la vente
                         </h3>
 
-                        <div className="flex justify-between text-sm">
-                            <span>Sous-total</span>
-                            <span className="font-medium">
-                                {Number(debt.sale_subtotal || debt.sale_total).toLocaleString()} F
-                            </span>
-                        </div>
+                        {(() => {
+                            const items = debt.sale_items || debt.items || [];
+                            const itemsSubtotal = items.reduce((sum, item) => sum + (parseFloat(item.total_price) || (parseFloat(item.unit_price || 0) * parseFloat(item.quantity || 0))), 0);
+                            let discAmt = Number(debt.sale_discount_amount || debt.discount_amount || 0);
+                            if (!discAmt && itemsSubtotal > total) {
+                                discAmt = itemsSubtotal - total;
+                            }
+                            const discType = debt.sale_discount_type || debt.discount_type || (discAmt > 0 ? 'fixed' : 'none');
+                            const discVal = debt.sale_discount_value || debt.discount_value || (discType === 'percentage' ? Math.round((discAmt / (itemsSubtotal || total + discAmt)) * 100) : discAmt);
+                            const subTot = Number(debt.sale_subtotal || debt.subtotal || itemsSubtotal || total + discAmt);
 
-                        <div className="flex justify-between text-sm">
-                            <span>Remise</span>
-                            <span className="text-orange-600 font-medium">
-                                {debt.sale_discount_type === 'percentage'
-                                    ? `${debt.sale_discount_value}%`
-                                    : `${Number(debt.sale_discount_value || 0).toLocaleString()} F`}
-                            </span>
-                        </div>
+                            return (
+                                <>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Sous-total HT</span>
+                                        <span className="font-medium">{subTot.toLocaleString()} FCFA</span>
+                                    </div>
 
-                        <div className="flex justify-between text-sm border-t pt-2">
-                            <span>Total final</span>
-                            <span className="font-bold">
-                                {total.toLocaleString()} F
-                            </span>
-                        </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Remise accordée</span>
+                                        <span className="text-brand-600 font-medium">
+                                            {discAmt > 0 ? (
+                                                <>
+                                                    -{discAmt.toLocaleString()} FCFA
+                                                    <span className="text-xs text-gray-400 ml-1">
+                                                        ({discType === 'percentage' ? `${discVal}%` : 'Fixe'})
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-400">Aucune</span>
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-between text-sm border-t pt-2 font-bold">
+                                        <span>Total Dette Initiale</span>
+                                        <span>{total.toLocaleString()} FCFA</span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* ================= PRODUCTS ================= */}
@@ -228,8 +256,36 @@ export default function DebtDetail({ debt, onBack, onAddPayment, onCancel }) {
 
                     {/* AMOUNTS */}
                     <div className="space-y-2 text-sm">
+                        {(() => {
+                            const items = debt.sale_items || debt.items || [];
+                            const itemsSubtotal = items.reduce((sum, item) => sum + (parseFloat(item.total_price) || (parseFloat(item.unit_price || 0) * parseFloat(item.quantity || 0))), 0);
+                            let discAmt = Number(debt.sale_discount_amount || debt.discount_amount || 0);
+                            if (!discAmt && itemsSubtotal > total) {
+                                discAmt = itemsSubtotal - total;
+                            }
+                            const discType = debt.sale_discount_type || debt.discount_type || (discAmt > 0 ? 'fixed' : 'none');
+                            const discVal = debt.sale_discount_value || debt.discount_value || (discType === 'percentage' ? Math.round((discAmt / (itemsSubtotal || total + discAmt)) * 100) : discAmt);
+                            const subTot = Number(debt.sale_subtotal || debt.subtotal || itemsSubtotal || total + discAmt);
+
+                            return (
+                                <>
+                                    {discAmt > 0 && (
+                                        <>
+                                            <div className="flex justify-between text-gray-500">
+                                                <span>Sous-total HT</span>
+                                                <span>{subTot.toLocaleString()} F</span>
+                                            </div>
+                                            <div className="flex justify-between text-brand-600 font-medium">
+                                                <span>Remise ({discType === 'percentage' ? `${discVal}%` : 'Fixe'})</span>
+                                                <span>-{discAmt.toLocaleString()} F</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            );
+                        })()}
                         <div className="flex justify-between">
-                            <span>Total</span>
+                            <span>Total Dette</span>
                             <span className="font-medium">{total.toLocaleString()} F</span>
                         </div>
 
@@ -275,6 +331,13 @@ export default function DebtDetail({ debt, onBack, onAddPayment, onCancel }) {
                     </div>
                 </div>
             </div>
+
+            {/* Modal d'impression du reçu de dette */}
+            <DebtReceiptPreviewModal
+                debt={debt}
+                open={printModalOpen}
+                onOpenChange={setPrintModalOpen}
+            />
         </motion.div>
     );
 }

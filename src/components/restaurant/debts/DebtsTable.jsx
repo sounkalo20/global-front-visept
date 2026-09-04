@@ -1,7 +1,7 @@
 // components/restaurant/DebtsTable.jsx
 'use client';
 import { useState } from 'react';
-import { Eye, Ban, CreditCard } from 'lucide-react';
+import { Eye, Ban, CreditCard, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +9,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import DebtDetailModal from './DebtDetailModal';
 import PaymentFormModal from './PaymentFormModal';
 import ConfirmModal from '@/components/super-admin/ConfirmModal';
+import DebtReceiptPreviewModal from '@/components/debts/receipt/DebtReceiptPreviewModal';
 import useRestaurantDebtStore from '@/store/restaurantDebtStore';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ export default function DebtsTable() {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmTarget, setConfirmTarget] = useState(null);
     const [confirmLoading, setConfirmLoading] = useState(false);
+    const [printTarget, setPrintTarget] = useState(null);
 
     const openDetail = (id) => { setSelectedId(id); setDetailOpen(true); };
     const openPayment = (debt) => { setPaymentDebt(debt); setPaymentOpen(true); };
@@ -68,14 +70,32 @@ export default function DebtsTable() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {debts.map((debt) => (
-                            <TableRow key={debt.id} className={debt.status === 'canceled' ? 'opacity-50' : ''}>
-                                <TableCell>
-                                    <p className="font-medium text-sm">{debt.client_name}</p>
-                                    <p className="text-xs text-gray-400">{debt.client_phone}</p>
-                                </TableCell>
-                                <TableCell className="text-sm">{debt.sale_number || '-'}</TableCell>
-                                <TableCell className="text-right text-sm font-medium">{Number(debt.total_amount).toLocaleString()} FCFA</TableCell>
+                        {debts.map((debt) => {
+                            const totalAmount = Number(debt.total_amount || 0);
+                            const discAmt = Number(debt.sale_discount_amount || debt.discount_amount || 0);
+                            const discType = debt.sale_discount_type || debt.discount_type || 'none';
+                            const discVal = debt.sale_discount_value || debt.discount_value || 0;
+                            const subtotal = Number(debt.sale_subtotal || debt.subtotal || totalAmount + discAmt);
+                            const remaining = Number(debt.remaining_amount || 0);
+
+                            return (
+                                <TableRow key={debt.id} className={debt.status === 'canceled' ? 'opacity-50' : ''}>
+                                    <TableCell>
+                                        <p className="font-medium text-sm">{debt.client_name}</p>
+                                        <p className="text-xs text-gray-400">{debt.client_phone}</p>
+                                    </TableCell>
+                                    <TableCell className="text-sm">{debt.sale_number || '-'}</TableCell>
+                                    <TableCell className="text-right text-sm">
+                                        <div className="font-bold text-base text-gray-900">{subtotal.toLocaleString()} FCFA</div>
+                                        {discAmt > 0 && (
+                                            <span className="inline-block text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                                                🏷️ Remise: -{discType === 'percentage' ? `${discVal}%` : `${discAmt.toLocaleString()} F`}
+                                            </span>
+                                        )}
+                                        <div className="text-xs font-bold text-red-600 mt-0.5">
+                                            Dette: {remaining.toLocaleString()} FCFA
+                                        </div>
+                                    </TableCell>
                                 <TableCell className="text-right text-sm text-green-600">{Number(debt.total_paid).toLocaleString()} FCFA</TableCell>
                                 <TableCell className="text-right text-sm font-bold text-red-600">{Number(debt.remaining_amount).toLocaleString()} FCFA</TableCell>
                                 <TableCell className="text-center">
@@ -88,17 +108,19 @@ export default function DebtsTable() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-1">
-                                        <Button variant="ghost" size="icon" onClick={() => openDetail(debt.id)}><Eye size={16} /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => openDetail(debt.id)} title="Voir détails"><Eye size={16} /></Button>
+                                        <Button variant="ghost" size="icon" onClick={() => setPrintTarget(debt)} className="text-gray-600 hover:text-brand-600" title="Imprimer le reçu"><Printer size={16} /></Button>
                                         {!['paid', 'canceled'].includes(debt.status) && (
                                             <>
-                                                <Button variant="ghost" size="icon" onClick={() => openPayment(debt)} className="text-green-600"><CreditCard size={16} /></Button>
-                                                <Button variant="ghost" size="icon" onClick={() => openCancel(debt)} className="text-red-600"><Ban size={16} /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => openPayment(debt)} className="text-green-600" title="Ajouter un paiement"><CreditCard size={16} /></Button>
+                                                <Button variant="ghost" size="icon" onClick={() => openCancel(debt)} className="text-red-600" title="Annuler la dette"><Ban size={16} /></Button>
                                             </>
                                         )}
                                     </div>
                                 </TableCell>
-                            </TableRow>
-                        ))}
+                             </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>
@@ -114,11 +136,24 @@ export default function DebtsTable() {
             )}
 
             <DebtDetailModal isOpen={detailOpen} onClose={() => setDetailOpen(false)} debtId={selectedId} />
-            <PaymentFormModal isOpen={paymentOpen} onClose={() => setPaymentOpen(false)} debt={paymentDebt} />
+            <PaymentFormModal
+                isOpen={paymentOpen}
+                onClose={() => setPaymentOpen(false)}
+                debt={paymentDebt}
+                onSuccess={(d) => setPrintTarget(d || paymentDebt)}
+            />
 
             <ConfirmModal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)} onConfirm={handleCancel}
                 title="Annuler cette dette" description={`Annuler la dette de "${confirmTarget?.client_name}" ?`}
                 confirmLabel="Annuler la dette" confirmVariant="destructive" isLoading={confirmLoading} />
+
+            <DebtReceiptPreviewModal
+                debt={printTarget}
+                open={!!printTarget}
+                onOpenChange={(open) => {
+                    if (!open) setPrintTarget(null);
+                }}
+            />
         </>
     );
 }

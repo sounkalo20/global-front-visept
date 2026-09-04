@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import useRestaurantPaymentStore from '@/store/restaurantPaymentStore';
 
-export default function PaymentFormModal({ isOpen, onClose, debt }) {
+export default function PaymentFormModal({ isOpen, onClose, debt, onSuccess }) {
     const { createPayment } = useRestaurantPaymentStore();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,7 +40,11 @@ export default function PaymentFormModal({ isOpen, onClose, debt }) {
             note: data.note || null,
         });
         setIsSubmitting(false);
-        if (result.success) { toast.success('Paiement enregistré.'); onClose(); }
+        if (result.success) {
+            toast.success('Paiement enregistré.');
+            onClose();
+            if (onSuccess) onSuccess(debt);
+        }
         else toast.error(result.message);
     };
 

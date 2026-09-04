@@ -3,13 +3,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { ArrowLeft, User, Phone, Calendar, DollarSign, CreditCard, Edit, AlertCircle, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, Phone, Calendar, DollarSign, CreditCard, Edit, AlertCircle, Trash2, Loader2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import useDebtStore from '@/store/debtStore';
 import useCompanyStore from '@/store/companyStore';
+import DebtReceiptPreviewModal from '@/components/debts/receipt/DebtReceiptPreviewModal';
 
 const statusBadge = (status) => {
   const map = {
@@ -33,6 +34,7 @@ export default function DebtDetailPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deletePaymentId, setDeletePaymentId] = useState(null);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
 
   // États pour le formulaire de paiement
   const [paymentAmount, setPaymentAmount] = useState('');
@@ -91,6 +93,7 @@ export default function DebtDetailPage() {
       setPaymentReference('');
       setPaymentNote('');
       loadDebt();
+      setPrintModalOpen(true);
     } else {
       toast.error(result.message);
     }
@@ -121,6 +124,7 @@ export default function DebtDetailPage() {
       toast.success('Dette modifiée.');
       setEditOpen(false);
       loadDebt();
+      setPrintModalOpen(true);
     } else {
       toast.error(result.message);
     }
@@ -163,6 +167,9 @@ export default function DebtDetailPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setPrintModalOpen(true)}>
+              <Printer size={16} className="mr-2" /> Imprimer
+            </Button>
             {currentDebt.status !== 'canceled' && currentDebt.status !== 'paid' && (
               <Button onClick={() => setPaymentOpen(true)}><CreditCard size={16} className="mr-2" /> Ajouter un paiement</Button>
             )}
@@ -245,6 +252,25 @@ export default function DebtDetailPage() {
           <div className="rounded-xl border bg-white p-5 h-fit space-y-4 lg:sticky lg:top-4">
             <h3 className="font-medium">Résumé</h3>
             <div className="space-y-2 text-sm">
+              {(() => {
+                const discAmt = parseFloat(currentDebt.sale_discount_amount || currentDebt.discount_amount || 0);
+                const discType = currentDebt.sale_discount_type || currentDebt.discount_type || 'none';
+                const discVal = currentDebt.sale_discount_value || currentDebt.discount_value || 0;
+                const subTot = parseFloat(currentDebt.sale_subtotal || currentDebt.subtotal || parseFloat(currentDebt.total_amount || 0) + discAmt);
+                return (
+                  <>
+                    {discAmt > 0 && (
+                      <>
+                        <div className="flex justify-between text-gray-500"><span>Sous-total HT</span><span className="font-medium">{parseInt(subTot).toLocaleString()} F</span></div>
+                        <div className="flex justify-between text-brand-600 font-medium">
+                          <span>Remise ({discType === 'percentage' ? `${discVal}%` : 'Fixe'})</span>
+                          <span>-{parseInt(discAmt).toLocaleString()} F</span>
+                        </div>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
               <div className="flex justify-between"><span>Montant total</span><span className="font-medium">{parseInt(currentDebt.total_amount || 0).toLocaleString()} F</span></div>
               <div className="flex justify-between text-green-600"><span>Payé</span><span className="font-medium">{totalPaid.toLocaleString()} F</span></div>
               <div className="flex justify-between text-red-600 font-bold text-lg pt-2 border-t">
@@ -371,6 +397,13 @@ export default function DebtDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal d'impression du reçu de dette */}
+      <DebtReceiptPreviewModal
+        debt={currentDebt}
+        open={printModalOpen}
+        onOpenChange={setPrintModalOpen}
+      />
     </div>
   );
 }

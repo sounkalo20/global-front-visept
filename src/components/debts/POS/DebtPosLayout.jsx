@@ -14,6 +14,7 @@ import useCartStore from '@/store/cartStore';
 import useProductStore from '@/store/productStore';
 import useDebtStore from '@/store/debtStore';
 import useCompanyStore from '@/store/companyStore';
+import DebtReceiptPreviewModal from '@/components/debts/receipt/DebtReceiptPreviewModal';
 
 export default function DebtPosLayout() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function DebtPosLayout() {
   const cart = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [completedDebt, setCompletedDebt] = useState(null);
   const [dueDate, setDueDate] = useState(() => {
     // Par défaut : dans 30 jours
     const date = new Date();
@@ -89,16 +91,28 @@ export default function DebtPosLayout() {
     const result = await createDebt(payload);
     setIsSubmitting(false);
 
-    if (result.success) {
+    if (result.success && result.debt) {
       toast.success('Vente à crédit créée avec succès !');
-      cart.clearCart();
-      setSelectedClient(null);
-      setDiscountType('none');
-      setDiscountValue(0);
-      if (activeCompany) fetchPosProducts(activeCompany.id);
-      router.push('/shop/debts');
+      setCompletedDebt(result.debt);
+    } else if (result.success) {
+      toast.success('Vente à crédit créée avec succès !');
+      handleReceiptClosed();
     } else {
       toast.error(result.message);
+    }
+  };
+
+  const handleReceiptClosed = () => {
+    cart.clearCart();
+    setSelectedClient(null);
+    setDiscountType('none');
+    setDiscountValue(0);
+    setCompletedDebt(null);
+    if (activeCompany) fetchPosProducts(activeCompany.id);
+    if (typeof window !== 'undefined' && window.location.pathname.includes('/restaurant')) {
+      router.push('/restaurant/debts');
+    } else {
+      router.push('/shop/debts');
     }
   };
 
@@ -410,6 +424,16 @@ export default function DebtPosLayout() {
           )}
         </Button>
       </div>
+
+      {/* Modal d'impression du reçu de dette */}
+      <DebtReceiptPreviewModal
+        debt={completedDebt}
+        open={!!completedDebt}
+        onOpenChange={(open) => {
+          if (!open) handleReceiptClosed();
+        }}
+        onClosed={handleReceiptClosed}
+      />
     </div>
   );
 }

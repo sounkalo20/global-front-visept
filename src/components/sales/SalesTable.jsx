@@ -48,6 +48,11 @@ export default function SalesTable({ sales }) {
             {sales.map((sale, i) => {
               const payStatus = statusBadge(sale.payment_status);
               const orderStatus = saleStatusBadge(sale.status);
+              const discAmt = parseFloat(sale.discount_amount || 0);
+              const totalAmount = parseInt(sale.total_amount || 0);
+              const subtotal = parseInt(sale.subtotal || totalAmount + discAmt);
+              const amountDue = parseInt(sale.amount_due || 0);
+
               return (
                 <motion.tr
                   key={sale.id}
@@ -72,7 +77,19 @@ export default function SalesTable({ sales }) {
                     {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
                   </td>
                   <td className="px-4 py-3 text-right text-sm">{sale.items_count || '-'}</td>
-                  <td className="px-4 py-3 text-right font-medium">{parseInt(sale.total_amount).toLocaleString()} F</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="font-bold text-base text-gray-900">{subtotal.toLocaleString()} F</div>
+                    {discAmt > 0 && (
+                      <span className="inline-block text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                        🏷️ Remise: -{sale.discount_type === 'percentage' ? `${sale.discount_value}%` : `${discAmt.toLocaleString()} F`}
+                      </span>
+                    )}
+                    {amountDue > 0 && (
+                      <div className="text-xs font-bold text-red-600 mt-0.5">
+                        Dette: {amountDue.toLocaleString()} F
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', payStatus.color)}>{payStatus.label}</span>
                   </td>
@@ -96,6 +113,10 @@ export default function SalesTable({ sales }) {
       <div className="md:hidden space-y-3">
         {sales.map((sale, i) => {
           const payStatus = statusBadge(sale.payment_status);
+          const discAmt = parseFloat(sale.discount_amount || 0);
+          const totalAmount = parseInt(sale.total_amount || 0);
+          const subtotal = parseInt(sale.subtotal || totalAmount + discAmt);
+          const amountDue = parseInt(sale.amount_due || 0);
           return (
             <motion.div
               key={sale.id}
@@ -120,7 +141,19 @@ export default function SalesTable({ sales }) {
                     {sale.client_first_name ? `${sale.client_first_name} ${sale.client_last_name}` : sale.client_name || 'Client passager'}
                   </p>
                 </div>
-                <p className="font-semibold">{parseInt(sale.total_amount).toLocaleString()} F</p>
+                <div className="text-right">
+                  <p className="font-bold text-base text-gray-900">{subtotal.toLocaleString()} F</p>
+                  {discAmt > 0 && (
+                    <p className="text-[10px] text-emerald-600 font-semibold">
+                      🏷️ -{sale.discount_type === 'percentage' ? `${sale.discount_value}%` : `${discAmt.toLocaleString()} F`}
+                    </p>
+                  )}
+                  {amountDue > 0 && (
+                    <p className="text-xs font-bold text-red-600 mt-0.5">
+                      Dette: {amountDue.toLocaleString()} F
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <span className={cn('rounded-full px-2 py-0.5 text-xs', payStatus.color)}>{payStatus.label}</span>

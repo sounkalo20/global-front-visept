@@ -49,7 +49,7 @@ export default function PaymentModal({ debt, open, onOpenChange, onSuccess }) {
             setAmount('');
             setPaymentReference('');
             setNote('');
-            onSuccess?.();
+            onSuccess?.(debt);
         } else {
             toast.error(result?.message || "Erreur lors de l'enregistrement");
         }

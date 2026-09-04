@@ -4,6 +4,8 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
   if (!sale) return null;
 
   const total = parseInt(sale.total_amount || 0);
+  const discountAmount = parseInt(sale.discount_amount || 0);
+  const subtotal = parseInt(sale.subtotal || total + discountAmount);
   const paid = parseInt(sale.amount_paid || 0);
   const change = Math.max(0, paid - total);
   
@@ -11,6 +13,10 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
     const d = new Date(dateString);
     return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   };
+
+  const discountLabel = sale.discount_type === 'percentage'
+    ? `Remise (${sale.discount_value}%):`
+    : 'Remise (Fixe):';
 
   return (
     <div>
@@ -56,16 +62,16 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
       <div className="mb-2">
         <div className="flex justify-between">
           <span>Sous-total:</span>
-          <span>{parseInt(sale.subtotal || 0).toLocaleString()}</span>
+          <span>{subtotal.toLocaleString()} FCFA</span>
         </div>
-        {sale.discount_amount > 0 && (
-          <div className="flex justify-between">
-            <span>Remise:</span>
-            <span>-{parseInt(sale.discount_amount).toLocaleString()}</span>
+        {discountAmount > 0 && (
+          <div className="flex justify-between font-bold" style={{ color: '#d4006e' }}>
+            <span>{discountLabel}</span>
+            <span>-{discountAmount.toLocaleString()} FCFA</span>
           </div>
         )}
         <div className="flex justify-between font-bold mt-2" style={{ fontSize: '14px' }}>
-          <span>TOTAL:</span>
+          <span>TOTAL NET:</span>
           <span>{total.toLocaleString()} FCFA</span>
         </div>
       </div>
@@ -73,12 +79,12 @@ export default function ReceiptTemplate({ sale, company, user, isProforma = fals
       <div className="border-t py-1 mb-2">
         <div className="flex justify-between">
           <span>Payé ({sale.payment_method?.replace('_', ' ') || 'espèces'}):</span>
-          <span>{paid.toLocaleString()}</span>
+          <span>{paid.toLocaleString()} FCFA</span>
         </div>
         {change > 0 && (
           <div className="flex justify-between">
             <span>Monnaie rendue:</span>
-            <span>{change.toLocaleString()}</span>
+            <span>{change.toLocaleString()} FCFA</span>
           </div>
         )}
       </div>

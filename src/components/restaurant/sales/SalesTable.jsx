@@ -68,21 +68,37 @@ export default function SalesTable() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sales.map((sale) => (
-                            <TableRow key={sale.id}>
-                                <TableCell>
-                                    <p className="font-medium text-sm">{sale.sale_number}</p>
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-sm">
-                                        {sale.client_first_name
-                                            ? `${sale.client_first_name} ${sale.client_last_name || ''}`
-                                            : sale.client_name || 'Client passage'}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right font-medium text-sm">
-                                    {Number(sale.total_amount).toLocaleString()} FCFA
-                                </TableCell>
+                        {sales.map((sale) => {
+                            const discAmt = Number(sale.discount_amount || 0);
+                            const totalAmount = Number(sale.total_amount || 0);
+                            const subtotal = Number(sale.subtotal || totalAmount + discAmt);
+                            const amountDue = Number(sale.amount_due || 0);
+
+                            return (
+                                <TableRow key={sale.id}>
+                                    <TableCell>
+                                        <p className="font-medium text-sm">{sale.sale_number}</p>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-sm">
+                                            {sale.client_first_name
+                                                ? `${sale.client_first_name} ${sale.client_last_name || ''}`
+                                                : sale.client_name || 'Client passage'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right text-sm">
+                                        <div className="font-bold text-base text-gray-900">{subtotal.toLocaleString()} FCFA</div>
+                                        {discAmt > 0 && (
+                                            <span className="inline-block text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                                                🏷️ Remise: -{sale.discount_type === 'percentage' ? `${sale.discount_value || sale.discount_amount}%` : `${discAmt.toLocaleString()} F`}
+                                            </span>
+                                        )}
+                                        {amountDue > 0 && (
+                                            <div className="text-xs font-bold text-red-600 mt-0.5">
+                                                Dette: {amountDue.toLocaleString()} FCFA
+                                            </div>
+                                        )}
+                                    </TableCell>
                                 <TableCell className="text-right text-sm">
                                     {Number(sale.amount_paid).toLocaleString()} FCFA
                                 </TableCell>
@@ -108,7 +124,8 @@ export default function SalesTable() {
                                     </div>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </div>
