@@ -98,8 +98,16 @@ export default function KitchenDisplayPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sales.map((sale) => {
-            const items = sale.items || [];
-            if (items.length === 0) return null;
+            const activeItems = (sale.items || []).filter((i) => (i.item_status || 'pending') !== 'served' && (i.item_status || 'pending') !== 'canceled');
+            if (activeItems.length === 0) return null;
+
+            const tableNameDisplay = sale.table_number || sale.table_name
+              ? `Table ${sale.table_number || sale.table_name} ${sale.space_name ? `(${sale.space_name})` : ''}`
+              : sale.order_type === 'takeaway'
+              ? '🛍️ À emporter'
+              : sale.order_type === 'delivery'
+              ? '🛵 Livraison'
+              : '⚡ Comptoir';
 
             return (
               <div
@@ -107,27 +115,39 @@ export default function KitchenDisplayPage() {
                 className="bg-slate-800/90 border border-slate-700 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl"
               >
                 {/* Entête du Bon */}
-                <div className="bg-slate-700/80 px-4 py-3 border-b border-slate-600 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-base text-amber-400">
-                        {sale.table_id ? `Table #${sale.table_id}` : 'Comptoir / Emporter'}
-                      </span>
-                      <Badge className="bg-slate-900 text-slate-300 text-[10px] border-0">
-                        {sale.sale_number}
-                      </Badge>
-                    </div>
-                    <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                <div className="bg-slate-700/80 px-4 py-3 border-b border-slate-600 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-base text-amber-400">
+                      {tableNameDisplay}
+                    </span>
+                    <Badge className="bg-slate-900 text-slate-300 text-[10px] border-0">
+                      {sale.sale_number}
+                    </Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center gap-1">
                       <Clock size={12} />
                       <span>{new Date(sale.sale_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {sale.seller_name && <span>• Serveur : {sale.seller_name}</span>}
+                      {sale.client_name && <span>• {sale.client_name}</span>}
                     </div>
+
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        activeItems.forEach((it) => handleUpdateItemStatus(it.id, 'ready'));
+                      }}
+                      className="text-[10px] h-6 px-2 text-emerald-400 hover:bg-emerald-950/50"
+                    >
+                      Tout prêts ➔
+                    </Button>
                   </div>
                 </div>
 
                 {/* Liste des Plats du Bon */}
-                <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[350px]">
-                  {items.map((item) => {
+                <div className="p-4 space-y-3 flex-1 overflow-y-auto max-h-[380px]">
+                  {activeItems.map((item) => {
                     const status = item.item_status || 'pending';
 
                     return (
@@ -157,6 +177,17 @@ export default function KitchenDisplayPage() {
                             {status === 'pending' ? 'Attente' : status === 'preparing' ? 'En Cuisson' : 'Prêt'}
                           </Badge>
                         </div>
+
+                        {/* Modificateurs / Personnalisations */}
+                        {item.modifier_choices && item.modifier_choices.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {item.modifier_choices.map((m, mIdx) => (
+                              <span key={mIdx} className="bg-amber-900/60 text-amber-200 text-[10px] px-2 py-0.5 rounded border border-amber-700/50">
+                                {m.option_name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         {item.notes && (
                           <div className="text-xs italic text-amber-200 bg-amber-950/40 px-2 py-1 rounded border border-amber-800/50">

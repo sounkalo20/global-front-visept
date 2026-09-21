@@ -7,7 +7,7 @@ import useCompanyStore from '@/store/companyStore';
 import useRestaurantCartStore from '@/store/restaurantCartStore';
 import axios from '@/lib/axios';
 
-export default function OrderModeHeader({ onOpenTableSelector }) {
+export default function OrderModeHeader({ onOpenTableSelector, onOpenNewOrderModal }) {
   const { activeCompany } = useCompanyStore();
   const cart = useRestaurantCartStore();
   const [occupiedTablesCount, setOccupiedTablesCount] = useState(0);
@@ -34,6 +34,15 @@ export default function OrderModeHeader({ onOpenTableSelector }) {
     <div className="bg-slate-900 text-white px-4 lg:px-6 py-2.5 flex items-center justify-between shadow-md shrink-0">
       {/* Table Active Context */}
       <div className="flex items-center gap-3">
+        {onOpenNewOrderModal && (
+          <Button
+            onClick={onOpenNewOrderModal}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 h-9 px-3"
+          >
+            <span>✨ Nouvelle commande</span>
+          </Button>
+        )}
+
         <Button
           onClick={onOpenTableSelector}
           className="bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 h-9 px-3"

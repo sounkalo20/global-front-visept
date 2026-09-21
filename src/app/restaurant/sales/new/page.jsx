@@ -21,6 +21,8 @@ import useRestaurantModifierStore from '@/store/restaurantModifierStore';
 import useCompanyStore from '@/store/companyStore';
 import { cn } from '@/lib/utils';
 
+import NewRestaurantOrderModal from '@/components/restaurant/pos/NewRestaurantOrderModal';
+
 export default function RestaurantPosPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,6 +39,7 @@ export default function RestaurantPosPage() {
   const [cartExpanded, setCartExpanded] = useState(true);
   const [tableModalOpen, setTableModalOpen] = useState(false);
   const [splitModalOpen, setSplitModalOpen] = useState(false);
+  const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
 
   // Modificateurs state
   const [modifierModalOpen, setModifierModalOpen] = useState(false);
@@ -121,7 +124,10 @@ export default function RestaurantPosPage() {
   return (
     <div className="h-[calc(100vh-65px)] flex flex-col bg-gray-50">
       {/* Header Contextuel Restaurant */}
-      <OrderModeHeader onOpenTableSelector={() => setTableModalOpen(true)} />
+      <OrderModeHeader
+        onOpenTableSelector={() => setTableModalOpen(true)}
+        onOpenNewOrderModal={() => setNewOrderModalOpen(true)}
+      />
 
       {/* Barre de Gestion Multi-Sessions & Tables Actives */}
       <OrderSessionTabs onOpenTableSelector={() => setTableModalOpen(true)} />
@@ -235,6 +241,11 @@ export default function RestaurantPosPage() {
       </div>
 
       {/* Modales Restaurant */}
+      <NewRestaurantOrderModal
+        open={newOrderModalOpen}
+        onOpenChange={setNewOrderModalOpen}
+      />
+
       {tableModalOpen && (
         <TableSelectorModal
           isOpen={tableModalOpen}

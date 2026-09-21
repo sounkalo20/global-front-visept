@@ -1,6 +1,6 @@
 // app/restaurant/sales/page.jsx
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,12 @@ import useRestaurantSaleStore from '@/store/restaurantSaleStore';
 import SaleStatsCards from '@/components/restaurant/sales/SaleStatsCards';
 import SaleFilters from '@/components/restaurant/sales/SaleFilters';
 import SalesTable from '@/components/restaurant/sales/SalesTable';
+import NewRestaurantOrderModal from '@/components/restaurant/pos/NewRestaurantOrderModal';
 
 export default function SalesPage() {
   const router = useRouter();
   const { stats, filters, setFilters, fetchSales, fetchStats } = useRestaurantSaleStore();
+  const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
 
   useEffect(() => {
     fetchSales();
@@ -28,7 +30,7 @@ export default function SalesPage() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Historique des ventes du restaurant</p>
         </div>
-        <Button onClick={() => router.push('/restaurant/sales/new')}>
+        <Button onClick={() => setNewOrderModalOpen(true)} className="bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl">
           <Plus size={16} className="mr-2" />Nouvelle commande
         </Button>
       </div>
@@ -36,6 +38,11 @@ export default function SalesPage() {
       <SaleStatsCards stats={stats} />
       <SaleFilters filters={filters} onFiltersChange={setFilters} />
       <SalesTable />
+
+      <NewRestaurantOrderModal
+        open={newOrderModalOpen}
+        onOpenChange={setNewOrderModalOpen}
+      />
     </div>
   );
 }
